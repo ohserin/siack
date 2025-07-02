@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
-import './styles/Join.css';
+import { TextField, Button, Box, Typography } from '@mui/material';
+
 function Join() {
     const {
         register,
@@ -19,66 +20,82 @@ function Join() {
     };
 
     return (
-        <div>
-            <h2>회원가입</h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <div>
-                    <label>이름:</label>
-                    <input {...register('name', { required: true })} />
-                    <div>
-                        {errors.name && <span>이름을 입력해주세요.</span>}
-                    </div>
+        <Box
+            maxWidth={400}
+            mx="auto"
+            mt={5}
+            p={3}
+            boxShadow={3}
+            borderRadius={2}
+            bgcolor="#fafafa"
+        >
+            <Typography variant="h4" component="h2" align="center" gutterBottom>
+                회원가입
+            </Typography>
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+                <TextField
+                    label="이름"
+                    fullWidth
+                    margin="normal"
+                    {...register('name', { required: '이름을 입력해주세요.' })}
+                    error={!!errors.name}
+                    helperText={errors.name?.message}
+                />
+                <TextField
+                    label="이메일"
+                    type="email"
+                    fullWidth
+                    margin="normal"
+                    {...register('email', { required: '이메일을 입력해주세요.' })}
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                />
+                <TextField
+                    label="핸드폰번호"
+                    fullWidth
+                    margin="normal"
+                    {...register('phone', { required: '핸드폰번호를 입력해주세요.' })}
+                    error={!!errors.phone}
+                    helperText={errors.phone?.message}
+                />
+                <TextField
+                    label="아이디"
+                    fullWidth
+                    margin="normal"
+                    {...register('username', { required: '아이디를 입력해주세요.' })}
+                    error={!!errors.username}
+                    helperText={errors.username?.message}
+                />
+                <TextField
+                    label="비밀번호"
+                    type="password"
+                    fullWidth
+                    margin="normal"
+                    {...register('password', { required: '비밀번호를 입력해주세요.' })}
+                    error={!!errors.password}
+                    helperText={errors.password?.message}
+                />
+                <TextField
+                    label="비밀번호 확인"
+                    type="password"
+                    fullWidth
+                    margin="normal"
+                    {...register('confirmPassword', { required: '비밀번호 확인을 입력해주세요.' })}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword?.message}
+                />
 
-                </div>
-
-                <div>
-                    <label>이메일:</label>
-                    <input {...register('email', { required: true })} />
-                    <div>
-                        {errors.email && <span>이메일을 입력해주세요.</span>}
-                    </div>
-
-                </div>
-
-                <div>
-                    <label>핸드폰번호:</label>
-                    <input {...register('phone', { required: true })} />
-                    <div>
-                        {errors.phone && <span>핸드폰번호를 입력해주세요.</span>}
-                    </div>
-
-                </div>
-
-                <div>
-                    <label>아이디:</label>
-                    <input {...register('username', { required: true })} />
-                    <div>
-                        {errors.username && <span>아이디를 입력해주세요.</span>}
-                    </div>
-
-                </div>
-
-                <div>
-                    <label>비밀번호:</label>
-                    <input type="password" {...register('password', { required: true })} />
-                    <div>
-                        {errors.password && <span>비밀번호를 입력해주세요.</span>}
-                    </div>
-
-                </div>
-
-                <div>
-                    <label>비밀번호 확인:</label>
-                    <input type="password" {...register('confirmPassword', { required: true })} />
-                    <div>
-                        {errors.confirmPassword && <span>비밀번호 확인을 입력해주세요.</span>}
-                    </div>
-
-                </div>
-
-                <button type="submit">회원가입</button>
+                <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{ mt: 2 }}
+                >
+                    회원가입
+                </Button>
             </form>
-        </div>
+        </Box>
     );
 }
 
