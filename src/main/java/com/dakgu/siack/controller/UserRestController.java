@@ -17,39 +17,37 @@ public class UserRestController {
 
     private final UserService userService;
 
-    /**
-     * 사용자 이름(ID)의 중복 여부를 확인하는 API 엔드포인트입니다.
-     * 클라이언트로부터 `username`을 쿼리 파라미터로 받아 해당 이름이 이미 존재하는지 확인합니다.
-     * @param username 중복 확인을 요청하는 사용자 이름
-     * @return 중복 여부에 따른 응답.
-     * - 사용자 이름이 사용 가능하면 HTTP 200 OK와 함께 성공 메시지.
-     * - 사용자 이름이 이미 존재하면 HTTP 409 CONFLICT와 함께 중복 메시지.
-     */
+    /* 유저네임 중복 여부를 확인하는 API 엔드포인트 */
     @GetMapping("/check-username")
     public ResponseEntity<?> checkUsernameDuplication(@RequestParam("username") String username) {
-        boolean exists = userService.checkUsernameDuplication(username);
 
-        if (exists) {
+        if (!userService.isValidUsernameFormat(username)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDto(HttpStatus.BAD_REQUEST.value(), "사용자 이름 형식이 올바르지 않습니다."));
+        }
+
+        if (userService.isUsernameDuplicated(username)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new ResponseDto(HttpStatus.CONFLICT.value(), "이미 사용 중인 사용자 이름입니다."));
-        } else {
-            return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 사용자 이름입니다."));
         }
+
+        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 사용자 이름입니다."));
     }
 
-    /**
-     * 이메일 중복 여부를 확인하는 API 엔드포인트.
-     * @param email 중복 확인을 요청하는 이메일 주소
-     * @return 중복 여부에 따른 응답.
-     * - 이메일이 사용 가능하면 HTTP 200 OK.
-     * - 이메일이 이미 존재하면 HTTP 409 CONFLICT.
-     */
+    /* 이메일 중복 여부를 확인하는 API 엔드포인트 */
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmailDuplication(@RequestParam("email") String email) {
-        if (userService.checkEmailDuplication(email)) {
+
+        if (!userService.isValidEmailFormat(email)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDto(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 올바르지 않습니다."));
+        }
+
+        if (userService.isEmailDuplicated(email)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new ResponseDto(HttpStatus.CONFLICT.value(), "이미 사용 중인 이메일입니다."));
         }
+
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 이메일입니다."));
     }
 }
