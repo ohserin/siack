@@ -35,4 +35,23 @@ public class User extends Timestamp {
 
     @Column(nullable = false)
     private int role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private UserProfile userProfile;
+
+    public User(String username, String password, String email, String phone) {
+        this();
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.phone = phone;
+    }
+
+    public void setUserProfile(UserProfile userProfile) {
+        this.userProfile = userProfile;
+        if (userProfile != null) {
+            userProfile.setUser(this); // 역참조 설정
+        }
+    }
+
 }
