@@ -50,4 +50,22 @@ public class UserRestController {
 
         return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 이메일입니다."));
     }
+
+    /* 전화번호 중복 여부를 확인하는 API 엔드포인트 */
+    @GetMapping("/check-phone")
+    public ResponseEntity<?> checkPhoneDuplication(@RequestParam("phone") String phone) {
+
+        if (!userService.isValidPhoneNumberFormat(phone)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseDto(HttpStatus.BAD_REQUEST.value(), "전화번호 형식이 올바르지 않습니다."));
+        }
+
+        if (userService.isPhoneNumberDuplicated(phone)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ResponseDto(HttpStatus.CONFLICT.value(), "이미 사용 중인 전화번호입니다."));
+        }
+
+        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 전화번호입니다."));
+    }
+
 }

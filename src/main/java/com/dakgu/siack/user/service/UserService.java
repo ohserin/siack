@@ -22,6 +22,11 @@ public class UserService {
         return Pattern.matches(emailRegex, email);
     }
 
+    public boolean isValidPhoneNumberFormat(String phone) {
+        String phoneRegex = "^\\d{2,3}-?\\d{3,4}-?\\d{4}$";
+        return Pattern.matches(phoneRegex, phone);
+    }
+
     /* username 중복 확인 */
     @Transactional(readOnly = true)
     public boolean isUsernameDuplicated(String username) { // 메소드 이름 변경
@@ -33,4 +38,11 @@ public class UserService {
     public boolean isEmailDuplicated(String email) {
         return userRepository.existsByEmail(email);
     }
+
+    /* 전화번호 중복 확인 */
+    @Transactional(readOnly = true)
+    public boolean isPhoneNumberDuplicated(String phone) {
+        return userRepository.existsByPhone(phone);
+    }
+
 }
