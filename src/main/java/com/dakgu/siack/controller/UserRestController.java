@@ -1,71 +1,52 @@
 package com.dakgu.siack.controller;
 
+import com.dakgu.siack.user.domain.UserRegisterRequestDto;
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.util.ResponseDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
-@RequestMapping("/user")
+@RequestMapping("/v1/user")
 @RestController
 public class UserRestController {
 
     private final UserService userService;
 
-    /* 유저네임 중복 여부를 확인하는 API 엔드포인트 */
+    /* 유저네임 중복 여부를 확인 */
     @GetMapping("/check-username")
     public ResponseEntity<?> checkUsernameDuplication(@RequestParam("username") String username) {
-
-        if (!userService.isValidUsernameFormat(username)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseDto(HttpStatus.BAD_REQUEST.value(), "사용자 이름 형식이 올바르지 않습니다."));
-        }
-
-        if (userService.isUsernameDuplicated(username)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ResponseDto(HttpStatus.CONFLICT.value(), "이미 사용 중인 사용자 이름입니다."));
-        }
-
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 사용자 이름입니다."));
+        ResponseDto response = userService.checkUsernameAvailability(username);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    /* 이메일 중복 여부를 확인하는 API 엔드포인트 */
+    /* 이메일 중복 여부를 확인 */
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmailDuplication(@RequestParam("email") String email) {
-
-        if (!userService.isValidEmailFormat(email)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseDto(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 올바르지 않습니다."));
-        }
-
-        if (userService.isEmailDuplicated(email)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ResponseDto(HttpStatus.CONFLICT.value(), "이미 사용 중인 이메일입니다."));
-        }
-
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 이메일입니다."));
+        ResponseDto response = userService.checkEmailAvailability(email);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    /* 전화번호 중복 여부를 확인하는 API 엔드포인트 */
+    /* 전화번호 중복 여부를 확인 */
     @GetMapping("/check-phone")
     public ResponseEntity<?> checkPhoneDuplication(@RequestParam("phone") String phone) {
+        ResponseDto response = userService.checkPhoneAvailability(phone);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 
-        if (!userService.isValidPhoneNumberFormat(phone)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ResponseDto(HttpStatus.BAD_REQUEST.value(), "전화번호 형식이 올바르지 않습니다."));
-        }
+    /* 닉네임 중복 여부를 확인 */
+    @GetMapping("/check-nickname")
+    public ResponseEntity<?> checkNicknameDuplication(@RequestParam("nickname") String nickname) {
+        ResponseDto response = userService.checkNicknameAvailability(nickname);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 
-        if (userService.isPhoneNumberDuplicated(phone)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ResponseDto(HttpStatus.CONFLICT.value(), "이미 사용 중인 전화번호입니다."));
-        }
-
-        return ResponseEntity.ok(new ResponseDto(HttpStatus.OK.value(), "사용 가능한 전화번호입니다."));
+    /* 사용자 회원가입 */
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody UserRegisterRequestDto request) {
+        ResponseDto response = userService.registerUser(request);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
 }
