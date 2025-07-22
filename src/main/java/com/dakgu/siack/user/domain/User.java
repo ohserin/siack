@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Getter
 @NoArgsConstructor
@@ -54,4 +55,7 @@ public class User extends Timestamp {
         }
     }
 
+    public boolean checkPassword(String rawPassword, BCryptPasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(rawPassword, this.password);
+    }
 }
