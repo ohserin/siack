@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
-import { TextField, Button, Box, Typography } from '@mui/material';
+import {TextField, Button, Box, Typography, Link} from '@mui/material';
+import React from "react";
 
 function Join() {
     const {
@@ -90,10 +91,16 @@ function Join() {
                     variant="contained"
                     color="primary"
                     fullWidth
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 1, mb: 2}}
                 >
                     회원가입
                 </Button>
+                <Box display="flex" justifyContent="end">
+                    <Link href="/login" variant="body2">
+                        로그인
+                    </Link>
+                </Box>
+
             </form>
         </Box>
     );

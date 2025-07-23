@@ -1,10 +1,12 @@
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
+import Login from './pages/users/Login';
+import Join from "./pages/users/Join.jsx";
 
 import { Box, Container } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Join from "./users/Join.jsx";
+
 
 function App() {
     return (
@@ -15,6 +17,7 @@ function App() {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/join" element={<Join />} />
+                        <Route path="/login" element={<Login />} />
                         {/* 추가 경로 여기에 작성 */}
                     </Routes>
                 </Container>

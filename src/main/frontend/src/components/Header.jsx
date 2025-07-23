@@ -1,14 +1,6 @@
 import React from 'react';
-import {
-    AppBar,
-    Toolbar,
-    Typography,
-    Box,
-    Button,
-    IconButton,
-    useMediaQuery,
-    useTheme,
-} from '@mui/material';
+import {AppBar, Toolbar, Typography, Box, Button, IconButton, useMediaQuery, useTheme,} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 
 function Header() {
@@ -40,11 +32,11 @@ function Header() {
                 <Box>
                     {showBothButtons && (
                         <>
-                            <Button color="inherit">로그인</Button>
-                            <Button color="inherit">회원가입</Button>
+                            <Button color="inherit" component={RouterLink} to="/login">로그인</Button>
+                            <Button color="inherit" component={RouterLink} to="/join">회원가입</Button>
                         </>
                     )}
-                    {showOnlyLogin && <Button color="inherit">로그인</Button>}
+                    {showOnlyLogin && <Button color="inherit" component={RouterLink} to="/login">로그인</Button>}
                     {showHamburger && (
                         <IconButton color="inherit">
                             <MenuIcon />
