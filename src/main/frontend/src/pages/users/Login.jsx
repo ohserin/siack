@@ -46,8 +46,6 @@ function Login() {
             } else {
                 localStorage.removeItem('savedUsername');
             }
-        } else {
-            console.log('유효성 검사 실패!');
         }
     };
 
