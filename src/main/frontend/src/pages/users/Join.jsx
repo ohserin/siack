@@ -7,8 +7,9 @@ import LockIcon from '@mui/icons-material/Lock';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import FaceIcon from '@mui/icons-material/Face';
-import React from "react";
+import React, {useEffect} from "react";
 import api from "../../api/api.js";
+import {getCookie} from "../../utils/cookie.js";
 
 const errorMessage = {
     usernameEmpty: "아이디: 필수 정보입니다.",
@@ -152,10 +153,9 @@ async function registerUser(formData) {
             phone: formData.phone,
             nickname: formData.nickname,
         });
-        return response.data; // 성공 시 반환 데이터
+        return response.data;
     } catch (error) {
-        // 실패 시 예외 던짐
-        throw error.response?.data || { message: '서버 오류' };
+        throw error.response?.data || {message: '서버 오류'};
     }
 }
 
@@ -170,11 +170,18 @@ function Join() {
 
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const token = getCookie('authToken');
+        if (token) {
+            navigate('/'); // 이미 로그인되어 있으면 홈으로 리디렉트
+        }
+    },);
+
     // 비밀번호 필드의 현재 값을 watch 하여 비밀번호 확인 필드 유효성 검사에 사용
     const password = watch('password', '');
 
     const onSubmit = async (data) => {
-
+        data.preventDefault();
         const usernameOk = await checkUsernameDuplicate(data.username, setError);
         if (!usernameOk) return;
 
@@ -216,6 +223,8 @@ function Join() {
             </Typography>
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
                 <TextField
+                    id="username"
+                    name="username"
                     label="아이디"
                     placeholder="아이디"
                     fullWidth
@@ -237,6 +246,8 @@ function Join() {
                     }}
                 />
                 <TextField
+                    id="password"
+                    name="password"
                     label="비밀번호"
                     placeholder="비밀번호"
                     type="password"
@@ -259,6 +270,8 @@ function Join() {
                     }}
                 />
                 <TextField
+                    id="confirmPassword"
+                    name="confirmPassword"
                     label="비밀번호 확인"
                     placeholder="비밀번호 재확인"
                     type="password"
@@ -281,6 +294,8 @@ function Join() {
                     }}
                 />
                 <TextField
+                    id="email"
+                    name="email"
                     label="이메일 주소 (비밀번호 찾기 등 본인 확인용)"
                     placeholder="이메일"
                     type="email"
@@ -303,6 +318,8 @@ function Join() {
                     }}
                 />
                 <TextField
+                    id="nickname"
+                    name="nickname"
                     label="닉네임"
                     placeholder="닉네임"
                     type="text"
@@ -314,7 +331,7 @@ function Join() {
                         input: {
                             startAdornment: (
                                 <InputAdornment position="start">
-                                    <FaceIcon />
+                                    <FaceIcon/>
                                 </InputAdornment>
                             ),
                             ...register('nickname', {
@@ -328,6 +345,8 @@ function Join() {
                 <Divider sx={{my: 2}}/>
 
                 <TextField
+                    id="phone"
+                    name="phone"
                     label="휴대전화번호 (선택 사항)"
                     placeholder="휴대전화 번호"
                     fullWidth
@@ -360,7 +379,7 @@ function Join() {
                     회원가입
                 </Button>
                 <Box display="flex" justifyContent="end">
-                    <Link href="/Login" variant="body2">
+                    <Link href="/login" variant="body2">
                         로그인
                     </Link>
                 </Box>
