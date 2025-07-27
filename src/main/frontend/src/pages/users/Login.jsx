@@ -11,6 +11,7 @@ import api from "../../api/api.js";
 import {useNavigate} from "react-router-dom";
 import {getCookie, setCookie} from "../../utils/cookie.js";
 import {useAuth} from '../../contexts/AuthContext.jsx';
+import theme from '../../theme.js'
 
 const errorMessage = {
     usernameEmpty: "아이디: 아이디를 입력해주세요.",
@@ -48,6 +49,8 @@ async function loginUser(formData) {
 function Login() {
     const [showForm, setShowForm] = useState(false);
     const [rememberId, setRememberId] = useState(false);
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
     const {
         register, // 입력 필드를 등록하는 함수
@@ -55,9 +58,6 @@ function Login() {
         setError,
         formState: { errors }, // 폼 오류 상태를 포함하는 객체
     } = useForm();
-
-    const { login } = useAuth();
-    const navigate = useNavigate();
 
     useEffect(() => {
         setShowForm(true);
@@ -98,7 +98,7 @@ function Login() {
     };
 
     return (
-        <Container component="main" maxWidth="xs" sx={{mt: 8, mb: 4}}>
+        <Container component="main" maxWidth={false} sx={{mt: 8, mb: 4, maxWidth: 450, minWidth: 450}}>
             <Fade in={showForm} timeout={1000}>
                 <Paper elevation={3} sx={{p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                     <Avatar sx={{m: 1, bgcolor: 'primary.main', width: 60, height: 60}}>
@@ -183,10 +183,10 @@ function Login() {
                             로그인
                         </Button>
                         <Box display="flex" justifyContent="space-between">
-                            <Link href="#" variant="body2">
+                            <Link href="#" variant="body2" sx={{color: theme.palette.blue.main}}>
                                 비밀번호를 잊으셨나요?
                             </Link>
-                            <Link href="/join" variant="body2">
+                            <Link href="/join" variant="body2" sx={{color: theme.palette.blue.main}}>
                                 회원가입
                             </Link>
                         </Box>

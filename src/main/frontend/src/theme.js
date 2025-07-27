@@ -14,6 +14,13 @@ const theme = createTheme({
             secondary: '#666666',
         },
         mode: 'light', // 또는 'dark'
+
+        blue: {
+            main: '#1976d2',
+            light: '#63a4ff',
+            dark: '#004ba0',
+            contrastText: '#ffffff',
+        },
     },
     typography: {
         fontFamily: '"Noto Sans KR", Roboto, sans-serif',

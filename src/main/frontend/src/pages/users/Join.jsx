@@ -1,15 +1,16 @@
 import {useForm} from 'react-hook-form';
 import {useNavigate} from 'react-router-dom';
-import {TextField, Button, Box, Typography, Link, InputAdornment, Divider} from '@mui/material';
+import {TextField, Button, Box, Typography, Link, InputAdornment, Divider, Paper, Container, Fade} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PersonIcon from '@mui/icons-material/Person';
 import LockIcon from '@mui/icons-material/Lock';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import FaceIcon from '@mui/icons-material/Face';
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import api from "../../api/api.js";
 import {getCookie} from "../../utils/cookie.js";
+import theme from '../../theme.js'
 
 const errorMessage = {
     usernameEmpty: "아이디: 필수 정보입니다.",
@@ -160,6 +161,9 @@ async function registerUser(formData) {
 }
 
 function Join() {
+    const [showForm, setShowForm] = useState(false);
+    const navigate = useNavigate();
+
     const {
         register,
         handleSubmit,
@@ -168,14 +172,14 @@ function Join() {
         formState: {errors},
     } = useForm();
 
-    const navigate = useNavigate();
-
     useEffect(() => {
+        setShowForm(true);
+
         const token = getCookie('authToken');
         if (token) {
             navigate('/'); // 이미 로그인되어 있으면 홈으로 리디렉트
         }
-    },);
+    }, []);
 
     // 비밀번호 필드의 현재 값을 watch 하여 비밀번호 확인 필드 유효성 검사에 사용
     const password = watch('password', '');
@@ -204,188 +208,179 @@ function Join() {
     };
 
     return (
-        <Box
-            maxWidth={400}
-            mx="auto"
-            mt={5}
-            p={3}
-            boxShadow={3}
-            borderRadius={2}
-            sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-            }}
-        >
-            <AccountCircleIcon sx={{fontSize: 60, color: 'primary.main', mb: 2}}/>
-            <Typography variant="h4" component="h2" align="center" gutterBottom>
-                회원가입
-            </Typography>
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
-                <TextField
-                    id="username"
-                    name="username"
-                    label="아이디"
-                    placeholder="아이디"
-                    fullWidth
-                    margin="normal"
-                    error={!!errors.username}
-                    helperText={errors.username?.message}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <PersonIcon/>
-                                </InputAdornment>
-                            ),
-                            ...register('username', {
-                                required: errorMessage.usernameEmpty,
-                                validate: value => usernameRegexTest(value) || errorMessage.usernameRegex
-                            }),
-                        },
-                    }}
-                />
-                <TextField
-                    id="password"
-                    name="password"
-                    label="비밀번호"
-                    placeholder="비밀번호"
-                    type="password"
-                    fullWidth
-                    margin="normal"
-                    error={!!errors.password}
-                    helperText={errors.password?.message}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <LockIcon/>
-                                </InputAdornment>
-                            ),
-                            ...register('password', {
-                                required: errorMessage.passwordEmpty,
-                                validate: value => passwordRegexTest(value) || errorMessage.passwordRegex
-                            })
-                        }
-                    }}
-                />
-                <TextField
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    label="비밀번호 확인"
-                    placeholder="비밀번호 재확인"
-                    type="password"
-                    fullWidth
-                    margin="normal"
-                    error={!!errors.confirmPassword}
-                    helperText={errors.confirmPassword?.message}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <LockIcon/>
-                                </InputAdornment>
-                            ),
-                            ...register('confirmPassword', {
-                                required: errorMessage.passwordConfirmEmpty,
-                                validate: value => value === password || errorMessage.passwordConfirmDisagree
-                            })
-                        },
-                    }}
-                />
-                <TextField
-                    id="email"
-                    name="email"
-                    label="이메일 주소 (비밀번호 찾기 등 본인 확인용)"
-                    placeholder="이메일"
-                    type="email"
-                    fullWidth
-                    margin="normal"
-                    error={!!errors.email}
-                    helperText={errors.email?.message}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <EmailIcon/>
-                                </InputAdornment>
-                            ),
-                            ...register('email', {
-                                required: errorMessage.emailEmpty,
-                                validate: value => emailRegexTest(value) || errorMessage.emailRegex
-                            })
-                        }
-                    }}
-                />
-                <TextField
-                    id="nickname"
-                    name="nickname"
-                    label="닉네임"
-                    placeholder="닉네임"
-                    type="text"
-                    fullWidth
-                    margin="normal"
-                    error={!!errors.nickname}
-                    helperText={errors.nickname?.message}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <FaceIcon/>
-                                </InputAdornment>
-                            ),
-                            ...register('nickname', {
-                                required: errorMessage.nicknameEmpty,
-                                validate: value => nicknameRegexTest(value) || errorMessage.nicknameRegex
-                            })
-                        }
-                    }}
-                />
-
-                <Divider sx={{my: 2}}/>
-
-                <TextField
-                    id="phone"
-                    name="phone"
-                    label="휴대전화번호 (선택 사항)"
-                    placeholder="휴대전화 번호"
-                    fullWidth
-                    margin="normal"
-                    error={!!errors.phone}
-                    helperText={errors.phone?.message}
-                    slotProps={{
-                        input: {
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <PhoneIcon/>
-                                </InputAdornment>
-                            ),
-                            ...register('phone', {
-                                validate: value => {
-                                    if (!value) return true;
-                                    return phoneRegexTest(value) || errorMessage.phoneRegex;
+        <Container component="main" maxWidth={false} sx={{mt: 8, mb: 4, maxWidth: 500, minWidth: 500}}>
+            <Fade in={showForm} timeout={1000}>
+                <Paper elevation={3} sx={{p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <AccountCircleIcon sx={{fontSize: 60, color: 'primary.main', mb: 2}}/>
+                    <Typography variant="h4" component="h2" align="center" gutterBottom>
+                        회원가입
+                    </Typography>
+                    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+                        <TextField
+                            id="username"
+                            name="username"
+                            label="아이디"
+                            placeholder="아이디"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.username}
+                            helperText={errors.username?.message}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PersonIcon/>
+                                        </InputAdornment>
+                                    ),
+                                    ...register('username', {
+                                        required: errorMessage.usernameEmpty,
+                                        validate: value => usernameRegexTest(value) || errorMessage.usernameRegex
+                                    }),
+                                },
+                            }}
+                        />
+                        <TextField
+                            id="password"
+                            name="password"
+                            label="비밀번호"
+                            placeholder="비밀번호"
+                            type="password"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.password}
+                            helperText={errors.password?.message}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <LockIcon/>
+                                        </InputAdornment>
+                                    ),
+                                    ...register('password', {
+                                        required: errorMessage.passwordEmpty,
+                                        validate: value => passwordRegexTest(value) || errorMessage.passwordRegex
+                                    })
                                 }
-                            })
-                        }
-                    }}
-                />
-                <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    sx={{mt: 2, mb: 2}}
-                >
-                    회원가입
-                </Button>
-                <Box display="flex" justifyContent="end">
-                    <Link href="/login" variant="body2">
-                        로그인
-                    </Link>
-                </Box>
+                            }}
+                        />
+                        <TextField
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            label="비밀번호 확인"
+                            placeholder="비밀번호 재확인"
+                            type="password"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.confirmPassword}
+                            helperText={errors.confirmPassword?.message}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <LockIcon/>
+                                        </InputAdornment>
+                                    ),
+                                    ...register('confirmPassword', {
+                                        required: errorMessage.passwordConfirmEmpty,
+                                        validate: value => value === password || errorMessage.passwordConfirmDisagree
+                                    })
+                                },
+                            }}
+                        />
+                        <TextField
+                            id="email"
+                            name="email"
+                            label="이메일 주소 (비밀번호 찾기 등 본인 확인용)"
+                            placeholder="이메일"
+                            type="email"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.email}
+                            helperText={errors.email?.message}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <EmailIcon/>
+                                        </InputAdornment>
+                                    ),
+                                    ...register('email', {
+                                        required: errorMessage.emailEmpty,
+                                        validate: value => emailRegexTest(value) || errorMessage.emailRegex
+                                    })
+                                }
+                            }}
+                        />
+                        <TextField
+                            id="nickname"
+                            name="nickname"
+                            label="닉네임"
+                            placeholder="닉네임"
+                            type="text"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.nickname}
+                            helperText={errors.nickname?.message}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <FaceIcon/>
+                                        </InputAdornment>
+                                    ),
+                                    ...register('nickname', {
+                                        required: errorMessage.nicknameEmpty,
+                                        validate: value => nicknameRegexTest(value) || errorMessage.nicknameRegex
+                                    })
+                                }
+                            }}
+                        />
 
-            </form>
-        </Box>
+                        <Divider sx={{my: 2}}/>
+
+                        <TextField
+                            id="phone"
+                            name="phone"
+                            label="휴대전화번호 (선택 사항)"
+                            placeholder="휴대전화 번호"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.phone}
+                            helperText={errors.phone?.message}
+                            slotProps={{
+                                input: {
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PhoneIcon/>
+                                        </InputAdornment>
+                                    ),
+                                    ...register('phone', {
+                                        validate: value => {
+                                            if (!value) return true;
+                                            return phoneRegexTest(value) || errorMessage.phoneRegex;
+                                        }
+                                    })
+                                }
+                            }}
+                        />
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            sx={{mt: 2, mb: 2}}
+                        >
+                            회원가입
+                        </Button>
+                        <Box display="flex" justifyContent="end">
+                            <Link href="/login" variant="body2" sx={{color: theme.palette.blue.main}}>
+                                로그인
+                            </Link>
+                        </Box>
+                    </form>
+                </Paper>
+            </Fade>
+        </Container>
     );
 }
 
