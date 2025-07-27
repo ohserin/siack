@@ -42,12 +42,7 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    /**
-     * JWT 토큰 생성
-     *
-     * @param authentication 인증 정보 (주로 로그인 성공 후의 Authentication 객체)
-     * @return 생성된 JWT 토큰 문자열
-     */
+    /** JWT 토큰 생성 */
     public String generateToken(Authentication authentication) {
         // 인증된 사용자의 권한을 쉼표로 구분된 문자열로 변환
         String authorities = authentication.getAuthorities().stream()
@@ -65,12 +60,7 @@ public class JwtTokenProvider {
                 .compact(); // 토큰 압축
     }
 
-    /**
-     * JWT 토큰에서 인증 정보를 추출
-     *
-     * @param token JWT 토큰 문자열
-     * @return Authentication 객체
-     */
+    /** JWT 토큰에서 인증 정보를 추출 */
     public Authentication getAuthentication(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith((SecretKey) key)
@@ -91,12 +81,7 @@ public class JwtTokenProvider {
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
-    /**
-     * JWT 토큰의 유효성을 검증합니다.
-     *
-     * @param token JWT 토큰 문자열
-     * @return 토큰이 유효하면 true, 그렇지 않으면 false
-     */
+    /** JWT 토큰의 유효성을 검증 */
     public boolean validateToken(String token) {
         try {
             Jwts.parser().verifyWith((SecretKey) key).build().parseSignedClaims(token);

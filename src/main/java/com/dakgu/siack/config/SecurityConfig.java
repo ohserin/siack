@@ -27,14 +27,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    /**
-     * HTTP 보안 필터 체인을 구성하는 Bean 입니다.
-     * 이 메서드는 애플리케이션의 HTTP 요청에 대한 보안 규칙을 정의합니다.
-     *
-     * @param http HttpSecurity 객체로, HTTP 요청에 대한 보안 설정을 구성하는 데 사용됩니다.
-     * @return 구성된 SecurityFilterChain 객체
-     * @throws Exception 보안 구성 중 발생할 수 있는 예외
-     */
+    /** HTTP 보안 필터 체인 구성 */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -59,13 +52,8 @@ public class SecurityConfig implements WebMvcConfigurer {
         return http.build();
     }
 
-    /**
-     * CORS (Cross-Origin Resource Sharing) 설정을 정의하는 Bean 입니다.
-     * 이 메서드는 어떤 출처(Origin), HTTP 메서드, 헤더를 허용할지 등을 설정합니다.
-     *
-     * @return 구성된 CorsConfigurationSource 객체
-     */
-    @Bean // CORS 설정 메소드
+    /** CORS (Cross-Origin Resource Sharing) 설정 정의 */
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 

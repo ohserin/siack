@@ -12,7 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@RequiredArgsConstructor // JwtTokenProvider 주입을 위한 Lombok 어노테이션
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
@@ -41,15 +41,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        filterChain.doFilter(request, response); // 다음 필터로 요청 전달
+        filterChain.doFilter(request, response);
     }
 
-    /**
-     * Request Header에서 토큰 정보를 추출합니다.
-     *
-     * @param request HTTP 서블릿 요청 객체
-     * @return 추출된 JWT 토큰 문자열 (Bearer 접두사 제거)
-     */
+    /** Request Header에서 토큰 정보를 추출합니다. */
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization"); // Authorization 헤더에서 토큰 가져오기
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
