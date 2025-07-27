@@ -151,8 +151,8 @@ async function registerUser(formData) {
             username: formData.username,
             password: formData.password,
             email: formData.email,
-            phone: formData.phone,
             nickname: formData.nickname,
+            phone: formData.phone,
         });
         return response.data;
     } catch (error) {
@@ -185,7 +185,7 @@ function Join() {
     const password = watch('password', '');
 
     const onSubmit = async (data) => {
-        data.preventDefault();
+
         const usernameOk = await checkUsernameDuplicate(data.username, setError);
         if (!usernameOk) return;
 
