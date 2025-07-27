@@ -154,4 +154,35 @@ public class UserService {
         // 4. 생성된 토큰과 함께 응답 반환
         return new UserResponseDTO(HttpStatus.OK.value(), "로그인이 성공적으로 완료되었습니다.", jwt, request.getUsername(), nickname);
     }
+
+    public ResponseDTO getUserData(Authentication authentication) {
+        String username = authentication.getName();
+
+        if (username == null) {
+            return new ResponseDTO(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
+        }
+
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+        }
+
+        UserProfile profile  = userProfileRepository.findByUserId(user.getUserId());
+        if (profile  == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
+        }
+
+        return new UserResponseDTO(
+                HttpStatus.OK.value(),
+                "success",
+                user.getUserId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPhone(),
+                profile.getNickname(),
+                profile.getProfileImg(),
+                profile.getStatusMessage(),
+                user.getRole()
+        );
+    }
 }
