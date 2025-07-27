@@ -88,8 +88,7 @@ function Login() {
                 localStorage.removeItem('savedUsername'); // 체크 해제 시 저장된 사용자 이름 제거
             }
 
-            setCookie('authToken', loginResponse.token);
-            login();
+            login(loginResponse.token);
             navigate('/');
         } catch (error) {
             setError('username', { type: 'manual', message: "아이디 또는 비밀번호가 올바르지 않습니다." });

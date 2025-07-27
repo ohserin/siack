@@ -2,16 +2,16 @@ import {AppBar, Toolbar, Typography, Box, Button, IconButton, useMediaQuery} fro
 import {Link as RouterLink, useNavigate} from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useAuth} from "../contexts/AuthContext.jsx";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 function Header() {
     const navigate = useNavigate();
+    const {user, logout, userData, loading} = useAuth();
 
     const isDesktop = useMediaQuery('(min-width:1080px)');
     const showBothButtons = useMediaQuery('(min-width:1215px)');
     const showOnlyLogin = useMediaQuery('(min-width:1080px) and (max-width:1214px)');
     const showHamburger = useMediaQuery('(max-width:1079px)');
-
-    const {user, logout} = useAuth();
 
     const handleLogout = () => {
         logout();
@@ -22,7 +22,7 @@ function Header() {
         <AppBar position="static" color="primary">
             <Toolbar sx={{justifyContent: 'space-between'}}>
                 <Box display="flex" alignItems="center">
-                    <Typography variant="h6" component="div">
+                    <Typography variant="h6" component={RouterLink} to="/" sx={{ color: 'inherit', textDecoration: 'none' }}>
                         Siack
                     </Typography>
                     {isDesktop && (
@@ -36,9 +36,15 @@ function Header() {
 
                 <Box>
                     {user ? (
-                        <>
-                            <Button color="inherit" onClick={handleLogout}>로그아웃</Button>
-                        </>
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <AccountCircleIcon/>
+                            <Typography variant="body1" sx={{mr: 2}}>
+                                {userData?.nickname || ''}
+                            </Typography>
+                            <Button color="inherit" onClick={handleLogout}>
+                                로그아웃
+                            </Button>
+                        </Box>
                     ) : showBothButtons ? (
                         <>
                             <Button color="inherit" component={RouterLink} to="/login">로그인</Button>
