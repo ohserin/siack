@@ -5,12 +5,19 @@ import Login from './pages/users/Login.jsx';
 import Join from "./pages/users/Join.jsx";
 import {AuthProvider} from './contexts/AuthContext.jsx';
 import {Box, Container} from '@mui/material';
-import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {Routes, Route, useNavigate} from 'react-router-dom';
+import {setNavigator} from "./utils/navigation.js";
+import {useEffect} from "react";
 
 
 function App() {
+    const nav = useNavigate();
+
+    useEffect(() => {
+        setNavigator(nav);
+    }, [nav]);
+
     return (
-        <BrowserRouter>
             <AuthProvider>
                 <Box display="flex" flexDirection="column" minHeight="100vh">
                     <Header/>
@@ -25,7 +32,6 @@ function App() {
                     <Footer/>
                 </Box>
             </AuthProvider>
-        </BrowserRouter>
     );
 }
 

@@ -2,6 +2,7 @@ import React, {createContext, useContext, useState, useEffect, useCallback} from
 import {getCookie, removeCookie, setCookie} from '../utils/cookie';
 import api from "../api/api.js";
 import axios from "axios";
+import {navigate} from "../utils/navigation.js";
 
 // 인증 상태를 관리할 Context 생성
 const AuthContext = createContext();
@@ -91,10 +92,18 @@ export const AuthProvider = ({children}) => {
         setUserData(null);
     }, []);
 
+    const guard = (isLoginRequired, redirectPath) => {
+        const token = getCookie('authToken');
+        const isLoggedIn = !!token;
+
+        if (isLoggedIn !== isLoginRequired) {
+            navigate(redirectPath);
+        }
+    };
 
     // Context를 통해 하위 컴포넌트에 사용자 상태, 상세 정보, 로그인/로그아웃 함수, 로딩 상태 제공
     return (
-        <AuthContext.Provider value={{user, userData, loading, login, logout}}>
+        <AuthContext.Provider value={{user, userData, loading, login, logout, guard}}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,5 +1,4 @@
 import {useForm} from 'react-hook-form';
-import {useNavigate} from 'react-router-dom';
 import {TextField, Button, Box, Typography, Link, InputAdornment, Divider, Paper, Container, Fade} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PersonIcon from '@mui/icons-material/Person';
@@ -9,8 +8,9 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import FaceIcon from '@mui/icons-material/Face';
 import React, {useEffect, useState} from "react";
 import api from "../../api/api.js";
-import {getCookie} from "../../utils/cookie.js";
 import theme from '../../theme.js'
+import {useAuth} from "../../contexts/AuthContext.jsx";
+import {navigate} from "../../utils/navigation.js";
 
 const errorMessage = {
     usernameEmpty: "아이디: 필수 정보입니다.",
@@ -162,7 +162,7 @@ async function registerUser(formData) {
 
 function Join() {
     const [showForm, setShowForm] = useState(false);
-    const navigate = useNavigate();
+    const { guard } = useAuth();
 
     const {
         register,
@@ -174,11 +174,7 @@ function Join() {
 
     useEffect(() => {
         setShowForm(true);
-
-        const token = getCookie('authToken');
-        if (token) {
-            navigate('/'); // 이미 로그인되어 있으면 홈으로 리디렉트
-        }
+        guard(false, '/');
     }, []);
 
     // 비밀번호 필드의 현재 값을 watch 하여 비밀번호 확인 필드 유효성 검사에 사용

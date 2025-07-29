@@ -1,5 +1,7 @@
 import {useForm} from 'react-hook-form';
 import React, {useState, useEffect} from 'react';
+import {useAuth} from '../../contexts/AuthContext.jsx';
+import {navigate} from "../../utils/navigation.js";
 import {
     Container, Box, Typography, TextField, Button, Link, Paper, Fade, FormControlLabel, Checkbox, InputAdornment,
 } from '@mui/material';
@@ -8,9 +10,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import LockIcon from "@mui/icons-material/Lock";
 import {Avatar} from '@mui/material';
 import api from "../../api/api.js";
-import {useNavigate} from "react-router-dom";
-import {getCookie, setCookie} from "../../utils/cookie.js";
-import {useAuth} from '../../contexts/AuthContext.jsx';
 import theme from '../../theme.js'
 
 const errorMessage = {
@@ -49,8 +48,7 @@ async function loginUser(formData) {
 function Login() {
     const [showForm, setShowForm] = useState(false);
     const [rememberId, setRememberId] = useState(false);
-    const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, guard } = useAuth();
 
     const {
         register, // 입력 필드를 등록하는 함수
@@ -63,10 +61,7 @@ function Login() {
         setShowForm(true);
 
         // 이미 로그인되어 있으면 홈으로 리디렉트
-        const token = getCookie('authToken');
-        if (token) {
-            navigate('/');
-        }
+        guard(false, '/');
 
         const savedUsername = localStorage.getItem('savedUsername');
         if (savedUsername) {

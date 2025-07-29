@@ -1,11 +1,11 @@
 import {AppBar, Toolbar, Typography, Box, Button, IconButton, useMediaQuery} from '@mui/material';
-import {Link as RouterLink, useNavigate} from 'react-router-dom';
+import {Link as RouterLink} from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import {useAuth} from "../contexts/AuthContext.jsx";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import {navigate} from "../utils/navigation.js";
 
 function Header() {
-    const navigate = useNavigate();
     const {user, logout, userData, loading} = useAuth();
 
     const isDesktop = useMediaQuery('(min-width:1080px)');
