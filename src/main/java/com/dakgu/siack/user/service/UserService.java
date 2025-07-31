@@ -4,6 +4,7 @@ import com.dakgu.siack.config.jwt.JwtTokenProvider;
 import com.dakgu.siack.user.domain.*;
 import com.dakgu.siack.util.ResponseDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class UserService {
@@ -116,8 +118,9 @@ public class UserService {
                 null
         );
         userProfileRepository.save(newUserProfile);
-
         savedUser.setUserProfile(newUserProfile);
+
+        log.info("[알림] 유저 회원가입: {} / {}", request.getUsername(), request.getNickname());
 
         return new ResponseDTO(HttpStatus.CREATED.value(), "회원가입이 성공적으로 완료되었습니다.");
     }
@@ -150,6 +153,9 @@ public class UserService {
         // 사용자 정보 가져오기 (선택 사항)
         User user = userRepository.findByUsername(request.getUsername());
         String nickname = (user != null && user.getUserProfile() != null) ? user.getUserProfile().getNickname() : null;
+
+        assert user != null;
+        log.info("[알림] 유저 로그인: {} / {}", user.getUsername(), nickname);
 
         // 4. 생성된 토큰과 함께 응답 반환
         return new UserResponseDTO(HttpStatus.OK.value(), "로그인이 성공적으로 완료되었습니다.", jwt, request.getUsername(), nickname);
