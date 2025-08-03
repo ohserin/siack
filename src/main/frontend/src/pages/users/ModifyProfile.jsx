@@ -4,16 +4,27 @@ import {
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
-import {useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
+import {useAuth} from "../../contexts/AuthContext.jsx";
 
 function ModifyProfile() {
+    const { userData, loading, getRoleLabel } = useAuth();
     const theme = useTheme();
     const fileInputRef = useRef(null);
     const [profileImage, setProfileImage] = useState(null);
-    const [nickname, setNickname] = useState('홍길동');
-    const [email, setEmail] = useState('example@example.com');
-    const [phone, setPhone] = useState('010-1234-5678');
+    const [nickname, setNickname] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
 
+    // 유저 데이터로 초기값 설정
+    useEffect(() => {
+        if (userData) {
+            setNickname(userData.nickname || '');
+            setEmail(userData.email || '');
+            setPhone(userData.phone || '');
+            setProfileImage(userData.profileImg || null);
+        }
+    }, [userData]);
 
     const handleImageChange = (event) => {
         const file = event.target.files[0];
@@ -29,15 +40,16 @@ function ModifyProfile() {
 
     return (
         <Container component="main" maxWidth={false} sx={{ mt: 8, mb: 4, display: 'flex',
-            flexDirection: 'column', justifyContent: 'center' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: 1000 }}>
+            flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <Box sx={{
                     backgroundColor: theme.palette.grey[100],
                     width: '100%',
                     border: `1px solid ${theme.palette.grey[400]}`,
                     borderRadius: 2,
                     mb: 2,
-                    minWidth: 500
+                    minWidth: 500,
+                    overflow: 'hidden'
                 }}>
                     <Typography variant="h5" component="h5" fontWeight={400} align="left" p={2}>
                         프로필
@@ -54,10 +66,10 @@ function ModifyProfile() {
 
                         <Box>
                             <Typography variant="h6" component="h6" fontWeight={300} align="left">
-                                유저아이디
+                                {userData ? userData.username : ''}
                             </Typography>
                             <Typography component="span" fontWeight={200} align="left">
-                                일반 유저
+                                {userData ? getRoleLabel() :''}
                             </Typography>
                         </Box>
                     </Box>
@@ -76,8 +88,8 @@ function ModifyProfile() {
                     </Typography>
                     <Divider sx={{ my: 2, margin: 0 }} />
 
-                    <EditableField label="닉네임" value={nickname} onChange={setNickname} />
                     <EditableField label="이메일" value={email} onChange={setEmail} />
+                    <EditableField label="닉네임" value={nickname} onChange={setNickname} />
                     <EditableField label="휴대전화번호" value={phone} onChange={setPhone} />
                 </Box>
 
@@ -152,6 +164,10 @@ function EditableField({ label, value, onChange }) {
     const [isEditing, setIsEditing] = useState(false);
     const [inputValue, setInputValue] = useState(value);
 
+    useEffect(() => {
+        setInputValue(value);
+    }, [value]);
+
     const handleEditClick = () => setIsEditing(true);
     const handleConfirmClick = () => {
         onChange(inputValue);
@@ -162,8 +178,15 @@ function EditableField({ label, value, onChange }) {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pl: 2, pr: 2 }}>
             <Typography sx={{ minWidth: 100 }}>{label}</Typography>
 
-            {/* 텍스트 필드 + 아이콘을 하나의 relative 박스로 감쌈 */}
-            <Box sx={{ position: 'relative', flex: 1 }}>
+            <Box
+                sx={{
+                    position: 'relative',
+                    flex: 1,
+                    '&:hover .edit-icon': {
+                        opacity: 1,
+                    },
+                }}
+            >
                 <TextField
                     fullWidth
                     value={inputValue}
@@ -172,6 +195,7 @@ function EditableField({ label, value, onChange }) {
                     disabled={!isEditing}
                 />
                 <IconButton
+                    className="edit-icon"
                     onClick={isEditing ? handleConfirmClick : handleEditClick}
                     size="small"
                     sx={{
@@ -180,6 +204,8 @@ function EditableField({ label, value, onChange }) {
                         right: 15,
                         transform: 'translateY(-50%)',
                         padding: 0,
+                        opacity: 0,
+                        transition: 'opacity 0.2s',
                     }}
                 >
                     {isEditing ? <CheckIcon fontSize="small" /> : <EditIcon fontSize="small" />}
