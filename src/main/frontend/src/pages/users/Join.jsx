@@ -11,6 +11,7 @@ import api from "../../api/api.js";
 import theme from '../../theme.js'
 import {useAuth} from "../../contexts/AuthContext.jsx";
 import {navigate} from "../../utils/navigation.js";
+import {checkDuplicate, regexTest} from "../../utils/validation.js";
 
 const errorMessage = {
     usernameEmpty: "아이디: 필수 정보입니다.",
@@ -30,119 +31,90 @@ const errorMessage = {
     nicknameDuplicate: "닉네임: 이미 사용중인 닉네임입니다. ",
 }
 
-const regexPatterns = {
-    username: /^[a-zA-Z0-9_@]{4,50}$/, // 4~50자, 영문/숫자/특수문자(_, @) 포함
-    // 비밀번호는 최소 8자 이상, 최소 하나의 소문자와 숫자를 포함
-    password: /^(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/,
-    email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // 일반적인 이메일 형식
-    phone: /^\d{3}-\d{3,4}-\d{4}$/, // 000-0000-0000 또는 000-000-0000 형식
-    nickname: /^[a-zA-Z0-9가-힣_]{2,30}$/
-};
-
-function usernameRegexTest(value) {
-    return regexPatterns.username.test(value);
-}
-
-function passwordRegexTest(value) {
-    return regexPatterns.password.test(value);
-}
-
-function emailRegexTest(value) {
-    return regexPatterns.email.test(value);
-}
-
-function nicknameRegexTest(value) {
-    return regexPatterns.nickname.test(value);
-}
-
-function phoneRegexTest(value) {
-    return regexPatterns.phone.test(value);
-}
-
 async function checkUsernameDuplicate(username, setError) {
-    if (!usernameRegexTest(username)) {
+    if (!regexTest('username', username)) {
         setError('username', {type: 'pattern', message: errorMessage.usernameRegex});
         return false;
     }
-    try {
-        await api.get('/v1/user/check-username', {params: {username}});
-        return true;
-    } catch (error) {
-        if (error.response?.status === 409) {
-            setError('username', {type: 'duplicate', message: errorMessage.usernameDuplicate});
-        } else if (error.response?.status === 400) {
-            setError('username', {type: 'pattern', message: errorMessage.usernameRegex});
-        } else {
-            alert('서버 오류가 발생했습니다.');
-        }
-        return false;
-    }
+
+    const status = await checkDuplicate('username', username);
+
+    const errorMap = {
+        409: {type: 'duplicate', message: errorMessage.usernameDuplicate},
+        400: {type: 'pattern', message: errorMessage.usernameRegex},
+    };
+
+    if (status === 200) return true;
+
+    if (errorMap[status]) setError('username', errorMap[status]);
+    else alert('서버 오류가 발생했습니다.');
+
+    return false;
 }
 
 async function checkEmailDuplicate(email, setError) {
-    if (!emailRegexTest(email)) {
+    if (!regexTest('email', email)) {
         setError('email', {type: 'pattern', message: errorMessage.emailRegex});
         return false;
     }
 
-    try {
-        await api.get('/v1/user/check-email', {params: {email}});
-        return true;
-    } catch (error) {
-        if (error.response?.status === 409) {
-            setError('email', {type: 'duplicate', message: errorMessage.emailDuplicate});
-        } else if (error.response?.status === 400) {
-            setError('email', {type: 'pattern', message: errorMessage.emailRegex});
-        } else {
-            alert('서버 오류가 발생했습니다.');
-        }
-        return false;
-    }
+    const status = await checkDuplicate('email', email);
+
+    const errorMap = {
+        409: {type: 'duplicate', message: errorMessage.emailDuplicate},
+        400: {type: 'pattern', message: errorMessage.emailRegex},
+    };
+
+    if (status === 200) return true;
+
+    if (errorMap[status]) setError('email', errorMap[status]);
+    else alert('서버 오류가 발생했습니다.');
+
+    return false;
 }
 
 async function checkNicknameDuplicate(nickname, setError) {
-
-    if (!nicknameRegexTest(nickname)) {
+    if (!regexTest('nickname', nickname)) {
         setError('nickname', {type: 'nickname', message: errorMessage.nicknameRegex});
         return false;
     }
 
-    try {
-        await api.get('/v1/user/check-nickname', {params: {nickname}});
-        return true;
-    } catch (error) {
-        if (error.response?.status === 409) {
-            setError('nickname', {type: 'duplicate', message: errorMessage.nicknameDuplicate});
-        } else if (error.response?.status === 400) {
-            setError('nickname', {type: 'pattern', message: errorMessage.nicknameRegex});
-        } else {
-            alert('서버 오류가 발생했습니다.');
-        }
-        return false;
-    }
+    const status = await checkDuplicate('nickname', nickname);
+
+    const errorMap = {
+        409: {type: 'duplicate', message: errorMessage.nicknameDuplicate},
+        400: {type: 'pattern', message: errorMessage.nicknameRegex},
+    };
+
+    if (status === 200) return true;
+
+    if (errorMap[status]) setError('nickname', errorMap[status]);
+    else alert('서버 오류가 발생했습니다.');
+
+    return false;
 }
 
 async function checkPhoneDuplicate(phone, setError) {
     if (!phone) return true;
 
-    if (!phoneRegexTest(phone)) {
+    if (!regexTest('phone', phone)) {
         setError('phone', {type: 'pattern', message: errorMessage.phoneRegex});
         return false;
     }
 
-    try {
-        await api.get('/v1/user/check-phone', {params: {phone}});
-        return true;
-    } catch (error) {
-        if (error.response?.status === 409) {
-            setError('phone', {type: 'duplicate', message: errorMessage.phoneDuplicate});
-        } else if (error.response?.status === 400) {
-            setError('phone', {type: 'pattern', message: errorMessage.phoneRegex});
-        } else {
-            alert('서버 오류가 발생했습니다.');
-        }
-        return false;
-    }
+    const status = await checkDuplicate('phone', phone);
+
+    const errorMap = {
+        409: {type: 'duplicate', message: errorMessage.phoneDuplicate},
+        400: {type: 'pattern', message: errorMessage.phoneRegex},
+    };
+
+    if (status === 200) return true;
+
+    if (errorMap[status]) setError('phone', errorMap[status]);
+    else alert('서버 오류가 발생했습니다.');
+
+    return false;
 }
 
 async function registerUser(formData) {
@@ -230,7 +202,7 @@ function Join() {
                                     ),
                                     ...register('username', {
                                         required: errorMessage.usernameEmpty,
-                                        validate: value => usernameRegexTest(value) || errorMessage.usernameRegex
+                                        validate: value => regexTest('username', value) || errorMessage.usernameRegex
                                     }),
                                 },
                             }}
@@ -254,7 +226,7 @@ function Join() {
                                     ),
                                     ...register('password', {
                                         required: errorMessage.passwordEmpty,
-                                        validate: value => passwordRegexTest(value) || errorMessage.passwordRegex
+                                        validate: value => regexTest('password', value) || errorMessage.passwordRegex
                                     })
                                 }
                             }}
@@ -302,7 +274,7 @@ function Join() {
                                     ),
                                     ...register('email', {
                                         required: errorMessage.emailEmpty,
-                                        validate: value => emailRegexTest(value) || errorMessage.emailRegex
+                                        validate: value => regexTest('email',value) || errorMessage.emailRegex
                                     })
                                 }
                             }}
@@ -326,7 +298,7 @@ function Join() {
                                     ),
                                     ...register('nickname', {
                                         required: errorMessage.nicknameEmpty,
-                                        validate: value => nicknameRegexTest(value) || errorMessage.nicknameRegex
+                                        validate: value => regexTest('nickname',value) || errorMessage.nicknameRegex
                                     })
                                 }
                             }}
@@ -353,7 +325,7 @@ function Join() {
                                     ...register('phone', {
                                         validate: value => {
                                             if (!value) return true;
-                                            return phoneRegexTest(value) || errorMessage.phoneRegex;
+                                            return regexTest('phone',value) || errorMessage.phoneRegex;
                                         }
                                     })
                                 }

@@ -101,9 +101,15 @@ export const AuthProvider = ({children}) => {
         }
     };
 
+    const getRoleLabel = () => {
+        if (userData.role === 1) return '관리자';
+        if (userData.role === 0) return '일반 사용자';
+        return '알 수 없음';
+    }
+
     // Context를 통해 하위 컴포넌트에 사용자 상태, 상세 정보, 로그인/로그아웃 함수, 로딩 상태 제공
     return (
-        <AuthContext.Provider value={{user, userData, loading, login, logout, guard}}>
+        <AuthContext.Provider value={{user, userData, loading, login, logout, getRoleLabel, guard}}>
             {children}
         </AuthContext.Provider>
     );
