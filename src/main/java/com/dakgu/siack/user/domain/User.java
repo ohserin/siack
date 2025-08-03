@@ -45,7 +45,12 @@ public class User extends Timestamp {
         this.username = username;
         this.password = password;
         this.email = email;
-        this.phone = phone;
+
+        if(phone.trim().isEmpty()) this.phone = null;
+        else this.phone = phone;
+
+        this.isDeleted = false;
+        this.role = 1;
     }
 
     public void setUserProfile(UserProfile userProfile) {
