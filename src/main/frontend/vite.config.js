@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000, // Vite 개발 서버 포트 명시 (기본값 5173이 아닌 3000으로 설정)
+    port: 3333, // Vite 개발 서버 포트 명시 (기본값 5173이 아닌 3333으로 설정)
     proxy: {
       '/api': {
         target: 'http://localhost:8080', // 스프링 부트 백엔드 주소
