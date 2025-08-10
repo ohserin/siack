@@ -1,7 +1,7 @@
-package com.dakgu.siack.controller;
+package com.dakgu.siack.controller.user;
 
 import com.dakgu.siack.user.service.UserService;
-import com.dakgu.siack.util.ResponseDTO;
+import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

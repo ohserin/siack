@@ -1,4 +1,4 @@
-package com.dakgu.siack.util;
+package com.dakgu.siack.utils;
 
 import jakarta.persistence.*;
 import lombok.Getter;

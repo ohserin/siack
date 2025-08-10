@@ -1,4 +1,4 @@
-package com.dakgu.siack.user.domain;
+package com.dakgu.siack.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

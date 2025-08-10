@@ -1,6 +1,6 @@
-package com.dakgu.siack.user.domain;
+package com.dakgu.siack.user.entity;
 
-import com.dakgu.siack.util.Timestamp;
+import com.dakgu.siack.utils.Timestamp;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

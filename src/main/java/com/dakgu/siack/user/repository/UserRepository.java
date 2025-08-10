@@ -1,5 +1,6 @@
-package com.dakgu.siack.user.domain;
+package com.dakgu.siack.user.repository;
 
+import com.dakgu.siack.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {

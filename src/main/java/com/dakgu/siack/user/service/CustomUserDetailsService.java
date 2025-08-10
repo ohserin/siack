@@ -1,17 +1,17 @@
 package com.dakgu.siack.user.service;
 
-import com.dakgu.siack.user.domain.User;
-import com.dakgu.siack.user.domain.UserRepository;
+import com.dakgu.siack.user.entity.User;
+import com.dakgu.siack.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority; // 권한 설정을 위한 임포트
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections; // 단일 권한을 위한 Collections.singletonList 임포트
+import java.util.Collections;
 
-@Service // Spring 빈으로 등록
+@Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 

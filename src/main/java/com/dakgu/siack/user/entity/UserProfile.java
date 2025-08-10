@@ -1,4 +1,4 @@
-package com.dakgu.siack.user.domain;
+package com.dakgu.siack.user.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

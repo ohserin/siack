@@ -1,8 +1,8 @@
-package com.dakgu.siack.controller;
+package com.dakgu.siack.controller.user;
 
-import com.dakgu.siack.user.domain.UserRequestDTO;
+import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.service.UserService;
-import com.dakgu.siack.util.ResponseDTO;
+import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

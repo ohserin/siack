@@ -1,7 +1,7 @@
 package com.dakgu.siack.user.service;
 
-import com.dakgu.siack.user.domain.UserProfileRepository;
-import com.dakgu.siack.user.domain.UserRepository;
+import com.dakgu.siack.user.repository.UserProfileRepository;
+import com.dakgu.siack.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

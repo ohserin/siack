@@ -1,6 +1,6 @@
-package com.dakgu.siack.user.domain;
+package com.dakgu.siack.user.dto;
 
-import com.dakgu.siack.util.ResponseDTO;
+import com.dakgu.siack.utils.ResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

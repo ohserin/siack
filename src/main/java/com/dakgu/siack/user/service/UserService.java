@@ -1,8 +1,13 @@
 package com.dakgu.siack.user.service;
 
 import com.dakgu.siack.config.jwt.JwtTokenProvider;
-import com.dakgu.siack.user.domain.*;
-import com.dakgu.siack.util.ResponseDTO;
+import com.dakgu.siack.user.dto.UserRequestDTO;
+import com.dakgu.siack.user.dto.UserResponseDTO;
+import com.dakgu.siack.user.entity.User;
+import com.dakgu.siack.user.entity.UserProfile;
+import com.dakgu.siack.user.repository.UserProfileRepository;
+import com.dakgu.siack.user.repository.UserRepository;
+import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
