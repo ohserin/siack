@@ -12,13 +12,13 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserResponseDTO extends ResponseDTO {
     private String token;
-    private Long userId;
+    private Long userid;
     private String username;
     private String nickname;
     private String email;
     private String phone;
-    private String profileImg;
-    private String statusMessage;
+    private String profileimg;
+    private String statusmsg;
     private Integer role;
 
     public UserResponseDTO(int statusCode, String message, String token, String username, String nickname) {
@@ -28,16 +28,16 @@ public class UserResponseDTO extends ResponseDTO {
         this.nickname = nickname;
     }
 
-    public UserResponseDTO(int statusCode, String message, Long userId, String username, String email, String phone,
-                           String nickname, String profileImg, String statusMessage, Integer role) {
+    public UserResponseDTO(int statusCode, String message, Long userid, String username, String email, String phone,
+                           String nickname, String profileimg, String statusmsg, Integer role) {
         super(statusCode, message);
-        this.userId = userId;
+        this.userid = userid;
         this.username = username;
         this.email = email;
         this.phone = phone;
         this.nickname = nickname;
-        this.profileImg = profileImg;
-        this.statusMessage = statusMessage;
+        this.profileimg = profileimg;
+        this.statusmsg = statusmsg;
         this.role = role;
     }
 

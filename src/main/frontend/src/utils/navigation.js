@@ -5,9 +5,5 @@ export const setNavigator = (navFn) => {
 };
 
 export const navigate = (...args) => {
-    if (navigator) {
-        navigator(...args);
-    } else {
-        console.error('Navigator not set');
-    }
+    if (navigator) navigator(...args);
 };

@@ -20,13 +20,13 @@ const fetchUserDataFromAPI = async (token) => {
 
         if (data.statusCode === 200) {
             return {
-                userId: data.userId,
+                userid: data.userid,
                 username: data.username,
                 email: data.email,
                 phone: data.phone,
                 nickname: data.nickname,
-                profileImg: data.profileImg,
-                statusMessage: data.statusMessage,
+                profileimg: data.profileimg,
+                statusmsg: data.statusmsg,
                 role: data.role,
             };
         } else {
