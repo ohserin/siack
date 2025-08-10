@@ -178,7 +178,7 @@ public class UserService {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
         }
 
-        UserProfile profile  = userProfileRepository.findByUserId(user.getUserId());
+        UserProfile profile  = userProfileRepository.findByUserid(user.getUserid());
         if (profile  == null) {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
         }
@@ -186,13 +186,13 @@ public class UserService {
         return new UserResponseDTO(
                 HttpStatus.OK.value(),
                 "success",
-                user.getUserId(),
+                user.getUserid(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getPhone(),
                 profile.getNickname(),
-                profile.getProfileImg(),
-                profile.getStatusMessage(),
+                profile.getProfileimg(),
+                profile.getStatusmsg(),
                 user.getRole()
         );
     }

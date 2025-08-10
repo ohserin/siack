@@ -10,33 +10,33 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user_profiles")
+@Table(name = "sdu_userprofile")
 public class UserProfile {
 
     @Id
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "USERID")
+    private Long userid;
 
     @Setter
     @OneToOne
     @MapsId
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "USERID")
     private User user;
 
-    @Column(name = "nickname", unique = true, nullable = false, length = 30)
+    @Column(name = "NICKNAME", unique = true, nullable = false, length = 30)
     private String nickname;
 
-    @Column(name = "profile_img", length = 255)
-    private String profileImg;
+    @Column(name = "PROFILEIMG", length = 255)
+    private String profileimg;
 
-    @Column(name = "status_message", length = 100)
-    private String statusMessage;
+    @Column(name = "STATUSMSG", length = 100)
+    private String statusmsg;
 
-    public UserProfile(User user, String nickname, String profileImg, String statusMessage) {
+    public UserProfile(User user, String nickname, String profileimg, String statusmsg) {
         this.user = user;
         this.nickname = nickname;
-        this.profileImg = profileImg;
-        this.statusMessage = statusMessage;
+        this.profileimg = profileimg;
+        this.statusmsg = statusmsg;
     }
 
 }

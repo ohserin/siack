@@ -11,13 +11,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(name = "sdu_user")
 public class User extends Timestamp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "USERID")
+    private Long userid;
 
     @Column(length = 50, nullable = false)
     private String username;
@@ -31,8 +31,8 @@ public class User extends Timestamp {
     @Column(length = 100, nullable = false)
     private String email;
 
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
+    @Column(name = "ISDEL", nullable = false)
+    private boolean isdel;
 
     @Column(nullable = false)
     private int role;
@@ -49,7 +49,7 @@ public class User extends Timestamp {
         if(phone.trim().isEmpty()) this.phone = null;
         else this.phone = phone;
 
-        this.isDeleted = false;
+        this.isdel = false;
         this.role = 1;
     }
 
