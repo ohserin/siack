@@ -107,7 +107,7 @@ export const AuthProvider = ({children}) => {
 
     // Context를 통해 하위 컴포넌트에 사용자 상태, 상세 정보, 로그인/로그아웃 함수, 로딩 상태 제공
     return (
-        <AuthContext.Provider value={{user, userData, loading, login, logout, getRoleLabel, guard}}>
+        <AuthContext.Provider value={{user, userData, setUserData, loading, login, logout, getRoleLabel, guard}}>
             {children}
         </AuthContext.Provider>
     );

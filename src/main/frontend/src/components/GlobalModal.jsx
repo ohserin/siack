@@ -1,34 +1,49 @@
-// components/GlobalModal.jsx
-import { Modal, Box, Typography, IconButton } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import { Modal, Typography, Box, IconButton } from "@mui/material";
+import CloseIcon from '@mui/icons-material/Close';
+import { useModal } from "../contexts/ModalContext.jsx";
 
-export default function GlobalModal({ open, title, message, onClose }) {
+export default function GlobalModal() {
+    const { modal, closeModal } = useModal();
+
+    if (!modal) return null;
+
     return (
-        <Modal open={open} onClose={onClose}>
-            <Box sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                bgcolor: "background.paper",
-                p: 4,
-                borderRadius: 2,
-                boxShadow: 24,
-                minWidth: 300,
-            }}>
+        <Modal
+            open={modal.open}
+            onClose={(event, reason) => {
+                if (reason === 'backdropClick') return; // 외부 클릭 방지
+                closeModal();
+            }}
+            BackdropProps={{ style: { backgroundColor: 'rgba(0,0,0,0.2)' } }}
+            sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+            <Box
+                sx={{
+                    p: 5,
+                    bgcolor: 'background.paper',
+                    borderRadius: 3,
+                    boxShadow: 24,
+                    width: { xs: '90%', sm: 400 },
+                    maxWidth: 500,
+                    position: 'relative',
+                    animation: 'fadeIn 0.3s ease-out',
+                }}
+            >
+                {/* X 버튼 */}
                 <IconButton
-                    onClick={onClose}
-                    sx={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        color: "grey.500",
-                    }}
+                    onClick={closeModal}
+                    sx={{ position: 'absolute', top: 8, right: 8, color: 'grey.600' }}
                 >
                     <CloseIcon />
                 </IconButton>
-                <Typography variant="h6" sx={{ mb: 2 }}>{title}</Typography>
-                <Typography>{message}</Typography>
+
+                {/* 타이틀과 내용 왼쪽 정렬 */}
+                <Typography variant="h6" fontWeight={600} mb={2} sx={{ textAlign: 'left' }}>
+                    {modal.title}
+                </Typography>
+                <Typography variant="body1" sx={{ textAlign: 'left' }}>
+                    {modal.message}
+                </Typography>
             </Box>
         </Modal>
     );

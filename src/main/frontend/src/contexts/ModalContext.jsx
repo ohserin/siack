@@ -4,29 +4,24 @@ import GlobalModal from "../components/GlobalModal.jsx";
 const ModalContext = createContext();
 
 export const ModalProvider = ({ children }) => {
-    const [modalState, setModalState] = useState({
+    const [modal, setModal] = useState({
         open: false,
         title: "",
         message: ""
     });
 
     const showModal = useCallback((title, message) => {
-        setModalState({ open: true, title, message });
+        setModal({ open: true, title, message });
     }, []);
 
-    const hideModal = useCallback(() => {
-        setModalState((prev) => ({ ...prev, open: false }));
+    const closeModal = useCallback(() => {
+        setModal(prev => ({ ...prev, open: false }));
     }, []);
 
     return (
-        <ModalContext.Provider value={{ showModal, hideModal }}>
+        <ModalContext.Provider value={{ modal: modal, showModal, closeModal }}>
             {children}
-            <GlobalModal
-                open={modalState.open}
-                title={modalState.title}
-                message={modalState.message}
-                onClose={hideModal}
-            />
+            <GlobalModal />
         </ModalContext.Provider>
     );
 };

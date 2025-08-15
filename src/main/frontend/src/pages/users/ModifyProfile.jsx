@@ -1,5 +1,5 @@
 import {
-    Container, Typography, TextField, Divider, Box, Link, useTheme, Avatar, IconButton, Modal
+    Container, Typography, TextField, Divider, Box, Link, useTheme, Avatar, IconButton,
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import EditIcon from '@mui/icons-material/Edit';
@@ -8,17 +8,16 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext.jsx";
 import api from "../../api/api.js";
 import {useModal} from "../../contexts/ModalContext.jsx";
+import {checkDuplicate, regexTest} from "../../utils/validation.js";
 
 function ModifyProfile() {
-    const { userData, getRoleLabel, user, guard } = useAuth();
+    const { userData, setUserData, getRoleLabel, user, guard } = useAuth();
     const theme = useTheme();
     const fileInputRef = useRef(null);
     const [profileImage, setProfileImage] = useState(null);
     const [nickname, setNickname] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState('');
     const {showModal} = useModal();
 
     useEffect(() => {
@@ -45,37 +44,96 @@ function ModifyProfile() {
     };
 
     const handleSave = async (updatedFields = {}) => {
-        setSaving(true);
-        setMessage('');
+        const originalEmail = email;
+        const originalNickname = nickname;
+        const originalPhone = phone;
+
+        const newEmail = updatedFields.email?.trim() || email.trim();
+        const newNickname = updatedFields.nickname?.trim() || nickname.trim();
+        const newPhone = updatedFields.phone?.trim() || phone.trim();
+
+        if (newEmail === email && newNickname === nickname && newPhone === phone) {
+            showModal('알림', '변경된 내용이 없습니다.');
+            return;
+        }
+
+        if (!regexTest('email', newEmail)) {
+            showModal('알림', '올바른 이메일 형식이 아닙니다.');
+            setEmail(originalEmail);
+            return;
+        }
+        if (!regexTest('phone', newPhone)) {
+            showModal('알림', '올바른 전화번호 형식이 아닙니다.');
+            setPhone(originalPhone);
+            return;
+        }
+        if (!regexTest('nickname', newNickname)) {
+            showModal('알림', '닉네임은 2~30자, 영문/숫자/한글/_(언더바)만 가능합니다.');
+            setNickname(originalNickname);
+            return;
+        }
+
         try {
+            // 중복 검사
+            if (updatedFields.email && newEmail !== originalEmail) {
+                const status = await checkDuplicate('email', newEmail);
+                if (status !== 200) {
+                    showModal('알림', '이미 사용 중인 이메일입니다.');
+                    setEmail(originalEmail);
+                    return;
+                }
+            }
+            if (updatedFields.nickname && newNickname !== originalNickname) {
+                const status = await checkDuplicate('nickname', newNickname);
+                if (status !== 200) {
+                    showModal('알림', '이미 사용 중인 닉네임입니다.');
+                    setNickname(originalNickname);
+                    return;
+                }
+            }
+            if (updatedFields.phone && newPhone !== originalPhone) {
+                const status = await checkDuplicate('phone', newPhone);
+                if (status !== 200) {
+                    showModal('알림', '이미 사용 중인 전화번호입니다.');
+                    setPhone(originalPhone);
+                    return;
+                }
+            }
+
             const response = await api.post('/v1/userinfo/modify', {
-                email: updatedFields.email?.trim() || email.trim() || null,
-                nickname: updatedFields.nickname?.trim() || nickname.trim() || null,
-                phone: updatedFields.phone?.trim() || phone.trim() || null,
+                email: newEmail,
+                nickname: newNickname,
+                phone: newPhone,
             }, { headers: { Authorization: `Bearer ${user.token}` } });
 
             if (response.data.statusCode === 200) {
-                setMessage("정보가 성공적으로 업데이트되었습니다.");
+                // 전역 상태 업데이트
+                setUserData(prev => ({
+                    ...prev,
+                    email: newEmail,
+                    nickname: newNickname,
+                    phone: newPhone,
+                }));
+                showModal('정보가 변경되었습니다.', '프로필이 정상적으로 업데이트되었습니다.');
             } else {
-                setNickname(userData.nickname || '');
-                setEmail(userData.email || '');
-                setPhone(userData.phone || '');
-                showModal({ title: '업데이트 실패', content: response.data.message || "업데이트에 실패했습니다." });
+                setEmail(originalEmail);
+                setNickname(originalNickname);
+                setPhone(originalPhone);
+                showModal('업데이트 실패', response.data.message || '업데이트에 실패했습니다.');
             }
-        } catch (error) {
-            setNickname(userData.nickname || '');
-            setEmail(userData.email || '');
-            setPhone(userData.phone || '');
-            showModal({ title: '서버 오류', content: '서버 오류가 발생했습니다.' });
-            console.error(error);
-        } finally {
-            setSaving(false);
-        }
-    };
 
-    const handleCloseModal = () => {
-        setOpenModal(false);
-        setErrorMessage('');
+        }  catch (error) {
+            // axios 에러 객체 확인
+            console.error('API 요청 실패', error?.response || error);
+
+            // 서버에서 실제로 statusCode를 반환했으면 메시지 사용
+            const message = error?.response?.data?.message || '서버 오류가 발생했습니다.';
+
+            setEmail(originalEmail);
+            setNickname(originalNickname);
+            setPhone(originalPhone);
+            showModal('서버 오류', message);
+        }
     };
 
     return (
@@ -135,7 +193,7 @@ function ModifyProfile() {
                         onChange={setEmail}
                         onConfirm={(newValue) => {
                             setEmail(newValue);
-                            handleSave({ email: newValue });
+                            handleSave({email: newValue});
                         }}
                     />
                     <EditableField
@@ -165,8 +223,6 @@ function ModifyProfile() {
                         </Link>
                     </Box>
                 </Box>
-
-                {message && <Typography color="success.main">{message}</Typography>}
             </Box>
         </Container>
     );
