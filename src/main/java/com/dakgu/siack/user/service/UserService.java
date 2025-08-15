@@ -11,10 +11,12 @@ import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -143,14 +145,10 @@ public class UserService {
         Authentication authentication;
         try {
             authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        } catch (Exception e) {
-            // 인증 실패 시 (예: 비밀번호 불일치, 사용자 없음)
-            User user = userRepository.findByUsername(request.getUsername());
-            if (user == null) {
-                return new UserResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다.", null, null, null);
-            } else {
-                return new UserResponseDTO(HttpStatus.UNAUTHORIZED.value(), "비밀번호가 일치하지 않습니다.", null, null, null);
-            }
+        } catch (UsernameNotFoundException e) {
+            return new UserResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다.", null, null, null);
+        } catch (BadCredentialsException e) {
+            return new UserResponseDTO(HttpStatus.UNAUTHORIZED.value(), "비밀번호가 일치하지 않습니다.", null, null, null);
         }
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
@@ -201,7 +199,6 @@ public class UserService {
     @Transactional
     public ResponseDTO setUserData(Authentication authentication, UserRequestDTO request) {
         String username = authentication.getName();
-
         if (username == null) {
             return new ResponseDTO(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
         }
@@ -216,59 +213,71 @@ public class UserService {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
         }
 
-        UserRequestDTO userRequestDTO = new UserRequestDTO();
+        String currentEmail = user.getEmail();
+        String currentPhone = user.getPhone();
+        String currentNickname = profile.getNickname();
 
-        // 이메일 검증 및 설정
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            if (!userValidationService.isValidEmailFormat(request.getEmail())) {
+        String email = request.getEmail();
+        String phone = request.getPhone() != null ? request.getPhone().trim() : null;
+        String nickname = request.getNickname();
+
+        boolean changed = false;
+
+        // 이메일 검증
+        if (email != null && !email.isEmpty() && !email.equals(currentEmail)) {
+            if (!userValidationService.isValidEmailFormat(email)) {
                 return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 올바르지 않습니다.");
             }
-            if (userValidationService.isEmailDuplicated(request.getEmail())) {
+            if (userValidationService.isEmailDuplicated(email)) {
                 return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 이메일입니다.");
             }
-            userRequestDTO.setEmail(request.getEmail());
+            changed = true;
+        } else {
+            email = currentEmail;
         }
 
-        // 전화번호 검증 및 설정 (빈 문자열은 NULL 처리)
-        if (request.getPhone() != null) {
-            String phone = request.getPhone().trim();
-            if (phone.isEmpty()) {
-                userRequestDTO.setPhone(null);
-            } else {
-                if (!userValidationService.isValidPhoneNumberFormat(phone)) {
-                    return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "전화번호 형식이 올바르지 않습니다.");
-                }
-                if (userValidationService.isPhoneNumberDuplicated(phone)) {
-                    return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 전화번호입니다.");
-                }
-                userRequestDTO.setPhone(phone);
+        // 전화번호 검증
+        if (phone != null && !phone.isEmpty() && !phone.equals(currentPhone)) {
+            if (!userValidationService.isValidPhoneNumberFormat(phone)) {
+                return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "전화번호 형식이 올바르지 않습니다.");
             }
+            if (userValidationService.isPhoneNumberDuplicated(phone)) {
+                return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 전화번호입니다.");
+            }
+            changed = true;
+        } else {
+            phone = currentPhone;
         }
 
-        // 닉네임 검증 및 설정
-        if (request.getNickname() != null && !request.getNickname().isEmpty()) {
-            if (!userValidationService.isValidNicknameFormat(request.getNickname())) {
+        // 닉네임 검증
+        if (nickname != null && !nickname.isEmpty() && !nickname.equals(currentNickname)) {
+            if (!userValidationService.isValidNicknameFormat(nickname)) {
                 return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "닉네임 형식이 올바르지 않습니다.");
             }
-            if (userValidationService.isNicknameDuplicated(request.getNickname())) {
+            if (userValidationService.isNicknameDuplicated(nickname)) {
                 return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
             }
-            userRequestDTO.setNickname(request.getNickname());
+            changed = true;
+        } else {
+            nickname = currentNickname;
         }
 
-        if (userRequestDTO.getEmail() != null) {
-            userRepository.updateEmail(user.getUserid(), userRequestDTO.getEmail());
-        }
-        if (userRequestDTO.getPhone() != null || (request.getPhone() != null && request.getPhone().trim().isEmpty())) {
-            userRepository.updatePhone(user.getUserid(), userRequestDTO.getPhone());
-        }
-        if (userRequestDTO.getNickname() != null) {
-            userProfileRepository.updateNickname(user.getUserid(), userRequestDTO.getNickname());
+        // 변경사항 없으면 패스
+        if (!changed) {
+            return new ResponseDTO(HttpStatus.OK.value(), "변경된 정보가 없습니다.");
         }
 
-        log.info("[알림] 유저 정보 업데이트: {} / {}", user.getUsername(), profile.getNickname());
+        updateUserInfo(user.getUserid(), nickname, phone, email);
 
+        log.info("[알림] 유저 정보 업데이트: {}", user.getUsername());
         return new ResponseDTO(HttpStatus.OK.value(), "사용자 정보가 성공적으로 업데이트되었습니다.");
+    }
+
+    @Transactional
+    protected void updateUserInfo(Long userid, String nickname, String phone, String email) {
+        if (nickname != null) userProfileRepository.updateNickname(userid, nickname);
+        if (email != null) userRepository.updateEmail(userid, email);
+        userRepository.updatePhone(userid, phone);
     }
 
 }

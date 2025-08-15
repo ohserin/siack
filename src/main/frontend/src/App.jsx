@@ -9,6 +9,7 @@ import {Box, Container} from '@mui/material';
 import {Routes, Route, useNavigate} from 'react-router-dom';
 import {setNavigator} from "./utils/navigation.js";
 import {useEffect} from "react";
+import {ModalProvider} from "./contexts/ModalContext.jsx";
 
 function App() {
     const nav = useNavigate();
@@ -18,21 +19,20 @@ function App() {
     }, [nav]);
 
     return (
-            <AuthProvider>
-                <Box display="flex" flexDirection="column" minHeight="100vh">
-                    <Header/>
-                    <Container sx={{flex: 1, mt: 2}}>
-                        <Routes>
-                            <Route path="/" element={<Home/>}/>
-                            <Route path="/join" element={<Join/>}/>
-                            <Route path="/login" element={<Login/>}/>
-                            <Route path="/modify-profile" element={<ModifyProfile/>}/>
-                            {/* 추가 경로 여기에 작성 */}
-                        </Routes>
-                    </Container>
-                    <Footer/>
-                </Box>
-            </AuthProvider>
+        <AuthProvider><ModalProvider>
+            <Box display="flex" flexDirection="column" minHeight="100vh">
+                <Header/>
+                <Container sx={{flex: 1, mt: 2}}>
+                    <Routes>
+                        <Route path="/" element={<Home/>}/>
+                        <Route path="/join" element={<Join/>}/>
+                        <Route path="/login" element={<Login/>}/>
+                        <Route path="/modify-profile" element={<ModifyProfile/>}/>
+                    </Routes>
+                </Container>
+                <Footer/>
+            </Box>
+        </ModalProvider></AuthProvider>
     );
 }
 

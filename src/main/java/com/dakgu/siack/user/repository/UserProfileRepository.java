@@ -13,7 +13,6 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, Long> 
     /* UK 중복 여부 확인 메서드 */
     boolean existsByNickname(String nickname);
 
-    /* 닉네임 업데이트 메서드 */
     @Modifying
     @Transactional
     @Query("UPDATE UserProfile u SET u.nickname = :nickname WHERE u.userid = :userid")

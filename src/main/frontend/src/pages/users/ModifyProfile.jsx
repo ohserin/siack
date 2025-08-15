@@ -1,15 +1,16 @@
 import {
-    Container, Typography, TextField, Divider, Box, Link, useTheme, Avatar, IconButton,
+    Container, Typography, TextField, Divider, Box, Link, useTheme, Avatar, IconButton, Modal
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
-import {useEffect, useRef, useState} from "react";
-import {useAuth} from "../../contexts/AuthContext.jsx";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 import api from "../../api/api.js";
+import {useModal} from "../../contexts/ModalContext.jsx";
 
 function ModifyProfile() {
-    const {userData, loading, getRoleLabel, user, guard} = useAuth();
+    const { userData, getRoleLabel, user, guard } = useAuth();
     const theme = useTheme();
     const fileInputRef = useRef(null);
     const [profileImage, setProfileImage] = useState(null);
@@ -18,8 +19,8 @@ function ModifyProfile() {
     const [phone, setPhone] = useState('');
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
+    const {showModal} = useModal();
 
-    // 유저 데이터로 초기값 설정
     useEffect(() => {
         guard(true, '/');
         if (userData) {
@@ -43,39 +44,45 @@ function ModifyProfile() {
         fileInputRef.current?.click();
     };
 
-    const handleSave = async () => {
+    const handleSave = async (updatedFields = {}) => {
         setSaving(true);
         setMessage('');
-
         try {
-            const response = await api.post('/modify', {
-                email: email.trim() === '' ? null : email.trim(),
-                nickname: nickname.trim() === '' ? null : nickname.trim(),
-                phone: phone.trim() === '' ? null : phone.trim(),
-            }, {
-                headers: {
-                    Authorization: `Bearer ${user.token}`,
-                },
-            });
+            const response = await api.post('/v1/userinfo/modify', {
+                email: updatedFields.email?.trim() || email.trim() || null,
+                nickname: updatedFields.nickname?.trim() || nickname.trim() || null,
+                phone: updatedFields.phone?.trim() || phone.trim() || null,
+            }, { headers: { Authorization: `Bearer ${user.token}` } });
 
             if (response.data.statusCode === 200) {
                 setMessage("정보가 성공적으로 업데이트되었습니다.");
             } else {
-                setMessage(response.data.message || "업데이트에 실패했습니다.");
+                setNickname(userData.nickname || '');
+                setEmail(userData.email || '');
+                setPhone(userData.phone || '');
+                showModal({ title: '업데이트 실패', content: response.data.message || "업데이트에 실패했습니다." });
             }
         } catch (error) {
-            setMessage("서버 오류가 발생했습니다.");
+            setNickname(userData.nickname || '');
+            setEmail(userData.email || '');
+            setPhone(userData.phone || '');
+            showModal({ title: '서버 오류', content: '서버 오류가 발생했습니다.' });
             console.error(error);
         } finally {
             setSaving(false);
         }
     };
 
+    const handleCloseModal = () => {
+        setOpenModal(false);
+        setErrorMessage('');
+    };
+
     return (
         <Container component="main" maxWidth={false} sx={{
             mt: 8, mb: 4, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'
         }}>
-            <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <Box sx={{
                     backgroundColor: theme.palette.grey[100],
                     width: '100%',
@@ -88,10 +95,9 @@ function ModifyProfile() {
                     <Typography variant="h5" component="h5" fontWeight={400} align="left" p={2}>
                         프로필
                     </Typography>
-                    <Divider sx={{my: 2, margin: 0}}/>
+                    <Divider sx={{ my: 2, margin: 0 }} />
 
-                    <Box
-                        sx={{display: 'flex', alignItems: 'center', gap: 2, backgroundColor: theme.palette.grey[200],}}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, backgroundColor: theme.palette.grey[200] }}>
                         <ProfileImageEditor
                             profileImage={profileImage}
                             onEditClick={handleEditClick}
@@ -121,11 +127,35 @@ function ModifyProfile() {
                     <Typography variant="h6" component="h6" fontWeight={400} align="left" p={2}>
                         정보 수정
                     </Typography>
-                    <Divider sx={{my: 2, margin: 0}}/>
+                    <Divider sx={{ my: 2, margin: 0 }} />
 
-                    <EditableField label="이메일" value={email} onChange={setEmail}/>
-                    <EditableField label="닉네임" value={nickname} onChange={setNickname}/>
-                    <EditableField label="휴대전화번호" value={phone} onChange={setPhone}/>
+                    <EditableField
+                        label="이메일"
+                        value={email}
+                        onChange={setEmail}
+                        onConfirm={(newValue) => {
+                            setEmail(newValue);
+                            handleSave({ email: newValue });
+                        }}
+                    />
+                    <EditableField
+                        label="닉네임"
+                        value={nickname}
+                        onChange={setNickname}
+                        onConfirm={(newValue) => {
+                            setNickname(newValue);
+                            handleSave({ nickname: newValue });
+                        }}
+                    />
+                    <EditableField
+                        label="휴대전화번호"
+                        value={phone}
+                        onChange={setPhone}
+                        onConfirm={(newValue) => {
+                            setPhone(newValue);
+                            handleSave({ phone: newValue });
+                        }}
+                    />
                 </Box>
 
                 <Box display="flex" width="100%" justifyContent="end">
@@ -136,31 +166,30 @@ function ModifyProfile() {
                     </Box>
                 </Box>
 
+                {message && <Typography color="success.main">{message}</Typography>}
             </Box>
-
-
-        </Container>);
+        </Container>
+    );
 }
 
-function ProfileImageEditor({profileImage, onEditClick, fileInputRef, onImageChange}) {
+function ProfileImageEditor({ profileImage, onEditClick, fileInputRef, onImageChange }) {
     const theme = useTheme();
 
-    return (<Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'left',
-                alignItems: 'center',
-                padding: 1,
-                borderRadius: 1,
-                position: 'relative',
-            }}
-        >
-            <Box sx={{position: 'relative', width: 80, height: 80}}>
-                {profileImage ? (<Avatar
-                        src={profileImage}
-                        alt="Profile"
-                        sx={{width: 80, height: 80}}
-                    />) : (<AccountCircleIcon sx={{fontSize: 80, color: 'primary.main'}}/>)}
+    return (
+        <Box sx={{
+            display: 'flex',
+            justifyContent: 'left',
+            alignItems: 'center',
+            padding: 1,
+            borderRadius: 1,
+            position: 'relative',
+        }}>
+            <Box sx={{ position: 'relative', width: 80, height: 80 }}>
+                {profileImage ? (
+                    <Avatar src={profileImage} alt="Profile" sx={{ width: 80, height: 80 }} />
+                ) : (
+                    <AccountCircleIcon sx={{ fontSize: 80, color: 'primary.main' }} />
+                )}
                 <IconButton
                     size="small"
                     sx={{
@@ -171,24 +200,25 @@ function ProfileImageEditor({profileImage, onEditClick, fileInputRef, onImageCha
                         border: `1px solid ${theme.palette.grey[400]}`,
                         width: 26,
                         height: 26,
-                        '&:hover': {backgroundColor: theme.palette.grey[200]},
+                        '&:hover': { backgroundColor: theme.palette.grey[200] },
                     }}
                     onClick={onEditClick}
                 >
-                    <EditIcon sx={{fontSize: 16, color: 'grey.800'}}/>
+                    <EditIcon sx={{ fontSize: 16, color: 'grey.800' }} />
                 </IconButton>
                 <input
                     type="file"
                     accept="image/*"
                     ref={fileInputRef}
-                    style={{display: 'none'}}
+                    style={{ display: 'none' }}
                     onChange={onImageChange}
                 />
             </Box>
-        </Box>);
+        </Box>
+    );
 }
 
-function EditableField({label, value, onChange}) {
+function EditableField({ label, value, onChange, onConfirm }) {
     const [isEditing, setIsEditing] = useState(false);
     const [inputValue, setInputValue] = useState(value);
 
@@ -198,20 +228,19 @@ function EditableField({label, value, onChange}) {
 
     const handleEditClick = () => setIsEditing(true);
     const handleConfirmClick = () => {
-        onChange(inputValue);
         setIsEditing(false);
+        onChange(inputValue);
+        if (onConfirm) onConfirm(inputValue); // 최신 값 직접 전달
     };
 
-    return (<Box sx={{display: 'flex', alignItems: 'center', gap: 2, pl: 2, pr: 2}}>
-            <Typography sx={{minWidth: 100}}>{label}</Typography>
-
-            <Box
-                sx={{
-                    position: 'relative', flex: 1, '&:hover .edit-icon': {
-                        opacity: 1,
-                    },
-                }}
-            >
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pl: 2, pr: 2 }}>
+            <Typography sx={{ minWidth: 100 }}>{label}</Typography>
+            <Box sx={{
+                position: 'relative',
+                flex: 1,
+                '&:hover .edit-icon': { opacity: 1 },
+            }}>
                 <TextField
                     fullWidth
                     value={inputValue}
@@ -233,10 +262,11 @@ function EditableField({label, value, onChange}) {
                         transition: 'opacity 0.2s',
                     }}
                 >
-                    {isEditing ? <CheckIcon fontSize="small"/> : <EditIcon fontSize="small"/>}
+                    {isEditing ? <CheckIcon fontSize="small" /> : <EditIcon fontSize="small" />}
                 </IconButton>
             </Box>
-        </Box>);
+        </Box>
+    );
 }
 
 export default ModifyProfile;

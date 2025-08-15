@@ -18,12 +18,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.phone = :phone WHERE u.userid = :userid")
-    int updatePhone(@Param("userid") Long userId, @Param("phone") String phone);
+    void updatePhone(@Param("userid") Long userId, @Param("phone") String phone);
 
     @Modifying
     @Transactional
     @Query("UPDATE User u SET u.email = :email WHERE u.userid = :userid")
-    int updateEmail(@Param("userid") Long userId, @Param("email") String email);
+    void updateEmail(@Param("userid") Long userId, @Param("email") String email);
 
 }
 

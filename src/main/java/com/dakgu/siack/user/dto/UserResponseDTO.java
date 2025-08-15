@@ -29,7 +29,7 @@ public class UserResponseDTO extends ResponseDTO {
     }
 
     public UserResponseDTO(int statusCode, String message, Long userid, String username, String email, String phone,
-                           String nickname, String profileimg, String statusmsg, Integer role) {
+                           String nickname, String profileimg, String statusmsg, int role) {
         super(statusCode, message);
         this.userid = userid;
         this.username = username;

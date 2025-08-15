@@ -34,10 +34,8 @@ const fetchUserDataFromAPI = async (token) => {
         }
     } catch (error) {
         if (axios.isAxiosError(error) && error.response) {
-            console.error('사용자 정보 API 호출 에러 (응답):', error.response.data);
             throw new Error(error.response.data.message || '사용자 정보를 가져오는데 실패했습니다.');
         } else {
-            console.error('사용자 정보 API 호출 에러:', error);
             throw new Error(error.message || '알 수 없는 오류가 발생했습니다.');
         }
     }
