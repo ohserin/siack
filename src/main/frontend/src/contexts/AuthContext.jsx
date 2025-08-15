@@ -9,7 +9,7 @@ const AuthContext = createContext();
 
 const fetchUserDataFromAPI = async (token) => {
     try {
-        const response = await api.get('/v1/userinfo/', {
+        const response = await api.get('/v1/userinfo', {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,

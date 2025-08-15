@@ -5,10 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3333, // Vite 개발 서버 포트 명시 (기본값 5173이 아닌 3333으로 설정)
+    host: '0.0.0.0', // 모든 네트워크 인터페이스에서 접근 허용
+    port: 3333,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080', // 스프링 부트 백엔드 주소
+        target: 'http://127.0.0.1:8080', // 스프링 부트 백엔드 주소
         changeOrigin: true, // 호스트 헤더를 target으로 변경
         secure: false // HTTPS가 아닌 경우 필요
       }

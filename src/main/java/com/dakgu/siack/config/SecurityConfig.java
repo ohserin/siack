@@ -58,7 +58,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 허용할 출처(도메인)를 설정합니다.
-        configuration.setAllowedOrigins(List.of("http://localhost:3333"));
+        configuration.setAllowedOrigins(List.of("http://127.0.0.1:3333", "http://localhost:3333"));
 
         // 허용할 HTTP 메서드를 설정합니다 (GET, POST, PUT, DELETE, OPTIONS 등).
         // OPTIONS는 Preflight 요청에 사용되므로 반드시 포함해야 함.

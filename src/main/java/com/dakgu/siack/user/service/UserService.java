@@ -197,6 +197,7 @@ public class UserService {
                 user.getRole()
         );
     }
+
     @Transactional
     public ResponseDTO setUserData(Authentication authentication, UserRequestDTO request) {
         String username = authentication.getName();

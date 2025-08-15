@@ -1,4 +1,4 @@
-package com.dakgu.siack.controller.user;
+package com.dakgu.siack.user.controller;
 
 import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.service.UserService;

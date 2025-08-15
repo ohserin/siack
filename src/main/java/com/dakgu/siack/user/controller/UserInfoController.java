@@ -1,4 +1,4 @@
-package com.dakgu.siack.controller.user;
+package com.dakgu.siack.user.controller;
 
 import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.service.UserService;
@@ -18,7 +18,7 @@ public class UserInfoController {
 
     private final UserService userService;
 
-    @GetMapping("/")
+    @GetMapping("")
     public ResponseEntity<?> getMyInfo(Authentication authentication) {
         ResponseDTO response = userService.getUserData(authentication);
         return ResponseEntity.status(response.getStatusCode()).body(response);
