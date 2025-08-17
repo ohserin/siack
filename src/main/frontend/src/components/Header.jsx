@@ -20,9 +20,8 @@ import { navigate } from '../utils/navigation.js';
 function Header() {
     const { user, logout, userData } = useAuth();
 
+    // 서비스/요금제/문의 반응형
     const isDesktop = useMediaQuery('(min-width:1080px)');
-    const showBothButtons = useMediaQuery('(min-width:1215px)');
-    const showOnlyLogin = useMediaQuery('(min-width:1080px) and (max-width:1214px)');
     const showHamburger = useMediaQuery('(max-width:1079px)');
 
     const [anchorEl, setAnchorEl] = useState(null);
@@ -58,6 +57,7 @@ function Header() {
                         Siack
                     </Typography>
 
+                    {/* 반응형 메뉴 */}
                     {isDesktop && (
                         <Box sx={{ ml: 4, display: 'flex', gap: 2 }}>
                             <Button color="inherit">서비스</Button>
@@ -65,8 +65,14 @@ function Header() {
                             <Button color="inherit">문의</Button>
                         </Box>
                     )}
+                    {showHamburger && (
+                        <IconButton color="inherit" sx={{ ml: 2 }}>
+                            <MenuIcon />
+                        </IconButton>
+                    )}
                 </Box>
 
+                {/* 로그인 / 회원가입 또는 프로필 */}
                 <Box>
                     {user ? (
                         <Box display="flex" alignItems="center" gap={1}>
@@ -92,7 +98,7 @@ function Header() {
                                 <MenuItem onClick={handleLogoutClick}>로그아웃</MenuItem>
                             </Menu>
                         </Box>
-                    ) : showBothButtons ? (
+                    ) : (
                         <>
                             <Button color="inherit" component={RouterLink} to="/login">
                                 로그인
@@ -101,16 +107,6 @@ function Header() {
                                 회원가입
                             </Button>
                         </>
-                    ) : showOnlyLogin ? (
-                        <Button color="inherit" component={RouterLink} to="/login">
-                            로그인
-                        </Button>
-                    ) : (
-                        showHamburger && (
-                            <IconButton color="inherit">
-                                <MenuIcon />
-                            </IconButton>
-                        )
                     )}
                 </Box>
             </Toolbar>
