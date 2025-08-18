@@ -176,7 +176,7 @@ function Join() {
     };
 
     return (
-        <Container component="main" maxWidth={false} sx={{mt: 8, mb: 4, maxWidth: 500, minWidth: 500}}>
+        <Container component="main" maxWidth={false} sx={{mt: 8, mb: 4, width: '100%', maxWidth: 500}}>
             <Fade in={showForm} timeout={1000}>
                 <Paper elevation={3} sx={{p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                     <AccountCircleIcon sx={{fontSize: 60, color: 'primary.main', mb: 2}}/>
@@ -252,7 +252,7 @@ function Join() {
                                         required: errorMessage.passwordConfirmEmpty,
                                         validate: value => value === password || errorMessage.passwordConfirmDisagree
                                     })
-                                },
+                                }
                             }}
                         />
                         <TextField

@@ -86,8 +86,8 @@ function ModifyProfile() {
 
     return (
         <Container component="main" maxWidth={false} sx={{ mt: 8, mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Box sx={{ width: '500', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <Box sx={{ backgroundColor: theme.palette.grey[100], width: '100%', border: `1px solid ${theme.palette.grey[400]}`, borderRadius: 2, mb: 2, minWidth: 500, overflow: 'hidden' }}>
+            <Box sx={{ width: '100%', maxWidth: 500, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Box sx={{ backgroundColor: theme.palette.grey[100], width: '100%', border: `1px solid ${theme.palette.grey[400]}`, borderRadius: 2, mb: 2, overflow: 'hidden' }}>
                     <Typography variant="h5" fontWeight={400} p={2}>프로필</Typography>
                     <Divider sx={{ my: 2, margin: 0 }} />
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, backgroundColor: theme.palette.grey[200] }}>
@@ -99,7 +99,7 @@ function ModifyProfile() {
                     </Box>
                 </Box>
 
-                <Box sx={{ backgroundColor: theme.palette.grey[100], width: '100%', border: `1px solid ${theme.palette.grey[400]}`, borderRadius: 2, mb: 2, minWidth: 500 }}>
+                <Box sx={{ backgroundColor: theme.palette.grey[100], width: '100%', border: `1px solid ${theme.palette.grey[400]}`, borderRadius: 2, mb: 2 }}>
                     <Typography variant="h6" fontWeight={400} p={2}>정보 수정</Typography>
                     <Divider sx={{ my: 2, margin: 0 }} />
                     <EditableField label="이메일" value={email} onChange={setEmail} onConfirm={(v) => void handleSave({ email: v })} />

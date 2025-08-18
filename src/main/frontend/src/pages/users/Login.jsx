@@ -92,7 +92,7 @@ function Login() {
     };
 
     return (
-        <Container component="main" maxWidth={false} sx={{mt: 8, mb: 4, maxWidth: 450, minWidth: 450}}>
+        <Container component="main" maxWidth={false} sx={{mt: 8, mb: 4, width: '100%', maxWidth: 450}}>
             <Fade in={showForm} timeout={1000}>
                 <Paper elevation={3} sx={{p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                     <Avatar sx={{m: 1, bgcolor: 'primary.main', width: 60, height: 60}}>
