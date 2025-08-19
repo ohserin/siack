@@ -12,6 +12,7 @@ import {Avatar} from '@mui/material';
 import api from "../../api/api.js";
 import theme from '../../theme.js'
 
+// 오류 메시지 정의
 const errorMessage = {
     usernameEmpty: "아이디: 아이디를 입력해주세요.",
     passwordEmpty: "비밀번호: 비밀번호를 입력해주세요.",
@@ -19,20 +20,23 @@ const errorMessage = {
     passwordRegex: "비밀번호: 비밀번호를 다시 확인해주세요.",
 }
 
+// 유효성 검사를 위한 정규식 패턴
 const regexPatterns = {
     username: /^[a-zA-Z0-9_@]{4,50}$/, // 4~50자, 영문/숫자/특수문자(_, @) 포함
-    // 비밀번호는 최소 8자 이상, 최소 하나의 소문자와 숫자를 포함
-    password: /^(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/,
+    password: /^(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/, // 최소 8자 이상, 최소 하나의 소문자와 숫자를 포함
 }
 
+// 아이디 유효성 검사 함수
 function usernameRegexTest(value) {
     return regexPatterns.username.test(value);
 }
 
+// 비밀번호 유효성 검사 함수
 function passwordRegexTest(value) {
     return regexPatterns.password.test(value);
 }
 
+// 로그인 API 호출 함수
 async function loginUser(formData) {
     try {
         const response = await api.post('/v1/user/login', {
@@ -47,45 +51,54 @@ async function loginUser(formData) {
 
 function Login() {
     const [showForm, setShowForm] = useState(false);
-    const [rememberId, setRememberId] = useState(false);
+    const [rememberId, setRememberId] = useState(false); // "아이디 기억하기" 체크박스 상태
     const { login, guard } = useAuth();
 
     const {
-        register, // 입력 필드를 등록하는 함수
-        handleSubmit, // 폼 제출을 처리하는 함수
-        setError,
-        formState: { errors }, // 폼 오류 상태를 포함하는 객체
+        register,       // 입력 필드를 react-hook-form에 등록
+        handleSubmit,   // 폼 제출 처리
+        setError,       // 오류 상태 설정
+        setValue,       // 필드 값을 동적으로 설정
+        formState: { errors }, // 폼 오류 상태
     } = useForm();
 
     useEffect(() => {
         setShowForm(true);
+        guard(false, '/'); // 이미 로그인된 사용자는 홈으로 리디렉션
 
-        // 이미 로그인되어 있으면 홈으로 리디렉트
-        guard(false, '/');
-
-        const savedUsername = localStorage.getItem('savedUsername');
+        // 로컬 스토리지에서 앱 고유의 키로 저장된 아이디를 확인합니다.
+        const savedUsername = localStorage.getItem('siack_savedUsername');
         if (savedUsername) {
+            // 저장된 아이디가 있으면, 입력 필드에 값을 설정하고
+            setValue('username', savedUsername);
+            // "아이디 기억하기" 체크박스를 활성화합니다.
             setRememberId(true);
         }
-    }, []);
+    }, [setValue, guard]); // 의존성 배열에 setValue와 guard 추가
 
+    // "아이디 기억하기" 체크박스 변경 핸들러
     const handleRememberIdChange = (event) => {
         setRememberId(event.target.checked);
     };
 
+    // 폼 제출 시 실행되는 함수
     const onSubmit = async (data) => {
         try {
             const loginResponse = await loginUser(data);
 
+            // "아이디 기억하기"가 체크된 경우
             if (rememberId) {
-                localStorage.setItem('savedUsername', data.username); // "아이디 기억하기"가 체크되면 사용자 이름 저장
+                // 로컬 스토리지에 앱 고유의 키로 아이디를 저장합니다.
+                localStorage.setItem('siack_savedUsername', data.username);
             } else {
-                localStorage.removeItem('savedUsername'); // 체크 해제 시 저장된 사용자 이름 제거
+                // 체크되지 않은 경우, 저장된 아이디를 제거합니다.
+                localStorage.removeItem('siack_savedUsername');
             }
 
-            login(loginResponse.token);
-            navigate('/');
+            login(loginResponse.token); // 로그인 처리
+            navigate('/'); // 홈으로 이동
         } catch (error) {
+            // 로그인 실패 시 오류 메시지 설정
             setError('username', { type: 'manual', message: "아이디 또는 비밀번호가 올바르지 않습니다." });
             setError('password', { type: 'manual', message: '' });
         }
