@@ -16,41 +16,33 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class RemoteFileController {
 
-    // 특정 구현체가 아닌 FileService 인터페이스에 의존합니다.
-    // Spring이 설정에 맞는 구현체(Local 또는 Ssh)를 자동으로 주입합니다.
     private final FileService fileService;
 
-    /**
-     * 지정된 경로의 파일 내용을 읽어옵니다.
-     *
-     * @param path 읽어올 파일의 전체 경로 (URL 쿼리 파라미터)
-     * @return 파일 내용을 담은 응답 객체
-     */
     @GetMapping("/read")
     public ResponseEntity<FileResponse> readFile(@RequestParam String path) {
         try {
             String content = fileService.readFile(path);
             return ResponseEntity.ok(new FileResponse(content));
         } catch (RuntimeException e) {
-            // 서비스 계층에서 발생한 예외를 클라이언트에 전달합니다.
             return ResponseEntity.internalServerError().body(new FileResponse(e.getMessage()));
         }
     }
 
     /**
-     * 지정된 경로에 파일 내용을 씁니다.
+     * 클라이언트로부터 받은 파일 정보를 이용해 파일을 저장하고, 생성된 파일명을 반환합니다.
      *
-     * @param request 파일 경로와 내용을 담은 요청 객체
-     * @return 작업 성공 여부 메시지를 담은 응답 객체
+     * @param request 파일 확장자와 Base64 인코딩된 내용을 담은 요청 객체
+     * @return 생성된 고유 파일명을 포함한 성공 메시지
      */
     @PostMapping("/write")
     public ResponseEntity<String> writeFile(@RequestBody FileRequest request) {
         try {
-            fileService.writeFile(request.getPath(), request.getContent());
-            return ResponseEntity.ok("파일 쓰기 성공: " + request.getPath());
+            String newFilename = fileService.writeFile(request);
+            return ResponseEntity.ok("파일 업로드 성공");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("파일 업로드 실패");
         } catch (RuntimeException e) {
-            // 서비스 계층에서 발생한 예외를 클라이언트에 전달합니다.
-            return ResponseEntity.internalServerError().body("파일 쓰기 실패: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("파일 업로드 실패");
         }
     }
 }

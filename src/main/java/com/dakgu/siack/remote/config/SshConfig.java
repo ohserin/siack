@@ -20,5 +20,6 @@ public class SshConfig {
     private String privateKeyPath;
     private int sessionTimeout = 10000;
     private int channelTimeout = 5000;
+    private String uploadPath;
 
 }

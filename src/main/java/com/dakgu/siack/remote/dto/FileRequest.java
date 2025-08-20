@@ -10,7 +10,8 @@ import lombok.Setter;
 @Setter
 public class FileRequest {
 
-    private String path; // 파일을 쓸 원격 서버의 절대 경로
-    private String content; // 파일에 쓸 내용
+    private String filename; // 파일 이름 (확장자 제외)
+    private String extension; // 파일 확장자
+    private String content; // 파일에 쓸 내용 (Base64 인코딩된 문자열)
 
 }
