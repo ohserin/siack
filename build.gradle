@@ -45,6 +45,9 @@ dependencies {
     implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
+
+    // SSH 연결을 위한 JSch 라이브러리 (개선된 포크 버전)
+    implementation 'com.github.mwiede:jsch:2.27.2'
 }
 
 tasks.named('test') {

@@ -62,4 +62,7 @@ dist-ssr
 *.sln
 *.sw?
 
-application.*.properties
+# 서버정보 제외
+/src/main/resources/application.datasource.properties
+/src/main/resources/application-ssh.properties
+/src/main/resources/id_rsa
