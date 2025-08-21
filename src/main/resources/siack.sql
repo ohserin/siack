@@ -5,7 +5,7 @@ CREATE TABLE `sdu_user`
     `PASSWORD`  varchar(255) NOT NULL COMMENT '사용자 비밀번호 (해시값 저장)',
     `PHONE`     varchar(30)           DEFAULT NULL COMMENT '사용자 전화번호',
     `EMAIL`     varchar(100) NOT NULL COMMENT '사용자 이메일 주소',
-    `ISDEL`     tinyint(1)            DEFAULT '0' COMMENT '사용자 계정 삭제 여부 (TRUE: 삭제됨, FALSE: 활성)',
+    `USEYN`     tinyint(1)            DEFAULT '0' COMMENT '사용자 계정 삭제 여부 (TRUE: 삭제됨, FALSE: 활성)',
     `ROLE`      tinyint               DEFAULT '1' COMMENT '사용자 권한 (0: 관리자, 1: 일반 사용자)',
     `CREATEDAT` timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '계정 생성 시각',
     `UPDATEDAT` timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '계정 마지막 업데이트 시각',
