@@ -31,8 +31,8 @@ public class User extends Timestamp {
     @Column(length = 100, nullable = false)
     private String email;
 
-    @Column(name = "ISDEL", nullable = false)
-    private boolean isdel;
+    @Column(name = "USEYN", nullable = false)
+    private boolean useyn;
 
     @Column(nullable = false)
     private int role;
@@ -49,14 +49,14 @@ public class User extends Timestamp {
         if(phone.trim().isEmpty()) this.phone = null;
         else this.phone = phone;
 
-        this.isdel = false;
+        this.useyn = true;
         this.role = 1;
     }
 
     public void setUserProfile(UserProfile userProfile) {
         this.userProfile = userProfile;
         if (userProfile != null) {
-            userProfile.setUser(this); // 역참조 설정
+            userProfile.setUser(this);
         }
     }
 

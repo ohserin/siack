@@ -26,13 +26,13 @@ public class UserProfile {
     @Column(name = "NICKNAME", unique = true, nullable = false, length = 30)
     private String nickname;
 
-    @Column(name = "PROFILEIMG", length = 255)
-    private String profileimg;
+    @Column(name = "PROFILEIMG")
+    private Long profileimg;
 
     @Column(name = "STATUSMSG", length = 100)
     private String statusmsg;
 
-    public UserProfile(User user, String nickname, String profileimg, String statusmsg) {
+    public UserProfile(User user, String nickname, Long profileimg, String statusmsg) {
         this.user = user;
         this.nickname = nickname;
         this.profileimg = profileimg;
