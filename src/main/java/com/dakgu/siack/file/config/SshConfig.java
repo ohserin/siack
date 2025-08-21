@@ -1,4 +1,4 @@
-package com.dakgu.siack.remote.config;
+package com.dakgu.siack.file.config;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +20,6 @@ public class SshConfig {
     private String privateKeyPath;
     private int sessionTimeout = 10000;
     private int channelTimeout = 5000;
-    private String uploadPath;
+    private String uploadPath; // ssh.upload-path 프로퍼티 값
 
 }

@@ -1,6 +1,6 @@
-package com.dakgu.siack.remote.service;
+package com.dakgu.siack.file.service;
 
-import com.dakgu.siack.remote.dto.FileRequest;
+import com.dakgu.siack.file.dto.FileStorageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,10 +14,6 @@ import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * 로컬 파일 시스템의 파일을 직접 읽고 쓰는 서비스 구현체입니다.
- * `file.access.mode` 속성이 `local`이거나 정의되지 않았을 때 활성화됩니다.
- */
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "file.access.mode", havingValue = "local", matchIfMissing = true)
@@ -37,36 +33,38 @@ public class LocalFileService implements FileService {
             byte[] fileBytes = Files.readAllBytes(Paths.get(path));
             return Base64.getEncoder().encodeToString(fileBytes);
         } catch (IOException e) {
-            throw new RuntimeException("로컬 파일 읽기에 실패했습니다. 경로: " + path);
+            log.error("로컬 파일 읽기 실패: path={}, error={}", path, e.getMessage(), e);
+            throw new RuntimeException("로컬 파일 읽기에 실패했습니다. 경로: " + path, e);
         }
     }
 
     @Override
-    public String writeFile(FileRequest request) {
-        String extension = request.getExtension().toLowerCase();
-        String category = getFileCategory(extension);
+    public FileStorageResult writeFile(byte[] content, String extension) {
+        String lowercasedExtension = (extension != null) ? extension.toLowerCase() : "";
+        String category = getFileCategory(lowercasedExtension);
 
         String uuid = UUID.randomUUID().toString();
-        String newFilename = uuid + "." + extension;
+        String newFilename = uuid + "." + lowercasedExtension;
         Path directoryPath = Paths.get(uploadPath, category);
         Path finalPath = directoryPath.resolve(newFilename);
 
         try {
             Files.createDirectories(directoryPath);
+            Files.write(finalPath, content);
 
-            byte[] fileContent = Base64.getDecoder().decode(request.getContent());
-            Files.write(finalPath, fileContent);
-
-            return newFilename;
+            log.info("로컬 파일 쓰기 성공: {}", finalPath);
+            return new FileStorageResult(newFilename, finalPath.toString(), category, lowercasedExtension);
 
         } catch (IOException e) {
-            throw new RuntimeException("로컬 파일 쓰기에 실패했습니다. 경로: " + finalPath);
+            log.error("로컬 파일 쓰기 실패: path={}, error={}", finalPath, e.getMessage(), e);
+            throw new RuntimeException("로컬 파일 쓰기에 실패했습니다. 경로: " + finalPath, e);
         }
     }
 
     private String getFileCategory(String extension) {
-        if (IMAGE_EXTENSIONS.contains(extension)) return "images";
+        if (IMAGE_EXTENSIONS.contains(extension)) {
+            return "images";
+        }
         throw new IllegalArgumentException("지원하지 않는 파일 형식입니다: " + extension);
     }
-
 }

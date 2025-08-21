@@ -1,16 +1,18 @@
-package com.dakgu.siack.remote.service;
+package com.dakgu.siack.file.service;
 
-import com.dakgu.siack.remote.config.SshConfig;
-import com.dakgu.siack.remote.dto.FileRequest;
+import com.dakgu.siack.file.config.SshConfig;
+import com.dakgu.siack.file.dto.FileStorageResult;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Base64;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -32,25 +34,25 @@ public class SshFileService implements FileService {
         try {
             session = createSession();
             channelSftp = createSftpChannel(session);
-            try (InputStream inputStream = channelSftp.get(path);
-                 InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-                 BufferedReader bufferedReader = new BufferedReader(reader)) {
-                return bufferedReader.lines().collect(Collectors.joining(System.lineSeparator()));
+            try (InputStream inputStream = channelSftp.get(path)) {
+                byte[] fileBytes = inputStream.readAllBytes();
+                return Base64.getEncoder().encodeToString(fileBytes);
             }
         } catch (Exception e) {
-            throw new RuntimeException("원격 파일 읽기에 실패했습니다. 경로: " + path);
+            log.error("원격 파일 읽기 실패: path={}, error={}", path, e.getMessage(), e);
+            throw new RuntimeException("원격 파일 읽기에 실패했습니다. 경로: " + path, e);
         } finally {
             disconnect(session, channelSftp);
         }
     }
 
     @Override
-    public String writeFile(FileRequest request) {
-        String extension = request.getExtension().toLowerCase();
-        String category = getFileCategory(extension);
+    public FileStorageResult writeFile(byte[] content, String extension) {
+        String lowercasedExtension = (extension != null) ? extension.toLowerCase() : "";
+        String category = getFileCategory(lowercasedExtension);
 
         String uuid = UUID.randomUUID().toString();
-        String newFilename = uuid + "." + extension;
+        String newFilename = uuid + "." + lowercasedExtension;
         String directoryPath = sshConfig.getUploadPath() + "/" + category;
         String finalPath = directoryPath + "/" + newFilename;
 
@@ -62,38 +64,49 @@ public class SshFileService implements FileService {
 
             ensureDirectoriesExist(channelSftp, directoryPath);
 
-            byte[] fileContent = Base64.getDecoder().decode(request.getContent());
-            try (InputStream inputStream = new ByteArrayInputStream(fileContent)) {
+            try (InputStream inputStream = new ByteArrayInputStream(content)) {
                 channelSftp.put(inputStream, finalPath);
+                log.info("원격 파일 쓰기 성공: {}", finalPath);
             }
 
-            return newFilename;
+            return new FileStorageResult(newFilename, finalPath, category, lowercasedExtension);
 
         } catch (Exception e) {
-            throw new RuntimeException("원격 파일 쓰기에 실패했습니다. 경로: " + finalPath);
+            log.error("원격 파일 쓰기 실패: path={}, error={}", finalPath, e.getMessage(), e);
+            throw new RuntimeException("원격 파일 쓰기에 실패했습니다. 경로: " + finalPath, e);
         } finally {
             disconnect(session, channelSftp);
         }
     }
 
     private String getFileCategory(String extension) {
-        if (IMAGE_EXTENSIONS.contains(extension)) return "images";
+        if (IMAGE_EXTENSIONS.contains(extension)) {
+            return "images";
+        }
         throw new IllegalArgumentException("지원하지 않는 파일 형식입니다: " + extension);
     }
 
     private void ensureDirectoriesExist(ChannelSftp channel, String path) throws SftpException {
         String[] folders = path.split("/");
         StringBuilder currentPath = new StringBuilder();
+        if (path.startsWith("/")) {
+            currentPath.append("/");
+        }
 
         for (String folder : folders) {
             if (folder.isEmpty()) continue;
-            currentPath.append("/").append(folder);
+            currentPath.append(folder);
             try {
                 channel.stat(currentPath.toString());
             } catch (SftpException e) {
-                if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) channel.mkdir(currentPath.toString());
-                else throw e;
+                if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
+                    log.info("디렉터리가 존재하지 않아 생성합니다: {}", currentPath);
+                    channel.mkdir(currentPath.toString());
+                } else {
+                    throw e;
+                }
             }
+            currentPath.append("/");
         }
     }
 
@@ -110,7 +123,7 @@ public class SshFileService implements FileService {
             byte[] privateKeyBytes = privateKeyStream.readAllBytes();
             jsch.addIdentity(sshConfig.getUsername(), privateKeyBytes, null, null);
         } catch (IOException e) {
-            throw new JSchException("개인 키 파일을 읽는 중 오류가 발생했습니다.");
+            throw new JSchException("개인 키 파일을 읽는 중 오류가 발생했습니다.", e);
         }
         Session session = jsch.getSession(sshConfig.getUsername(), sshConfig.getHost(), sshConfig.getPort());
         session.setConfig("StrictHostKeyChecking", "no");
@@ -126,7 +139,11 @@ public class SshFileService implements FileService {
     }
 
     private void disconnect(Session session, Channel channel) {
-        if (channel != null && channel.isConnected()) channel.disconnect();
-        if (session != null && session.isConnected()) session.disconnect();
+        if (channel != null && channel.isConnected()) {
+            channel.disconnect();
+        }
+        if (session != null && session.isConnected()) {
+            session.disconnect();
+        }
     }
 }
