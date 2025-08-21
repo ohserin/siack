@@ -13,7 +13,7 @@ CREATE TABLE `sdu_user`
     UNIQUE KEY `username` (`USERNAME`),
     UNIQUE KEY `email` (`EMAIL`),
     UNIQUE KEY `phone` (`PHONE`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='유저 기본정보';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='유저 기본정보';
 
 CREATE TABLE `sdu_userprofile`
 (
@@ -33,3 +33,22 @@ CREATE TABLE `sdu_role`
     PRIMARY KEY (`ROLE`),
     UNIQUE KEY `rolenm` (`ROLENM`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='권한정보';
+
+
+CREATE TABLE `sdf_file`
+(
+    `FILEID`       bigint       NOT NULL AUTO_INCREMENT COMMENT '고유 파일 ID',
+    `ORIGINALNAME` varchar(255) NOT NULL COMMENT '업로드 당시 원본 파일명',
+    `STOREDNAME`   varchar(255) NOT NULL COMMENT '서버 또는 스토리지에 저장된 파일명 (UUID 등)',
+    `PATH`         varchar(500) NOT NULL COMMENT '파일 저장 경로 또는 URL',
+    `EXTENSION`    varchar(10)  NOT NULL COMMENT '파일 확장자 (jpg, png, pdf 등)',
+    `SIZE`         bigint       NOT NULL COMMENT '파일 크기 (Byte 단위)',
+    `CONTENTTYPE`  varchar(100) NOT NULL COMMENT '파일 MIME 타입 (예: image/png)',
+    `USERID`       int                   DEFAULT NULL COMMENT '업로드한 사용자 ID (sdu_user.USERID 참조)',
+    `STATUS`       tinyint(1)            DEFAULT '1' COMMENT '파일 상태 (0: 삭제됨, 1: 활성)',
+    `CREATEDAT`    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '파일 업로드 시각',
+    `UPDATEDAT`    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '파일 정보 마지막 수정 시각',
+    PRIMARY KEY (`FILEID`),
+    KEY `userid` (`USERID`),
+    CONSTRAINT FOREIGN KEY (`USERID`) REFERENCES `sdu_user` (`USERID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='파일 메타데이터 정보';
