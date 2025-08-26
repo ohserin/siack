@@ -65,4 +65,4 @@ dist-ssr
 # 서버정보 제외
 /src/main/resources/application.datasource.properties
 /src/main/resources/application-ssh.properties
-/src/main/resources/id_rsa
+/src/main/resources/id.rsa
