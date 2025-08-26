@@ -89,9 +89,7 @@ public class SshFileService implements FileService {
     private void ensureDirectoriesExist(ChannelSftp channel, String path) throws SftpException {
         String[] folders = path.split("/");
         StringBuilder currentPath = new StringBuilder();
-        if (path.startsWith("/")) {
-            currentPath.append("/");
-        }
+        if (path.startsWith("/")) currentPath.append("/");
 
         for (String folder : folders) {
             if (folder.isEmpty()) continue;
@@ -139,11 +137,7 @@ public class SshFileService implements FileService {
     }
 
     private void disconnect(Session session, Channel channel) {
-        if (channel != null && channel.isConnected()) {
-            channel.disconnect();
-        }
-        if (session != null && session.isConnected()) {
-            session.disconnect();
-        }
+        if (channel != null && channel.isConnected()) channel.disconnect();
+        if (session != null && session.isConnected()) session.disconnect();
     }
 }
