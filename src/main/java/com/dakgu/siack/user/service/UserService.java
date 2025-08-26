@@ -1,6 +1,7 @@
 package com.dakgu.siack.user.service;
 
 import com.dakgu.siack.config.jwt.JwtTokenProvider;
+import com.dakgu.siack.file.service.FileUploadService;
 import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.dto.UserResponseDTO;
 import com.dakgu.siack.user.entity.User;
@@ -19,6 +20,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -31,6 +35,7 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final UserValidationService userValidationService;
+    private final FileUploadService uploadService;
 
     /* username 사용 가능한지 확인 */
     public ResponseDTO checkUsernameAvailability(String username) {
@@ -277,6 +282,35 @@ public class UserService {
         if (nickname != null) userProfileRepository.updateNickname(userid, nickname);
         if (email != null) userRepository.updateEmail(userid, email);
         userRepository.updatePhone(userid, phone);
+    }
+
+    @Transactional
+    public ResponseDTO updateProfileImage(Authentication authentication, MultipartFile file) throws IOException {
+        // 1. 로그인된 사용자 식별
+        String username = authentication.getName();
+        if (username == null) {
+            return new ResponseDTO(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
+        }
+
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+        }
+
+        UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
+        if (profile == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
+        }
+        
+        // 2. 파일 업로드 및 메타데이터 저장
+        Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
+
+        // 3. UserProfile의 profileimg 필드 업데이트
+        profile.setProfileimg(fileId);
+        userProfileRepository.save(profile); // 변경된 UserProfile 저장
+
+        log.info("[알림] 유저 프로필 이미지 업데이트: {} -> 파일 ID {}", user.getUsername(), fileId);
+        return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
     }
 
 }

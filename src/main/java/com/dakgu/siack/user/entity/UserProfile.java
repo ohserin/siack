@@ -26,6 +26,7 @@ public class UserProfile {
     @Column(name = "NICKNAME", unique = true, nullable = false, length = 30)
     private String nickname;
 
+    @Setter
     @Column(name = "PROFILEIMG")
     private Long profileimg;
 
