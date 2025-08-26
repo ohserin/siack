@@ -26,16 +26,44 @@ function ModifyProfile() {
             setNickname(userData.nickname || '');
             setEmail(userData.email || '');
             setPhone(userData.phone || '');
-            setProfileImage(userData.profileimg || null);
+            if (userData.profileimg) {
+                // userData.profileimg가 파일 ID 또는 경로일 수 있으므로, 이를 처리할 수 있는 API 엔드포인트를 사용합니다.
+                // 여기서는 파일의 전체 경로를 반환한다고 가정하고 `/v1/files/read` 엔드포인트를 사용합니다.
+                setProfileImage(`/v1/files/read?path=${userData.profileimg}`);
+            } else {
+                setProfileImage(null);
+            }
         }
     }, [userData]);
 
-    const handleImageChange = (event) => {
+    const handleImageChange = async (event) => {
         const file = event.target.files[0];
         if (file) {
-            const imageUrl = URL.createObjectURL(file);
-            setProfileImage(imageUrl);
-            // 프로필 이미지 변경 API는 별도 구현 필요
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await api.post('/v1/userinfo/modify-profile', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${user.token}`,
+                    },
+                });
+
+                if (response.data.statusCode === 200) {
+                    // 서버 응답에서 새로운 파일 경로를 받아 상태를 업데이트합니다.
+                    // 백엔드에서 파일 ID 대신 파일 경로를 반환하도록 수정이 필요할 수 있습니다.
+                    const newProfileImgPath = response.data.message; // "프로필 이미지가 성공적으로 업데이트되었습니다." 메시지 대신 실제 파일 경로가 와야 합니다.
+                    const imageUrl = `/v1/files/read?path=${newProfileImgPath}`;
+                    setProfileImage(imageUrl);
+                    setUserData(prev => ({ ...prev, profileimg: newProfileImgPath }));
+                    showModal('성공', '프로필 이미지가 변경되었습니다.');
+                } else {
+                    showModal('오류', response.data.message || '이미지 업로드에 실패했습니다.');
+                }
+            } catch (error) {
+                showModal('서버 오류', error?.response?.data?.message || '서버 오류가 발생했습니다.');
+            }
         }
     };
 
@@ -57,7 +85,7 @@ function ModifyProfile() {
         // 형식 체크
         if (!regexTest('email', newValues.email)) return showModal('알림', '올바른 이메일 형식이 아닙니다.');
         if (!regexTest('nickname', newValues.nickname)) return showModal('알림', '닉네임은 2~30자, 영문/숫자/한글/_(언더바)만 가능합니다.');
-        if (!regexTest('phone', newValues.phone)) return showModal('알림', '올바른 전화번호 형식이 아닙니다.');
+        if (newValues.phone && !regexTest('phone', newValues.phone)) return showModal('알림', '올바른 전화번호 형식이 아닙니다.');
 
         try {
             // 중복 검사
