@@ -1,6 +1,7 @@
 package com.dakgu.siack.user.service;
 
 import com.dakgu.siack.config.jwt.JwtTokenProvider;
+import com.dakgu.siack.file.repository.SdfFileRepository;
 import com.dakgu.siack.file.service.FileUploadService;
 import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.dto.UserResponseDTO;
@@ -36,6 +37,7 @@ public class UserService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final UserValidationService userValidationService;
     private final FileUploadService uploadService;
+    private final SdfFileRepository fileRepository;
 
     /* username 사용 가능한지 확인 */
     public ResponseDTO checkUsernameAvailability(String username) {
@@ -301,7 +303,7 @@ public class UserService {
         if (profile == null) {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
         }
-        
+
         // 2. 파일 업로드 및 메타데이터 저장
         Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
 
@@ -311,6 +313,22 @@ public class UserService {
 
         log.info("[알림] 유저 프로필 이미지 업데이트: {} -> 파일 ID {}", user.getUsername(), fileId);
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
+    }
+
+    public ResponseDTO getUserProfileImage(String userid){
+        User user = userRepository.findByUserid(Long.valueOf(userid));
+        if (user == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+        }
+        UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
+        if (profile == null || profile.getProfileimg() == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
+        }
+
+        Long fileId = profile.getProfileimg();
+        String path = fileRepository.findPathByFileId(fileId);
+
+        return new ResponseDTO(HttpStatus.OK.value(), path);
     }
 
 }

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByUsername(String username);
+    User findByUserid(Long userid);
 
     /* UK 중복 여부 확인 메서드 */
     boolean existsByUsername(String username);
