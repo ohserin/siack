@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,10 +27,9 @@ public class LocalFileService implements FileService {
     }
 
     @Override
-    public String readFile(String path) {
+    public byte[] readFile(String path) {
         try {
-            byte[] fileBytes = Files.readAllBytes(Paths.get(path));
-            return Base64.getEncoder().encodeToString(fileBytes);
+            return Files.readAllBytes(Paths.get(path));
         } catch (IOException e) {
             log.error("로컬 파일 읽기 실패: path={}, error={}", path, e.getMessage(), e);
             throw new RuntimeException("로컬 파일 읽기에 실패했습니다. 경로: " + path, e);

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,15 +27,14 @@ public class SshFileService implements FileService {
     }
 
     @Override
-    public String readFile(String path) {
+    public byte[] readFile(String path) {
         Session session = null;
         ChannelSftp channelSftp = null;
         try {
             session = createSession();
             channelSftp = createSftpChannel(session);
             try (InputStream inputStream = channelSftp.get(path)) {
-                byte[] fileBytes = inputStream.readAllBytes();
-                return Base64.getEncoder().encodeToString(fileBytes);
+                return inputStream.readAllBytes();
             }
         } catch (Exception e) {
             log.error("원격 파일 읽기 실패: path={}, error={}", path, e.getMessage(), e);

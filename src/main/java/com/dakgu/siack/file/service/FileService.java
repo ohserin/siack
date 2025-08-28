@@ -13,7 +13,7 @@ public interface FileService {
      * @param path 파일의 전체 경로
      * @return 파일 내용 (Base64 인코딩된 문자열)
      */
-    String readFile(String path);
+    byte[] readFile(String path);
 
     /**
      * 파일 바이트 배열과 확장자를 받아 물리 스토리지에 파일을 저장하고, 그 결과를 반환합니다.

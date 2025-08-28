@@ -1,7 +1,5 @@
 package com.dakgu.siack.file.controller;
 
-import com.dakgu.siack.file.dto.FileResponse;
-import com.dakgu.siack.file.service.FileService;
 import com.dakgu.siack.file.service.FileUploadService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,17 +22,6 @@ import java.io.IOException;
 public class FileController {
 
     private final FileUploadService fileUploadService;
-    private final FileService fileService;
-
-    @GetMapping("/read")
-    public ResponseEntity<FileResponse> readFile(@RequestParam String path) {
-        try {
-            String content = fileService.readFile(path);
-            return ResponseEntity.ok(new FileResponse(content));
-        } catch (RuntimeException e) {
-            return ResponseEntity.internalServerError().body(new FileResponse(e.getMessage()));
-        }
-    }
 
     /**
      * 클라이언트로부터 multipart/form-data 형식의 파일을 받아 저장하고, 메타데이터를 DB에 기록합니다.
@@ -59,4 +46,5 @@ public class FileController {
             return ResponseEntity.internalServerError().body("파일 업로드 중 서버 오류가 발생했습니다.");
         }
     }
+
 }

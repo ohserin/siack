@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RequiredArgsConstructor
 @RequestMapping("/v1/user")
 @RestController
@@ -57,9 +59,13 @@ public class UserRestController {
     }
 
     @GetMapping("/get-userprofile-image")
-    public ResponseEntity<?> getUserProfileImage(@RequestParam("userid") String userid) {
-        ResponseDTO response = userService.getUserProfileImage(userid);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+    public ResponseEntity<byte[]> getUserProfileImage(@RequestParam("userid") String userid) throws IOException {
+        ResponseEntity<byte[]> imageData = userService.getUserProfileImage(userid);
+
+        if (imageData == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return imageData;
     }
 
 }
