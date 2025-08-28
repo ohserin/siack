@@ -13,13 +13,15 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { navigate } from '../utils/navigation.js';
 import Sidebar from './Sidebar.jsx';
+import api from "../api/api.js";
 
 function Header() {
     const { user, logout, userData } = useAuth();
+    const [profileImageUrl, setProfileImageUrl] = useState(null);
 
     // 반응형 디자인을 위한 미디어 쿼리
     const isDesktop = useMediaQuery('(min-width:1080px)');
@@ -27,6 +29,16 @@ function Header() {
 
     const [anchorEl, setAnchorEl] = useState(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
+
+    useEffect(() => {
+        if (userData?.userid) {
+            const cacheBuster = userData.profileimg || Date.now();
+            const imageUrl = `${api.defaults.baseURL}/v1/user/get-userprofile-image?userid=${userData.userid}&v=${cacheBuster}`;
+            setProfileImageUrl(imageUrl);
+        } else {
+            setProfileImageUrl(null);
+        }
+    }, [userData]);
 
     const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
@@ -92,8 +104,8 @@ function Header() {
                         {user ? (
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <IconButton onClick={handleMenuOpen} size="small" sx={{ p: 0, color: 'white' }}>
-                                    {userData?.profileImage ? (
-                                        <Avatar src={userData.profileImage} alt="profile" />
+                                    {profileImageUrl ? (
+                                        <Avatar src={profileImageUrl} alt="profile" sx={{ width: 32, height: 32 }}/>
                                     ) : (
                                         <AccountCircleIcon fontSize="large" sx={{ color: 'white' }} />
                                     )}

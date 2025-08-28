@@ -11,7 +11,7 @@ import {useModal} from "../../contexts/ModalContext.jsx";
 import {checkDuplicate, regexTest} from "../../utils/validation.js";
 
 function ModifyProfile() {
-    const { userData, setUserData, getRoleLabel, user, guard } = useAuth();
+    const { userData, setUserData, getRoleLabel, user, guard, fetchUserDataFromAPI } = useAuth();
     const theme = useTheme();
     const fileInputRef = useRef(null);
     const [profileImage, setProfileImage] = useState(null);
@@ -26,15 +26,19 @@ function ModifyProfile() {
             setNickname(userData.nickname || '');
             setEmail(userData.email || '');
             setPhone(userData.phone || '');
-            if (userData.profileimg) {
-                // userData.profileimg가 파일 ID 또는 경로일 수 있으므로, 이를 처리할 수 있는 API 엔드포인트를 사용합니다.
-                // 여기서는 파일의 전체 경로를 반환한다고 가정하고 `/v1/files/read` 엔드포인트를 사용합니다.
-                setProfileImage(`/v1/files/read?path=${userData.profileimg}`);
-            } else {
-                setProfileImage(null);
-            }
         }
     }, [userData]);
+
+    useEffect(() => {
+        if (userData?.userid) {
+            const cacheBuster = userData.profileimg || Date.now();
+            const imageUrl = `${api.defaults.baseURL}/v1/user/get-userprofile-image?userid=${userData.userid}&v=${cacheBuster}`;
+            setProfileImage(imageUrl);
+        } else {
+            setProfileImage(null);
+        }
+    }, [userData?.userid, userData?.profileimg]);
+
 
     const handleImageChange = async (event) => {
         const file = event.target.files[0];
@@ -51,12 +55,7 @@ function ModifyProfile() {
                 });
 
                 if (response.data.statusCode === 200) {
-                    // 서버 응답에서 새로운 파일 경로를 받아 상태를 업데이트합니다.
-                    // 백엔드에서 파일 ID 대신 파일 경로를 반환하도록 수정이 필요할 수 있습니다.
-                    const newProfileImgPath = response.data.message; // "프로필 이미지가 성공적으로 업데이트되었습니다." 메시지 대신 실제 파일 경로가 와야 합니다.
-                    const imageUrl = `/v1/files/read?path=${newProfileImgPath}`;
-                    setProfileImage(imageUrl);
-                    setUserData(prev => ({ ...prev, profileimg: newProfileImgPath }));
+                    await fetchUserDataFromAPI(user.token);
                     showModal('성공', '프로필 이미지가 변경되었습니다.');
                 } else {
                     showModal('오류', response.data.message || '이미지 업로드에 실패했습니다.');
@@ -101,7 +100,7 @@ function ModifyProfile() {
             });
 
             if (response.data.statusCode === 200) {
-                setUserData(prev => ({ ...prev, ...newValues }));
+                await fetchUserDataFromAPI(user.token);
                 showModal('정보가 변경되었습니다.', '프로필이 정상적으로 업데이트되었습니다.');
             } else {
                 showModal('업데이트 실패', response.data.message || '업데이트에 실패했습니다.');
