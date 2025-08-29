@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * application.yml 또는 application.properties 파일에서 SSH 연결 정보를 읽어와 관리하는 클래스입니다.
+ * application.properties 파일에서 SSH 연결 정보를 읽어와 관리하는 클래스입니다.
  */
 @Getter
 @Setter

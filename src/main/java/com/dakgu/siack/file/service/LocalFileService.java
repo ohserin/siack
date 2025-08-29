@@ -13,6 +13,10 @@ import java.nio.file.Paths;
 import java.util.Set;
 import java.util.UUID;
 
+/*
+    도커로 서버를 구동하여 사용하지 않는 클래스입니다.
+ */
+
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "file.access.mode", havingValue = "local", matchIfMissing = true)
@@ -23,7 +27,6 @@ public class LocalFileService implements FileService {
 
     public LocalFileService(@Value("${file.local.upload-path:uploads}") String uploadPath) {
         this.uploadPath = uploadPath;
-        log.info("LocalFileService가 활성화되었습니다. 로컬 파일 시스템에 직접 접근합니다. Upload Path: {}", uploadPath);
     }
 
     @Override
@@ -60,9 +63,7 @@ public class LocalFileService implements FileService {
     }
 
     private String getFileCategory(String extension) {
-        if (IMAGE_EXTENSIONS.contains(extension)) {
-            return "images";
-        }
+        if (IMAGE_EXTENSIONS.contains(extension)) return "images";
         throw new IllegalArgumentException("지원하지 않는 파일 형식입니다: " + extension);
     }
 }
