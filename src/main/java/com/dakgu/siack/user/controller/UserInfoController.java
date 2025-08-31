@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/userinfo")
@@ -34,6 +35,19 @@ public class UserInfoController {
     @PostMapping(value = "/modify-profile", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> updateProfileImage(Authentication authentication, @RequestPart("file") MultipartFile file) throws IOException {
         ResponseDTO response = userService.updateProfileImage(authentication, file);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+
+    @PostMapping(value = "/verify-password")
+    public ResponseEntity<?> verifyCurrentPassword(Authentication authentication, @RequestBody Map<String, String> request) {
+        ResponseDTO response = userService.verifyCurrentPassword(authentication, request.get("currentPassword"));
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @PostMapping(value = "/change-password")
+    public ResponseEntity<?> changePassword(Authentication authentication, @RequestBody Map<String, String> request) {
+        ResponseDTO response = userService.changePassword(authentication, request.get("newPassword"));
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 

@@ -119,7 +119,7 @@ public class UserService {
             return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
         }
 
-        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        String encodedPassword = encodePassword(request.getPassword());
 
         User newUser = new User(
                 request.getUsername(),
@@ -319,7 +319,7 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
     }
 
-    public ResponseEntity<byte[]> getUserProfileImage(String userid) throws IOException {
+    public ResponseEntity<byte[]> getUserProfileImage(String userid) {
         User user = userRepository.findByUserid(Long.valueOf(userid));
         if (user == null) return null;
         UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
@@ -351,4 +351,54 @@ public class UserService {
                 .body(bytes);
     }
 
+    /**
+     * 사용자 비밀번호를 변경합니다.
+     *
+     * @param authentication  현재 인증된 사용자 정보
+     * @param newPassword     새 비밀번호
+     * @return ResponseDTO 처리 결과
+     */
+    @Transactional
+    public ResponseDTO changePassword(Authentication authentication, String newPassword) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+        }
+
+        if (!userValidationService.isValidPasswordFormat(newPassword)) {
+            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비밀번호 형식이 올바르지 않습니다. 최소 8자, 영문, 숫자, 특수문자를 포함해야 합니다.");
+        }
+
+        String encodedPassword = encodePassword(newPassword);
+        user.setPassword(encodedPassword);
+
+        return new ResponseDTO(HttpStatus.OK.value(), "비밀번호가 성공적으로 변경되었습니다.");
+    }
+
+    /**
+     * 현재 비밀번호가 올바른지 확인합니다.
+     *
+     * @param authentication  현재 인증된 사용자 정보
+     * @param currentPassword 확인할 현재 비밀번호
+     * @return ResponseDTO 처리 결과
+     */
+    @Transactional(readOnly = true)
+    public ResponseDTO verifyCurrentPassword(Authentication authentication, String currentPassword) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+        }
+
+        if(!passwordEncoder.matches(currentPassword, user.getPassword())){
+            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다.");
+        }
+
+        return new ResponseDTO(HttpStatus.OK.value(), "비밀번호가 일치합니다.");
+    }
+
+    private String encodePassword(String password) {
+        return passwordEncoder.encode(password);
+    }
 }

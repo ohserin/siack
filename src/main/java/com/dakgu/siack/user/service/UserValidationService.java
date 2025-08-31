@@ -23,7 +23,7 @@ public class UserValidationService {
 
     // 이메일 형식 유효성 검사
     public boolean isValidEmailFormat(String email) {
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+        String emailRegex = "^[^\\s@]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)+$";
         return Pattern.matches(emailRegex, email);
     }
 

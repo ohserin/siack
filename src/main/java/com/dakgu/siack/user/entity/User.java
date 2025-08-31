@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.Setter;
 
 @Getter
 @NoArgsConstructor
@@ -22,6 +22,7 @@ public class User extends Timestamp {
     @Column(length = 50, nullable = false)
     private String username;
 
+    @Setter
     @Column(nullable = false)
     private String password;
 
@@ -46,11 +47,11 @@ public class User extends Timestamp {
         this.password = password;
         this.email = email;
 
-        if(phone.trim().isEmpty()) this.phone = null;
+        if (phone.trim().isEmpty()) this.phone = null;
         else this.phone = phone;
 
         this.useyn = true;
-        this.role = 1;
+        this.role = 0;
     }
 
     public void setUserProfile(UserProfile userProfile) {
@@ -60,7 +61,4 @@ public class User extends Timestamp {
         }
     }
 
-    public boolean checkPassword(String rawPassword, BCryptPasswordEncoder passwordEncoder) {
-        return passwordEncoder.matches(rawPassword, this.password);
-    }
 }
