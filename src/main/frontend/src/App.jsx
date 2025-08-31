@@ -3,13 +3,13 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Login from './pages/users/Login.jsx';
 import Join from "./pages/users/Join.jsx";
-import ModifyProfile from "./pages/users/ModifyProfile.jsx";
 import {AuthProvider} from './contexts/AuthContext.jsx';
 import {Box, Container} from '@mui/material';
 import {Routes, Route, useNavigate} from 'react-router-dom';
 import {setNavigator} from "./utils/navigation.js";
 import {useEffect} from "react";
 import {ModalProvider} from "./contexts/ModalContext.jsx";
+import UserSettingsPage from "./pages/users/settings/UserSettingsPage.jsx";
 
 function App() {
     const nav = useNavigate();
@@ -27,7 +27,7 @@ function App() {
                         <Route path="/" element={<Home/>}/>
                         <Route path="/join" element={<Join/>}/>
                         <Route path="/login" element={<Login/>}/>
-                        <Route path="/modify-profile" element={<ModifyProfile/>}/>
+                        <Route path="/user-setting" element={<UserSettingsPage/>}/>
                     </Routes>
                 </Container>
                 <Footer/>
