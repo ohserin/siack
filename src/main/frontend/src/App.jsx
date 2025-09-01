@@ -23,7 +23,7 @@ function App() {
         <AuthProvider><ModalProvider>
             <Box display="flex" flexDirection="column" minHeight="100vh">
                 <Header/>
-                <Container sx={{flex: 1, mt: 2}}>
+                <Container sx={{flex: 1}}>
                     <Routes>
                         <Route path="/" element={<Home/>}/>
                         <Route path="/join" element={<Join/>}/>
