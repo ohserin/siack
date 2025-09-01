@@ -1,4 +1,6 @@
 package com.dakgu.siack.user.entity;
 
-public class Board {
+import com.dakgu.siack.utils.Timestamp;
+
+public class Board extends Timestamp {
 }

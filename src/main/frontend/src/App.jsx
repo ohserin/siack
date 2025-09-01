@@ -10,6 +10,7 @@ import {Routes, Route, useNavigate} from 'react-router-dom';
 import {setNavigator} from "./utils/navigation.js";
 import {useEffect} from "react";
 import {ModalProvider} from "./contexts/ModalContext.jsx";
+import Contact from "./pages/Contact.jsx";
 
 function App() {
     const nav = useNavigate();
@@ -28,6 +29,7 @@ function App() {
                         <Route path="/join" element={<Join/>}/>
                         <Route path="/login" element={<Login/>}/>
                         <Route path="/modify-profile" element={<ModifyProfile/>}/>
+                        <Route path="/contact" element={<Contact/>}/>
                     </Routes>
                 </Container>
                 <Footer/>
