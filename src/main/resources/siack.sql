@@ -52,3 +52,21 @@ CREATE TABLE `sdf_file`
     KEY `userid` (`USERID`),
     CONSTRAINT FOREIGN KEY (`USERID`) REFERENCES `sdu_user` (`USERID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='파일 메타데이터 정보';
+
+
+CREATE TABLE `sdl_userlog`
+(
+    `LOGID`      int         NOT NULL AUTO_INCREMENT COMMENT '고유 로그 ID',
+    `USERID`     int         NOT NULL COMMENT '유저 PK (sdu_user.USERID)',
+    `IP`         varchar(45) NOT NULL COMMENT '사용자 접속 IP',
+    `REGION`     varchar(100)         DEFAULT NULL COMMENT '접속 지역',
+    `ACTIONTYPE` varchar(50)          DEFAULT NULL COMMENT '행위 유형 (로그인, 로그아웃, 수정 등)',
+    `STATUS`     tinyint              DEFAULT NULL COMMENT '행위 결과 상태 (0: 성공, 1: 실패)',
+    `REQUESTURL` varchar(255)         DEFAULT NULL COMMENT '요청 URL 또는 API 엔드포인트',
+    `USERAGENT`  varchar(255)         DEFAULT NULL COMMENT '사용자 환경 정보 (브라우저/OS/디바이스)',
+    `CONTENT`    text        NOT NULL COMMENT '로그 상세 내용',
+    `CREATEDAT`  timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '로그 생성 시각',
+    PRIMARY KEY (`LOGID`),
+    KEY `idx_userid` (`USERID`),
+    CONSTRAINT `fk_user_log_user` FOREIGN KEY (`USERID`) REFERENCES `sdu_user` (`USERID`) ON DELETE CASCADE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT='유저 로그 기록';

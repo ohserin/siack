@@ -4,6 +4,8 @@ import com.dakgu.siack.config.jwt.JwtTokenProvider;
 import com.dakgu.siack.file.repository.SdfFileRepository;
 import com.dakgu.siack.file.service.FileService;
 import com.dakgu.siack.file.service.FileUploadService;
+import com.dakgu.siack.log.service.UserLogService;
+import com.dakgu.siack.log.vo.UserLog;
 import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.dto.UserResponseDTO;
 import com.dakgu.siack.user.entity.User;
@@ -27,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -42,6 +46,7 @@ public class UserService {
     private final FileUploadService uploadService;
     private final SdfFileRepository fileRepository;
     private final FileService fileService;
+    private final UserLogService userLogService;
 
     /* username 사용 가능한지 확인 */
     public ResponseDTO checkUsernameAvailability(String username) {
@@ -138,37 +143,67 @@ public class UserService {
         userProfileRepository.save(newUserProfile);
         savedUser.setUserProfile(newUserProfile);
 
+        // 회원가입 성공 로그
+        UserLog userLog = new UserLog();
+        userLog.setUserid(savedUser.getUserid().intValue());
+        userLog.setActiontype("REGISTER");
+        userLog.setStatus(0); // 0: 성공
+        userLog.setContent("회원가입 성공");
+        userLogService.saveLog(userLog);
+
         log.info("[알림] 유저 회원가입: {} / {}", request.getUsername(), request.getNickname());
 
         return new ResponseDTO(HttpStatus.CREATED.value(), "회원가입이 성공적으로 완료되었습니다.");
     }
 
     /* 사용자 로그인 처리 */
-    @Transactional(readOnly = true)
+    @Transactional
     public ResponseDTO loginUser(UserRequestDTO request) {
         // 1. UsernamePasswordAuthenticationToken 생성
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
 
         // 2. 실제 인증 (사용자 비밀번호 검증)
-        // authenticate 메서드가 실행될 때 CustomUserDetailsService에서 loadUserByUsername 메서드가 실행됨
         Authentication authentication;
         try {
             authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         } catch (UsernameNotFoundException e) {
+            UserLog userLog = new UserLog();
+            userLog.setUserid(0); // 사용자를 특정할 수 없으므로 0으로 설정
+            userLog.setActiontype("LOGIN_FAIL");
+            userLog.setStatus(1); // 1: 실패
+            userLog.setContent("로그인 실패: 존재하지 않는 사용자 '" + request.getUsername() + "'");
+            userLogService.saveLog(userLog);
             return new UserResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다.", null, null, null);
         } catch (BadCredentialsException e) {
+            User user = userRepository.findByUsername(request.getUsername());
+            if (user != null) {
+                UserLog userLog = new UserLog();
+                userLog.setUserid(user.getUserid().intValue());
+                userLog.setActiontype("LOGIN_FAIL");
+                userLog.setStatus(1); // 1: 실패
+                userLog.setContent("로그인 실패");
+                userLogService.saveLog(userLog);
+            }
             return new UserResponseDTO(HttpStatus.UNAUTHORIZED.value(), "비밀번호가 일치하지 않습니다.", null, null, null);
         }
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
         String jwt = jwtTokenProvider.generateToken(authentication);
 
-        // 사용자 정보 가져오기 (선택 사항)
+        // 사용자 정보 가져오기
         User user = userRepository.findByUsername(request.getUsername());
         String nickname = (user != null && user.getUserProfile() != null) ? user.getUserProfile().getNickname() : null;
-
         assert user != null;
+
+        // 로그인 성공 로그
+        UserLog userLog = new UserLog();
+        userLog.setUserid(user.getUserid().intValue());
+        userLog.setActiontype("LOGIN");
+        userLog.setStatus(0); // 0: 성공
+        userLog.setContent("로그인 성공");
+        userLogService.saveLog(userLog);
+
         log.info("[알림] 유저 로그인: {} / {}", user.getUsername(), nickname);
 
         // 4. 생성된 토큰과 함께 응답 반환
@@ -227,67 +262,65 @@ public class UserService {
         String currentPhone = user.getPhone();
         String currentNickname = profile.getNickname();
 
-        String email = request.getEmail();
-        String phone = request.getPhone() != null ? request.getPhone().trim() : null;
-        String nickname = request.getNickname();
+        String newEmail = request.getEmail();
+        String newPhone = request.getPhone() != null ? request.getPhone().trim() : null;
+        String newNickname = request.getNickname();
 
-        boolean changed = false;
+        List<String> updatedFields = new ArrayList<>();
 
-        // 이메일 검증
-        if (email != null && !email.isEmpty() && !email.equals(currentEmail)) {
-            if (!userValidationService.isValidEmailFormat(email)) {
+        // 이메일 변경 처리
+        if (newEmail != null && !newEmail.isEmpty() && !newEmail.equals(currentEmail)) {
+            if (!userValidationService.isValidEmailFormat(newEmail)) {
                 return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "이메일 형식이 올바르지 않습니다.");
             }
-            if (userValidationService.isEmailDuplicated(email)) {
+            if (userValidationService.isEmailDuplicated(newEmail)) {
                 return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 이메일입니다.");
             }
-            changed = true;
-        } else {
-            email = currentEmail;
+            userRepository.updateEmail(user.getUserid(), newEmail);
+            updatedFields.add("이메일");
         }
 
-        // 전화번호 검증
-        if (phone != null && !phone.isEmpty() && !phone.equals(currentPhone)) {
-            if (!userValidationService.isValidPhoneNumberFormat(phone)) {
-                return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "전화번호 형식이 올바르지 않습니다.");
+        // 전화번호 변경 처리
+        if (newPhone != null && !newPhone.equals(currentPhone)) {
+            if (!newPhone.isEmpty()) {
+                if (!userValidationService.isValidPhoneNumberFormat(newPhone)) {
+                    return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "전화번호 형식이 올바르지 않습니다.");
+                }
+                if (userValidationService.isPhoneNumberDuplicated(newPhone)) {
+                    return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 전화번호입니다.");
+                }
             }
-            if (userValidationService.isPhoneNumberDuplicated(phone)) {
-                return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 전화번호입니다.");
-            }
-            changed = true;
-        } else {
-            phone = currentPhone;
+            userRepository.updatePhone(user.getUserid(), newPhone);
+            updatedFields.add("전화번호");
         }
 
-        // 닉네임 검증
-        if (nickname != null && !nickname.isEmpty() && !nickname.equals(currentNickname)) {
-            if (!userValidationService.isValidNicknameFormat(nickname)) {
+        // 닉네임 변경 처리
+        if (newNickname != null && !newNickname.isEmpty() && !newNickname.equals(currentNickname)) {
+            if (!userValidationService.isValidNicknameFormat(newNickname)) {
                 return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "닉네임 형식이 올바르지 않습니다.");
             }
-            if (userValidationService.isNicknameDuplicated(nickname)) {
+            if (userValidationService.isNicknameDuplicated(newNickname)) {
                 return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 닉네임입니다.");
             }
-            changed = true;
-        } else {
-            nickname = currentNickname;
+            userProfileRepository.updateNickname(user.getUserid(), newNickname);
+            updatedFields.add("닉네임");
         }
 
         // 변경사항 없으면 패스
-        if (!changed) {
+        if (updatedFields.isEmpty()) {
             return new ResponseDTO(HttpStatus.OK.value(), "변경된 정보가 없습니다.");
         }
 
-        updateUserInfo(user.getUserid(), nickname, phone, email);
+        // 프로필 업데이트 성공 로그
+        UserLog userLog = new UserLog();
+        userLog.setUserid(user.getUserid().intValue());
+        userLog.setActiontype("UPDATE_PROFILE");
+        userLog.setStatus(0); // 0: 성공
+        userLog.setContent("정보 업데이트: " + String.join(", ", updatedFields));
+        userLogService.saveLog(userLog);
 
         log.info("[알림] 유저 정보 업데이트: {}", user.getUsername());
         return new ResponseDTO(HttpStatus.OK.value(), "사용자 정보가 성공적으로 업데이트되었습니다.");
-    }
-
-    @Transactional
-    protected void updateUserInfo(Long userid, String nickname, String phone, String email) {
-        if (nickname != null) userProfileRepository.updateNickname(userid, nickname);
-        if (email != null) userRepository.updateEmail(userid, email);
-        userRepository.updatePhone(userid, phone);
     }
 
     @Transactional
@@ -314,6 +347,14 @@ public class UserService {
         // 3. UserProfile의 profileimg 필드 업데이트
         profile.setProfileimg(fileId);
         userProfileRepository.save(profile); // 변경된 UserProfile 저장
+
+        // 프로필 이미지 업데이트 성공 로그
+        UserLog userLog = new UserLog();
+        userLog.setUserid(user.getUserid().intValue());
+        userLog.setActiontype("UPDATE_PROFILE_IMAGE");
+        userLog.setStatus(0); // 0: 성공
+        userLog.setContent("프로필 이미지 업데이트");
+        userLogService.saveLog(userLog);
 
         log.info("[알림] 유저 프로필 이미지 업데이트: {} -> 파일 ID {}", user.getUsername(), fileId);
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
@@ -372,6 +413,14 @@ public class UserService {
 
         String encodedPassword = encodePassword(newPassword);
         user.setPassword(encodedPassword);
+
+        // 비밀번호 변경 성공 로그
+        UserLog userLog = new UserLog();
+        userLog.setUserid(user.getUserid().intValue());
+        userLog.setActiontype("CHANGE_PASSWORD");
+        userLog.setStatus(0); // 0: 성공
+        userLog.setContent("비밀번호 변경");
+        userLogService.saveLog(userLog);
 
         return new ResponseDTO(HttpStatus.OK.value(), "비밀번호가 성공적으로 변경되었습니다.");
     }
