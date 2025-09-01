@@ -18,7 +18,7 @@ import api from '../../../api/api'; // API 인스턴스 임포트
 
 const ITEMS_PER_PAGE = 10;
 
-function LoginHistorySettings() {
+function LogHistorySettings() {
     const [logs, setLogs] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
@@ -106,7 +106,7 @@ function LoginHistorySettings() {
     return (
         <Box>
             <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
-                로그인 이력
+                로그 조회
             </Typography>
 
             {loading ? (
@@ -117,7 +117,7 @@ function LoginHistorySettings() {
                 isMobile ? mobileView : desktopView
             ) : (
                 <Paper variant="outlined" sx={{ p: 5, textAlign: 'center' }}>
-                    <Typography>로그인 이력이 없습니다.</Typography>
+                    <Typography>로그 이력이 없습니다.</Typography>
                 </Paper>
             )}
 
@@ -138,4 +138,4 @@ function LoginHistorySettings() {
     );
 }
 
-export default LoginHistorySettings;
+export default LogHistorySettings;

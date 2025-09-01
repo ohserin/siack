@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react';
 import {Container, Box, Tabs, Tab} from '@mui/material';
 import ProfileSettings from './ProfileSettings';
 import PasswordSettings from './PasswordSettings';
-import LoginHistorySettings from './LoginHistorySettings';
+import LogHistorySettings from './LogHistorySettings.jsx';
 import {useAuth} from '../../../contexts/AuthContext';
 
 function UserSettingsPage() {
@@ -33,14 +33,14 @@ function UserSettingsPage() {
                 <Tabs value={currentTab} onChange={handleTabChange} aria-label="user settings tabs">
                     <Tab label="프로필 설정"/>
                     <Tab label="비밀번호 변경"/>
-                    <Tab label="로그인 이력"/>
+                    <Tab label="로그 조회"/>
                 </Tabs>
             </Box>
             <Container component="main" sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                 <Box sx={{width: '100%', maxWidth: getMaxWidth()}}>
                     {currentTab === 0 && <ProfileSettings/>}
                     {currentTab === 1 && <PasswordSettings/>}
-                    {currentTab === 2 && <LoginHistorySettings/>}
+                    {currentTab === 2 && <LogHistorySettings/>}
                 </Box>
             </Container>
         </Box>
