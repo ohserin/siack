@@ -1,6 +1,6 @@
 package com.dakgu.siack.user.repository;
 
-import com.dakgu.siack.user.entity.User;
+import com.dakgu.siack.user.vo.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

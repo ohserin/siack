@@ -2,7 +2,7 @@ package com.dakgu.siack.log.controller;
 
 import com.dakgu.siack.log.service.UserLogService;
 import com.dakgu.siack.log.vo.UserLog;
-import com.dakgu.siack.user.entity.User;
+import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

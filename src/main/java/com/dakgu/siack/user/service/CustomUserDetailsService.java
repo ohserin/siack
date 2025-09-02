@@ -1,6 +1,6 @@
 package com.dakgu.siack.user.service;
 
-import com.dakgu.siack.user.entity.User;
+import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

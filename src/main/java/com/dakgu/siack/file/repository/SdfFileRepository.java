@@ -1,6 +1,6 @@
 package com.dakgu.siack.file.repository;
 
-import com.dakgu.siack.file.entity.SdfFile;
+import com.dakgu.siack.file.vo.SdfFile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

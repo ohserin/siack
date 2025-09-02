@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 
@@ -44,6 +45,7 @@ public class UserLog {
     @Column(name = "CONTENT", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "CREATEDAT", nullable = false, updatable = false, insertable = false)
+    @CreationTimestamp
+    @Column(name = "CREATEDAT", nullable = false, updatable = false)
     private Timestamp createdat;
 }
