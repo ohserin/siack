@@ -1,9 +1,9 @@
 package com.dakgu.siack.file.service;
 
 import com.dakgu.siack.file.dto.FileStorageResult;
-import com.dakgu.siack.file.entity.SdfFile;
+import com.dakgu.siack.file.vo.SdfFile;
 import com.dakgu.siack.file.repository.SdfFileRepository;
-import com.dakgu.siack.user.entity.User;
+import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
