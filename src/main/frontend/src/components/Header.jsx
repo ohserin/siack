@@ -89,9 +89,15 @@ function Header() {
                     <Box>
                         {user ? (<Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                                 <IconButton onClick={handleMenuOpen} size="small" sx={{p: 0, color: 'white'}}>
-                                    {profileImageUrl ? (
-                                        <Avatar src={profileImageUrl} alt="profile" sx={{width: 32, height: 32}}/>) : (
-                                        <AccountCircleIcon fontSize="large" sx={{color: 'white'}}/>)}
+                                    <Avatar
+                                        src={typeof profileImageUrl === 'string' && profileImageUrl.trim() !== '' && profileImageUrl !== 'null' && profileImageUrl !== 'undefined' ? profileImageUrl : undefined}
+                                        sx={{width: 32, height: 32, bgcolor: 'secondary.main', border: '1px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center'}}
+                                        alt=""
+                                    >
+                                        {(!profileImageUrl || profileImageUrl === 'null' || profileImageUrl === 'undefined' || profileImageUrl === '') && (
+                                            <AccountCircleIcon sx={{fontSize: 28, color: 'white'}}/>
+                                        )}
+                                    </Avatar>
                                     <Typography variant="body1" sx={{ml: 1, color: 'white'}}>
                                         {userData?.nickname || ''}
                                     </Typography>

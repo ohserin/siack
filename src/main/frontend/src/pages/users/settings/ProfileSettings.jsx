@@ -224,7 +224,7 @@ function ProfileImageEditor({profileImage, onEditClick, fileInputRef, onImageCha
                 {loading ? (
                     <CircularProgress size={40} sx={{color: 'white'}}/>
                 ) : (error || !profileImage) ? (
-                    <AccountCircleIcon sx={{fontSize: 78, color: 'primary.main'}}/>
+                    <AccountCircleIcon sx={{fontSize: 78, color: 'secondary.main'}}/>
                 ) : (
                     <Avatar src={profileImage} sx={{width: 78, height: 78}}/>
                 )}

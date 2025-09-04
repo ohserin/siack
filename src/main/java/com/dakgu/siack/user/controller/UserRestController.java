@@ -63,7 +63,7 @@ public class UserRestController {
         ResponseEntity<byte[]> imageData = userService.getUserProfileImage(userid);
 
         if (imageData == null) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().build();
         }
         return imageData;
     }

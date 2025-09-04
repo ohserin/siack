@@ -336,15 +336,19 @@ function Join() {
                             variant="contained"
                             color="primary"
                             fullWidth
-                            sx={{mt: 2, mb: 2}}
+                            sx={{mt: 2, mb: 1}}
                         >
                             회원가입
                         </Button>
-                        <Box display="flex" justifyContent="end">
-                            <Link href="/login" variant="body2" sx={{color: theme.palette.blue.main}}>
-                                로그인
-                            </Link>
-                        </Box>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            fullWidth
+                            sx={{mb: 1}}
+                            onClick={() => navigate('/login')}
+                        >
+                            로그인 하기
+                        </Button>
                     </form>
                 </Paper>
             </Fade>
