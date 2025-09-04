@@ -9,7 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByUsername(String username);
-    User findByUserid(Long userid);
+    User findByUsernameAndUseyn(String username, boolean useyn);
+    User findByUseridAndUseyn(Long userid, boolean useyn);
 
     /* UK 중복 여부 확인 메서드 */
     boolean existsByUsername(String username);
@@ -26,5 +27,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("UPDATE User u SET u.email = :email WHERE u.userid = :userid")
     void updateEmail(@Param("userid") Long userId, @Param("email") String email);
 
-}
+    @Modifying
+    @Transactional
+    @Query("UPDATE User u SET u.useyn = :useyn WHERE u.userid = :userid")
+    void updateUseYnByUserId(@Param("userid") Long userId, @Param("useyn") boolean useYn);
 
+}

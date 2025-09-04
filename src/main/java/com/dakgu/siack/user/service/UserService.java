@@ -159,54 +159,38 @@ public class UserService {
     /* 사용자 로그인 처리 */
     @Transactional
     public ResponseDTO loginUser(UserRequestDTO request) {
-        // 1. UsernamePasswordAuthenticationToken 생성
+        // 1. 유저 아이디로 활성 계정 조회
+        User user = userRepository.findByUsernameAndUseyn(request.getUsername(), true);
+        if (user == null) {
+            return new UserResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다.", null, null, null);
+        }
+        // 2. 인증 (비밀번호 검증)
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
-
-        // 2. 실제 인증 (사용자 비밀번호 검증)
         Authentication authentication;
         try {
             authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        } catch (UsernameNotFoundException e) {
+        } catch (BadCredentialsException e) {
             UserLog userLog = new UserLog();
-            userLog.setUserid(0); // 사용자를 특정할 수 없으므로 0으로 설정
+            userLog.setUserid(user.getUserid().intValue());
             userLog.setActiontype("LOGIN_FAIL");
             userLog.setStatus(1); // 1: 실패
-            userLog.setContent("로그인 실패: 존재하지 않는 사용자 '" + request.getUsername() + "'");
+            userLog.setContent("로그인 실패: 비밀번호 불일치");
             userLogService.saveLog(userLog);
-            return new UserResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다.", null, null, null);
-        } catch (BadCredentialsException e) {
-            User user = userRepository.findByUsername(request.getUsername());
-            if (user != null) {
-                UserLog userLog = new UserLog();
-                userLog.setUserid(user.getUserid().intValue());
-                userLog.setActiontype("LOGIN_FAIL");
-                userLog.setStatus(1); // 1: 실패
-                userLog.setContent("로그인 실패");
-                userLogService.saveLog(userLog);
-            }
             return new UserResponseDTO(HttpStatus.UNAUTHORIZED.value(), "비밀번호가 일치하지 않습니다.", null, null, null);
         }
-
-        // 3. 인증 정보를 기반으로 JWT 토큰 생성
+        // 3. JWT 토큰 생성
         String jwt = jwtTokenProvider.generateToken(authentication);
-
-        // 사용자 정보 가져오기
-        User user = userRepository.findByUsername(request.getUsername());
-        String nickname = (user != null && user.getUserProfile() != null) ? user.getUserProfile().getNickname() : null;
-        assert user != null;
-
-        // 로그인 성공 로그
+        String nickname = (user.getUserProfile() != null) ? user.getUserProfile().getNickname() : null;
+        // 4. 로그인 성공 로그
         UserLog userLog = new UserLog();
         userLog.setUserid(user.getUserid().intValue());
         userLog.setActiontype("LOGIN");
         userLog.setStatus(0); // 0: 성공
         userLog.setContent("로그인 성공");
         userLogService.saveLog(userLog);
-
         log.info("[알림] 유저 로그인: {} / {}", user.getUsername(), nickname);
-
-        // 4. 생성된 토큰과 함께 응답 반환
+        // 5. 응답 반환
         return new UserResponseDTO(HttpStatus.OK.value(), "로그인이 성공적으로 완료되었습니다.", jwt, request.getUsername(), nickname);
     }
 
@@ -325,52 +309,40 @@ public class UserService {
 
     @Transactional
     public ResponseDTO updateProfileImage(Authentication authentication, MultipartFile file) throws IOException {
-        // 1. 로그인된 사용자 식별
         String username = authentication.getName();
         if (username == null) {
             return new ResponseDTO(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
         }
-
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndUseyn(username, true);
         if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 삭제된 계정입니다.");
         }
-
         UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
         if (profile == null) {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
         }
-
-        // 2. 파일 업로드 및 메타데이터 저장
         Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
-
-        // 3. UserProfile의 profileimg 필드 업데이트
         profile.setProfileimg(fileId);
-        userProfileRepository.save(profile); // 변경된 UserProfile 저장
-
-        // 프로필 이미지 업데이트 성공 로그
+        userProfileRepository.save(profile);
         UserLog userLog = new UserLog();
         userLog.setUserid(user.getUserid().intValue());
         userLog.setActiontype("UPDATE_PROFILE_IMAGE");
-        userLog.setStatus(0); // 0: 성공
+        userLog.setStatus(0);
         userLog.setContent("프로필 이미지 업데이트");
         userLogService.saveLog(userLog);
-
         log.info("[알림] 유저 프로필 이미지 업데이트: {} -> 파일 ID {}", user.getUsername(), fileId);
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
     }
 
     public ResponseEntity<byte[]> getUserProfileImage(String userid) {
-        User user = userRepository.findByUserid(Long.valueOf(userid));
+        if (userid == null) return null;
+        User user = userRepository.findByUseridAndUseyn(Long.valueOf(userid), true);
         if (user == null) return null;
         UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
         if (profile == null || profile.getProfileimg() == null) return null;
-
         Long fileId = profile.getProfileimg();
         String path = fileRepository.findPathByFileId(fileId);
-
         if (path == null || path.isEmpty()) return null;
-
         String extension = "";
         int i = path.lastIndexOf('.');
         if (i > 0) {
@@ -384,12 +356,8 @@ public class UserService {
         } else if (extension.equalsIgnoreCase("gif")) {
             mediaType = MediaType.IMAGE_GIF;
         }
-
         byte[] bytes = fileService.readFile(path);
-
-        return ResponseEntity.ok()
-                .contentType(mediaType)
-                .body(bytes);
+        return ResponseEntity.ok().contentType(mediaType).body(bytes);
     }
 
     /**
@@ -402,9 +370,9 @@ public class UserService {
     @Transactional
     public ResponseDTO changePassword(Authentication authentication, String newPassword) {
         String username = authentication.getName();
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndUseyn(username, true);
         if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 삭제된 계정입니다.");
         }
 
         if (!userValidationService.isValidPasswordFormat(newPassword)) {
@@ -435,9 +403,9 @@ public class UserService {
     @Transactional(readOnly = true)
     public ResponseDTO verifyCurrentPassword(Authentication authentication, String currentPassword) {
         String username = authentication.getName();
-        User user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsernameAndUseyn(username, true);
         if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 삭제된 계정입니다.");
         }
 
         if(!passwordEncoder.matches(currentPassword, user.getPassword())){
@@ -447,6 +415,46 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "비밀번호가 일치합니다.");
     }
 
+    /**
+     * 회원 탈퇴를 처리합니다.
+     *
+     * @param authentication  현재 인증된 사용자 정보
+     * @param password        확인할 비밀번호
+     * @return ResponseDTO 처리 결과
+     */
+    @Transactional
+    public ResponseDTO deleteUser(Authentication authentication, String password) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsernameAndUseyn(username, true);
+        if (user == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 이미 삭제된 계정입니다.");
+        }
+
+        if(!passwordEncoder.matches(password, user.getPassword())){
+            // 탈퇴 실패 로그 기록
+            UserLog userLog = new UserLog();
+            userLog.setUserid(user.getUserid().intValue());
+            userLog.setActiontype("DELETE_USER_FAIL");
+            userLog.setStatus(1); // 1: 실패
+            userLog.setContent("회원 탈퇴 실패: 비밀번호 불일치");
+            userLogService.saveLog(userLog);
+            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다.");
+        }
+
+        userRepository.updateUseYnByUserId(user.getUserid(), false);
+
+        // 탈퇴 성공 로그 기록
+        UserLog userLog = new UserLog();
+        userLog.setUserid(user.getUserid().intValue());
+        userLog.setActiontype("DELETE_USER");
+        userLog.setStatus(0); // 0: 성공
+        userLog.setContent("회원 탈퇴 성공");
+        userLogService.saveLog(userLog);
+
+        return new ResponseDTO(HttpStatus.OK.value(), "회원 탈퇴가 성공적으로 처리되었습니다.");
+    }
+
+    // 비밀번호 인코딩 메서드
     private String encodePassword(String password) {
         return passwordEncoder.encode(password);
     }

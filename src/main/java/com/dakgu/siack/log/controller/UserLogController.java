@@ -25,8 +25,28 @@ public class UserLogController {
     private final UserLogService userLogService;
     private final UserRepository userRepository;
 
+    class PageResponse<T> {
+        private final java.util.List<T> content;
+        private final int page;
+        private final int size;
+        private final long totalElements;
+        private final int totalPages;
+        public PageResponse(Page<T> page) {
+            this.content = page.getContent();
+            this.page = page.getNumber();
+            this.size = page.getSize();
+            this.totalElements = page.getTotalElements();
+            this.totalPages = page.getTotalPages();
+        }
+        public java.util.List<T> getContent() { return content; }
+        public int getPage() { return page; }
+        public int getSize() { return size; }
+        public long getTotalElements() { return totalElements; }
+        public int getTotalPages() { return totalPages; }
+    }
+
     @GetMapping("/user")
-    public ResponseEntity<Page<UserLog>> getUserLogs(
+    public ResponseEntity<PageResponse<UserLog>> getUserLogs(
             Authentication authentication,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
@@ -44,7 +64,7 @@ public class UserLogController {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdat").descending());
         Page<UserLog> logs = userLogService.getLogsByUserId(user.getUserid().intValue(), pageable);
 
-        return ResponseEntity.ok(logs);
+        return ResponseEntity.ok(new PageResponse<>(logs));
     }
 
 }

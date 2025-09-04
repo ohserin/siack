@@ -10,6 +10,7 @@ import {setNavigator} from "./utils/navigation.js";
 import {useEffect} from "react";
 import {ModalProvider} from "./contexts/ModalContext.jsx";
 import UserSettingsPage from "./pages/users/settings/UserSettingsPage.jsx";
+import DeletedAccount from './pages/users/DeletedAccount.jsx';
 
 function App() {
     const nav = useNavigate();
@@ -28,6 +29,7 @@ function App() {
                         <Route path="/join" element={<Join/>}/>
                         <Route path="/login" element={<Login/>}/>
                         <Route path="/user-setting" element={<UserSettingsPage/>}/>
+                        <Route path="/account-deleted" element={<DeletedAccount/>}/>
                     </Routes>
                 </Container>
                 <Footer/>

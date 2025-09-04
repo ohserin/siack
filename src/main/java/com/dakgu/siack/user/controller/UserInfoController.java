@@ -51,4 +51,10 @@ public class UserInfoController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    @DeleteMapping(value = "/delete-user")
+    public ResponseEntity<?> deleteUser(Authentication authentication, @RequestBody Map<String, String> request) {
+        ResponseDTO response = userService.deleteUser(authentication, request.get("password"));
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
 }
