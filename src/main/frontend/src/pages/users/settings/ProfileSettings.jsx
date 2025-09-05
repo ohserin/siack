@@ -175,10 +175,6 @@ function ProfileSettings() {
                 <EditableField label="닉네임" value={nickname} onConfirm={(v) => handleSave({nickname: v})}/>
                 <EditableField label="휴대전화번호" value={phone} onConfirm={(v) => handleSave({phone: v})}/>
             </Box>
-
-            <Box display="flex" width="100%" justifyContent="end">
-                <Link href="/" variant="body2">돌아가기</Link>
-            </Box>
         </Box>
     );
 }
