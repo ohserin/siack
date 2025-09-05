@@ -58,7 +58,7 @@ function PasswordSettings() {
 
     return (
         <Box>
-            <Typography variant="h6" fontWeight={400} p={2}>비밀번호 변경</Typography>
+            <Typography variant="h5" fontWeight={400} p={2}>비밀번호 변경</Typography>
             <Divider sx={{mb: 2}}/>
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 2, px: 2}}>
                 <TextField
