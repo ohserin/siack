@@ -46,9 +46,8 @@ function WithdrawalSettings() {
     return (
         <Box sx={{textAlign: 'center', mt: 6}}>
             <Typography variant="h4" gutterBottom>회원 탈퇴</Typography>
-            <Typography color="text.secondary" sx={{mb: 3}}>
-                회원 탈퇴 시 모든 정보가 삭제되며 복구할 수 없습니다.<br/>
-                정말로 탈퇴하시겠습니까?
+            <Typography color="text.secondary" sx={{mt:5, mb: 5, wordBreak: 'keep-all', whiteSpace: 'pre-line'}}>
+                {`회원 탈퇴 시 모든 정보가 삭제되며\n복구할 수 없습니다.\n정말로 탈퇴하시겠습니까?`}
             </Typography>
             <Button variant="contained" color="error" onClick={handleOpen} disabled={loading} sx={{mb: 2}}>
                 회원 탈퇴

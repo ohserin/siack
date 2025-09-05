@@ -105,7 +105,7 @@ function LogHistorySettings() {
 
     return (
         <Box>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 'bold', mb: 3 }}>
+            <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
                 로그 조회
             </Typography>
 
