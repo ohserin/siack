@@ -32,4 +32,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("UPDATE User u SET u.useyn = :useyn WHERE u.userid = :userid")
     void updateUseYnByUserId(@Param("userid") Long userId, @Param("useyn") boolean useYn);
 
+    @Query(value = "SELECT userId FROM sdu_user WHERE username=?1", nativeQuery = true)
+    public Long findUserCodeByUsername(String username);
+
 }
+
