@@ -3,7 +3,7 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
     palette: {
         primary: { main: '#611f69' },
-        secondary: { main: '#9c27b0' },
+        secondary: { main: '#4A154B' },
         error: { main: '#df3526' },
         background: {
             default: '#f5f5f5', // 페이지 배경색
@@ -14,14 +14,12 @@ const theme = createTheme({
             secondary: '#666666',
         },
         mode: 'light', // 또는 'dark'
-
         blue: {
             main: '#1976d2',
             light: '#63a4ff',
             dark: '#004ba0',
             contrastText: '#ffffff',
         },
-
         grey:{
             100: '#f5f5f5',
             200: '#eeeeee',
