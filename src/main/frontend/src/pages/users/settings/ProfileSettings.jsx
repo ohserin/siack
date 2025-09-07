@@ -1,5 +1,5 @@
 import {
-    Typography, TextField, Divider, Box, Link, useTheme, Avatar, IconButton, CircularProgress,
+    Typography, TextField, Divider, Box, useTheme, Avatar, IconButton, CircularProgress,
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import EditIcon from '@mui/icons-material/Edit';

@@ -14,6 +14,7 @@ import {
     useMediaQuery,
     CircularProgress
 } from '@mui/material';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import api from '../../../api/api'; // API 인스턴스 임포트
 
 const ITEMS_PER_PAGE = 10;
@@ -27,20 +28,21 @@ function LogHistorySettings() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    useEffect(() => {
-        const fetchLogs = async () => {
-            setLoading(true);
-            try {
-                const response = await api.get(`/v1/logs/user?page=${page - 1}&size=${ITEMS_PER_PAGE}`);
-                setLogs(response.data.content);
-                setTotalPages(response.data.totalPages);
-            } catch (error) {
-                console.error("로그 데이터를 불러오는 데 실패했습니다.", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    // fetchLogs를 useEffect 밖으로 분리하여 새로고침에서도 재사용 가능하게 변경
+    const fetchLogs = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get(`/v1/logs/user?page=${page - 1}&size=${ITEMS_PER_PAGE}`);
+            setLogs(response.data.content);
+            setTotalPages(response.data.totalPages);
+        } catch (error) {
+            console.error("로그 데이터를 불러오는 데 실패했습니다.", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchLogs();
     }, [page]);
 
@@ -105,9 +107,17 @@ function LogHistorySettings() {
 
     return (
         <Box>
-            <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-                로그 조회
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" gutterBottom sx={{ mb: 0, mr: 1 }}>
+                    로그 조회
+                </Typography>
+                <RefreshIcon
+                    onClick={fetchLogs}
+                    sx={{ cursor: loading ? 'not-allowed' : 'pointer', color: loading ? 'grey.400' : 'grey.700', transition: 'color 0.2s', ml: 0.5 }}
+                    fontSize="medium"
+                    titleAccess="새로고침"
+                />
+            </Box>
 
             {loading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
