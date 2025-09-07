@@ -24,11 +24,12 @@ function App() {
         <AuthProvider><ModalProvider>
             <Box display="flex" flexDirection="column" minHeight="100vh">
                 <Header/>
-                <Container sx={{flex: 1}}>
+                <Container sx={{flex: 1, mt: 2}}>
                     <Routes>
                         <Route path="/" element={<Home/>}/>
                         <Route path="/join" element={<Join/>}/>
                         <Route path="/login" element={<Login/>}/>
+                        <Route path="/contact" element={<Contact/>}/>
                         <Route path="/user-setting" element={<UserSettingsPage/>}/>
                         <Route path="/account-deleted" element={<DeletedAccount/>}/>
                         <Route path="/contact" element={<Contact/>}/>
