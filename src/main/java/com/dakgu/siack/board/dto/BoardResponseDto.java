@@ -1,5 +1,6 @@
 package com.dakgu.siack.board.dto;
 
+import com.dakgu.siack.utils.ResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,11 +10,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BoardRequestDTO {
-
-    private long boardId;
-    private String author;
-    private  String title;
-    private  String content;
+public class BoardResponseDto extends ResponseDTO {
+    private Long boardId;
     private String username;
+    private String title;
+    private String content;
+
 }

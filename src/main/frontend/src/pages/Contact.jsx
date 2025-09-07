@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from "../api/api.js";
 import {
     Box,
     Typography,
@@ -18,6 +19,8 @@ import {
     TextField,
 } from "@mui/material";
 
+
+
 // 샘플 게시글 데이터
 const posts = [
     { id: 1, title: "첫 번째 게시글", author: "세린", date: "2025-08-29" },
@@ -32,6 +35,30 @@ const Contact = () => {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [open, setOpen] = useState(false);
+
+    const handleSubmit = async () => {
+        if (!title.trim() || !content.trim()) {
+            alert("제목과 내용을 모두 입력해주세요.");
+            return;
+        }
+
+        try {
+            const response = await api.post("/board-write", {
+                title,
+                content,
+                author,
+            });
+            alert(response.data?.message || "게시물이 등록되었습니다!");
+            setOpen(false);
+            setTitle("");
+            setContent("");
+
+            // 게시글 리스트 갱신
+            fetchPosts();
+        } catch (error) {
+            alert(error.response?.data?.message || "게시물 등록 중 오류가 발생했습니다.");
+        }
+    };
 
     return (
         <Box sx={{ padding: 4 }}>
@@ -104,12 +131,28 @@ const Contact = () => {
             <Dialog open={open} onClose={() => setOpen(false)}>
                 <DialogTitle>글쓰기</DialogTitle>
                 <DialogContent>
-                    <TextField label="제목" fullWidth margin="normal" />
-                    <TextField label="내용" fullWidth multiline rows={4} margin="normal" />
+                    <TextField
+                        label="제목"
+                        fullWidth
+                        margin="normal"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                    />
+                    <TextField
+                        label="내용"
+                        fullWidth
+                        multiline
+                        rows={4}
+                        margin="normal"
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpen(false)}>취소</Button>
-                    <Button variant="contained">등록</Button>
+                    <Button variant="contained" onClick={handleSubmit}>
+                        등록
+                    </Button>
                 </DialogActions>
             </Dialog>
         </Box>

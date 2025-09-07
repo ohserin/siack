@@ -26,5 +26,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("UPDATE User u SET u.email = :email WHERE u.userid = :userid")
     void updateEmail(@Param("userid") Long userId, @Param("email") String email);
 
+    @Query(value = "SELECT userId FROM sdu_user WHERE username=?1", nativeQuery = true)
+    public Long findUserCodeByUsername(String username);
+
 }
 
