@@ -1,4 +1,4 @@
-package com.dakgu.siack.board.entity;
+package com.dakgu.siack.board.vo;
 
 import com.dakgu.siack.board.dto.BoardRequestDTO;
 import com.dakgu.siack.utils.Timestamp;
