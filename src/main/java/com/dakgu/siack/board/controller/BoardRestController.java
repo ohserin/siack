@@ -3,16 +3,11 @@ package com.dakgu.siack.board.controller;
 import com.dakgu.siack.board.dto.BoardListResponseDTO;
 import com.dakgu.siack.board.dto.BoardRequestDTO;
 import com.dakgu.siack.board.service.BoardService;
-import com.dakgu.siack.board.vo.Board;
 import com.dakgu.siack.utils.ResponseDTO;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
 
 @RequiredArgsConstructor
 @RequestMapping("/v1/board")

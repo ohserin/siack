@@ -38,10 +38,19 @@ const Contact = () => {
     const fetchPosts = async (page = 0) => {
         try {
             const response = await api.get(`/v1/board/list?page=${page}&size=${size}`);
-            setPosts(response.data.content);
+            // 서버에서 받은 데이터 구조에 맞게 변환
+            const posts = response.data.content.map(post => ({
+                boardId: post.boardId,
+                title: post.title,
+                content: post.content,
+                author: post.nickname, // 닉네임을 author로 사용
+                date: post.createdat ? new Date(post.createdat).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '',
+                statusCode: post.statusCode,
+                message: post.message,
+            }));
+            setPosts(posts);
             setTotalCount(response.data.totalCount);
         } catch (error) {
-            console.error(error);
             showModal("오류", "게시글 목록을 불러오지 못했습니다.");
         }
     };

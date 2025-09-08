@@ -12,8 +12,17 @@ import lombok.Setter;
 @AllArgsConstructor
 public class BoardResponseDto extends ResponseDTO {
     private Long boardId;
-    private String username;
+    private String nickname;
     private String title;
     private String content;
+    private java.sql.Timestamp createdat;
 
+    public BoardResponseDto(int statusCode, String message, Long boardId, String nickname, String title, String content, java.sql.Timestamp createdat) {
+        super(statusCode, message);
+        this.boardId = boardId;
+        this.nickname = nickname;
+        this.title = title;
+        this.content = content;
+        this.createdat = createdat;
+    }
 }
