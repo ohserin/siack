@@ -7,24 +7,30 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "sdu_board")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "sdu_board")
 public class Board extends Timestamp {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long boardId;
-    private long author;
+    @Column(name = "BOARDID")
+    private Long boardId;
+
+    @Column(name = "AUTHOR", nullable = false)
+    private Long userId;   // author → userId 로 이름 변경 (더 직관적)
+
+    @Column(name = "TITLE", nullable = false, length = 200)
     private String title;
+
+    @Column(name = "CONTENT", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    public Board(Long userCode, BoardRequestDTO boardDto) {
-        this.author = userCode;
-        this.title = boardDto.getTitle();
-        this.content = boardDto.getContent();
+    public Board(Long userId, BoardRequestDTO dto) {
+        this.userId = userId;
+        this.title = dto.getTitle();
+        this.content = dto.getContent();
     }
-
-
 }

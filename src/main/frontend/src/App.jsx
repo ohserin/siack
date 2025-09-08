@@ -32,7 +32,6 @@ function App() {
                         <Route path="/contact" element={<Contact/>}/>
                         <Route path="/user-setting" element={<UserSettingsPage/>}/>
                         <Route path="/account-deleted" element={<DeletedAccount/>}/>
-                        <Route path="/contact" element={<Contact/>}/>
                     </Routes>
                 </Container>
                 <Footer/>

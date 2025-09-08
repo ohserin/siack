@@ -3,13 +3,13 @@ package com.dakgu.siack.board.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import java.util.List;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BoardRequestDTO {
-    private String title;
-    private String content;
+public class BoardListResponseDTO {
+    private List<BoardResponseDto> content;
+    private long totalCount;
 }
