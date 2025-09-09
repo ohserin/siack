@@ -34,7 +34,7 @@ function App() {
                         <Route path="/account-deleted" element={<DeletedAccount/>}/>
                     </Routes>
                 </Container>
-                <Footer/>
+                {/*<Footer/>*/}
             </Box>
         </ModalProvider></AuthProvider>
     );

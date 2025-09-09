@@ -35,7 +35,7 @@ public class UserValidationService {
 
     // 닉네임 형식 유효성 검사
     public boolean isValidNicknameFormat(String nickname) {
-        String nicknameRegex = "^[a-zA-Z0-9가-힣_]{2,30}$";
+        String nicknameRegex = "^[a-zA-Z0-9가-힣_]{2,14}$";
         return Pattern.matches(nicknameRegex, nickname);
     }
 

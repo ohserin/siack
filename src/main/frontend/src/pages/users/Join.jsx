@@ -1,5 +1,5 @@
 import {useForm} from 'react-hook-form';
-import {TextField, Button, Box, Typography, Link, InputAdornment, Divider, Paper, Container, Fade} from '@mui/material';
+import {TextField, Button, Typography, InputAdornment, Divider, Paper, Container, Fade} from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import PersonIcon from '@mui/icons-material/Person';
 import LockIcon from '@mui/icons-material/Lock';
@@ -8,7 +8,6 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import FaceIcon from '@mui/icons-material/Face';
 import React, {useEffect, useState} from "react";
 import api from "../../api/api.js";
-import theme from '../../theme.js'
 import {useAuth} from "../../contexts/AuthContext.jsx";
 import {navigate} from "../../utils/navigation.js";
 import {checkDuplicate, regexTest} from "../../utils/validation.js";
@@ -147,7 +146,7 @@ function Join() {
     useEffect(() => {
         setShowForm(true);
         guard(false, '/');
-    }, []);
+    }, [guard]);
 
     // 비밀번호 필드의 현재 값을 watch 하여 비밀번호 확인 필드 유효성 검사에 사용
     const password = watch('password', '');

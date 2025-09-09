@@ -6,7 +6,7 @@ const regexPatterns = {
     password: /^(?=.*[a-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/,
     email: /^[^\s@]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/, // 일반적인 이메일 형식
     phone: /^\d{3}-\d{3,4}-\d{4}$/, // 000-0000-0000 또는 000-000-0000 형식
-    nickname: /^[a-zA-Z0-9가-힣_]{2,30}$/
+    nickname: /^[a-zA-Z0-9가-힣_]{2,14}$/
 };
 
 export function regexTest(type, value) {
