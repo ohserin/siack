@@ -3,8 +3,6 @@ import api from "../api/api.js";
 import {
     Box,
     Typography,
-    Grid,
-    Paper,
     Button,
     Dialog,
     DialogTitle,
@@ -18,12 +16,13 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import {useModal} from "../contexts/ModalContext.jsx";
+import {useAuth} from "../contexts/AuthContext.jsx";
 
 const Contact = () => {
     const [posts, setPosts] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
     const [page, setPage] = useState(0); // 0부터 시작
-    const size = 10;
+    const [size, setSize] = useState(10); // 페이지당 게시글 수
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [open, setOpen] = useState(false);
@@ -32,8 +31,21 @@ const Contact = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const writeButtonRef = useRef(null);
-    const rootRef = useRef(null);
     const {showModal} = useModal();
+    const {user, userData} = useAuth();
+
+
+    const handleOpenWrite = () => {
+        if (!user) {
+            showModal("로그인이 필요합니다", "로그인 후 이용해 주세요.");
+            return;
+        }
+        setOpen(true);
+    };
+
+    useEffect(() => {
+        setSize(isMobile ? 5 : 10); // 모바일은 5개, 데스크탑은 10개
+    }, [isMobile]);
 
     const fetchPosts = async (page = 0) => {
         try {
@@ -44,7 +56,19 @@ const Contact = () => {
                 title: post.title,
                 content: post.content,
                 author: post.nickname, // 닉네임을 author로 사용
-                date: post.createdat ? new Date(post.createdat).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '',
+                date: post.createdat ? new Date(post.createdat).toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                }).replace(/\.$/, '').replace(/(\d{4})\. (\d{2})\. (\d{2})\./, (m, y, mth, d) => `${y}.${mth}.${d}`) : '',
+                dateTime: post.createdat ? new Date(post.createdat).toLocaleString('ko-KR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                }).replace(/(\d{4})\. (\d{2})\. (\d{2})\./, (m, y, mth, d) => `${y}.${mth}.${d}`) : '',
                 statusCode: post.statusCode,
                 message: post.message,
             }));
@@ -57,7 +81,7 @@ const Contact = () => {
 
     useEffect(() => {
         fetchPosts(page);
-    }, [page]);
+    }, [page, size]);
 
     const handleSubmit = async () => {
         if (!title.trim() || !content.trim()) {
@@ -121,6 +145,9 @@ const Contact = () => {
         };
     }, [open, viewOpen]);
 
+    const myNickname = userData?.nickname?.trim();
+    const isMyPost = myNickname && selectedPost?.author?.trim() === myNickname;
+
     return (
         <Box sx={{
             maxWidth: 900,
@@ -139,9 +166,9 @@ const Contact = () => {
                     variant="contained"
                     color="primary"
                     startIcon={<AddIcon/>}
-                    onClick={() => setOpen(true)}
+                    onClick={handleOpenWrite}
                     sx={{
-                        borderRadius: 3,
+                        borderRadius: 1,
                         fontWeight: 700,
                         boxShadow: '0 2px 8px 0 rgba(0,0,0,0.08)',
                         fontSize: {xs: 15, md: 16},
@@ -153,11 +180,10 @@ const Contact = () => {
                 </Button>
             </Box>
 
-            {/* 데스크탑: 리스트(행) 스타일 */}
             {!isMobile && (
                 <Box sx={{
                     background: '#fff',
-                    borderRadius: 4,
+                    borderRadius: 0,
                     boxShadow: '0 4px 24px 0 rgba(0,0,0,0.07)',
                     overflow: 'hidden',
                 }}>
@@ -184,19 +210,35 @@ const Contact = () => {
                             borderBottom: post === posts[posts.length - 1] ? 'none' : '1px solid #f0f2f5',
                             '&:hover': {background: '#f8fafc'},
                             transition: 'background 0.15s',
+                            borderRadius: 0, // 완전 직각
                         }}>
-                            <Box sx={{flex: 1, fontWeight: 600, color: '#222', fontSize: 16}}>{post.title}</Box>
+                            <Box sx={{
+                                flex: 1,
+                                fontWeight: 600,
+                                color: '#222',
+                                fontSize: 16,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                mr: 2,
+                            }}>{post.title}</Box>
                             <Box sx={{
                                 width: 120,
                                 textAlign: 'center',
                                 color: '#7b8a9b',
-                                fontSize: 15
+                                fontSize: 15,
+                                flexShrink: 0
                             }}>{post.author}</Box>
-                            <Box
-                                sx={{width: 120, textAlign: 'center', color: '#7b8a9b', fontSize: 15}}>{post.date}</Box>
-                            <Box sx={{width: 60, textAlign: 'center'}}>
+                            <Box sx={{
+                                width: 120,
+                                textAlign: 'center',
+                                color: '#7b8a9b',
+                                fontSize: 15,
+                                flexShrink: 0
+                            }}>{post.date}</Box>
+                            <Box sx={{width: 60, textAlign: 'center', flexShrink: 0}}>
                                 <IconButton color="primary" size="small" sx={{
-                                    borderRadius: 2,
+                                    borderRadius: 0,
                                     background: '#f4f6fa',
                                     '&:hover': {background: '#e3e8f0'}
                                 }} onClick={() => handleViewPost(post)}>
@@ -208,53 +250,51 @@ const Contact = () => {
                 </Box>
             )}
 
-            {/* 모바일: 카드형 */}
+            {/* 모바일: 카드형 리스트 뷰 */}
             {isMobile && (
-                <Grid container spacing={3}>
+                <Box sx={{
+                    background: 'transparent',
+                    borderRadius: 0,
+                    boxShadow: 'none',
+                    p: 0,
+                }}>
                     {posts.map((post) => (
-                        <Grid key={post.boardId} style={{width: '100%'}}>
-                            <Paper
-                                elevation={3}
-                                sx={{
-                                    p: 3,
-                                    borderRadius: 4,
-                                    boxShadow: '0 4px 24px 0 rgba(0,0,0,0.07)',
-                                    width: '100%',
-                                    minHeight: 140,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    justifyContent: 'space-between',
-                                    background: '#fff',
-                                }}
-                            >
-                                <Box>
-                                    <Typography variant="h6" sx={{
-                                        fontWeight: 700,
-                                        color: '#222',
-                                        mb: 1,
-                                        fontSize: 17,
-                                        lineHeight: 1.3,
-                                        wordBreak: 'break-all'
-                                    }}>
-                                        {post.title}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{color: '#7b8a9b', fontSize: 14, mb: 0.5}}>
-                                        {post.author} · {post.date}
-                                    </Typography>
+                        <Box key={post.boardId} sx={{
+                            mb: 2,
+                            borderRadius: 0,
+                            boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)',
+                            background: '#fff',
+                            p: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 1,
+                            transition: 'box-shadow 0.15s',
+                            '&:hover': {boxShadow: '0 4px 16px 0 rgba(0,0,0,0.10)'}
+                        }}>
+                            <Box sx={{
+                                fontWeight: 700,
+                                color: '#222',
+                                fontSize: 16,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                mb: 0.5,
+                            }}>{post.title}</Box>
+                            <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                                <Box sx={{color: '#7b8a9b', fontWeight: 400, fontSize: 13}}>
+                                    {post.author} · {post.date}
                                 </Box>
-                                <Box sx={{display: 'flex', justifyContent: 'flex-end', mt: 2}}>
-                                    <IconButton color="primary" size="small" sx={{
-                                        borderRadius: 2,
-                                        background: '#f4f6fa',
-                                        '&:hover': {background: '#e3e8f0'}
-                                    }} onClick={() => handleViewPost(post)}>
-                                        <VisibilityIcon fontSize="small"/>
-                                    </IconButton>
-                                </Box>
-                            </Paper>
-                        </Grid>
+                                <IconButton color="primary" size="small" sx={{
+                                    borderRadius: 0, // 완전 직각
+                                    background: '#f4f6fa',
+                                    '&:hover': {background: '#e3e8f0'}
+                                }} onClick={() => handleViewPost(post)}>
+                                    <VisibilityIcon fontSize="small"/>
+                                </IconButton>
+                            </Box>
+                        </Box>
                     ))}
-                </Grid>
+                </Box>
             )}
 
             <Dialog
@@ -266,7 +306,7 @@ const Contact = () => {
                     paper: {
                         sx: isMobile
                             ? {m: 0, width: "100%", height: "100%", borderRadius: 0, p: 0}
-                            : {borderRadius: 4, p: 2},
+                            : {borderRadius: 0, p: 2},
                     }
                 }}
             >
@@ -303,7 +343,7 @@ const Contact = () => {
                     <Button
                         onClick={() => setOpen(false)}
                         size={isMobile ? "medium" : "large"}
-                        sx={{fontWeight: 700, color: '#7b8a9b'}}
+                        sx={{fontWeight: 700, color: '#7b8a9b', borderRadius: 2}}
                     >
                         취소
                     </Button>
@@ -311,7 +351,7 @@ const Contact = () => {
                         variant="contained"
                         onClick={handleSubmit}
                         size={isMobile ? "medium" : "large"}
-                        sx={{fontWeight: 700, px: 4}}
+                        sx={{fontWeight: 700, px: 4, borderRadius: 2}}
                     >
                         등록
                     </Button>
@@ -331,23 +371,44 @@ const Contact = () => {
                         }
                     },
                     paper: {
-                        sx: {borderRadius: 4, p: 2}
+                        sx: {borderRadius: 2, p: 2}
                     }
                 }}
             >
-                <DialogTitle sx={{fontWeight: 800, fontSize: isMobile ? 19 : 22, color: '#222'}}>
+                <DialogTitle sx={{
+                    fontWeight: 800,
+                    fontSize: isMobile ? 19 : 22,
+                    color: '#222',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: 'calc(100% - 48px)',
+                    display: 'block',
+                }}>
                     {selectedPost?.title || '게시글 상세'}
                 </DialogTitle>
                 <DialogContent sx={{px: {xs: 2, sm: 4}, pt: 1, pb: 0}}>
                     <Typography sx={{color: '#7b8a9b', fontSize: 15, mb: 1}}>
-                        작성자: {selectedPost?.author} | 작성일: {selectedPost?.date}
+                        작성자: {selectedPost?.author} | 작성일: {selectedPost?.dateTime}
                     </Typography>
                     <Typography sx={{fontSize: 16, color: '#222', whiteSpace: 'pre-line', mt: 2}}>
                         {selectedPost?.content || '내용이 없습니다.'}
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{px: {xs: 2, sm: 4}, pb: {xs: 2, sm: 3}}}>
-                    <Button onClick={handleCloseView} variant="contained" color="primary" sx={{fontWeight: 700}}>
+                    {isMyPost && (
+                        <>
+                            <Button variant="outlined"  sx={{ borderColor:"#bdbdbd",color:"#757575", fontWeight: 700, mr: 1, borderRadius: 0}}>
+                                수정
+                            </Button>
+                            <Button variant="outlined" color="error" sx={{fontWeight: 700, mr: 1, borderRadius: 0}}>
+                                삭제
+                            </Button>
+                        </>
+
+                    )}
+                    <Button onClick={handleCloseView} variant="contained" color="primary"
+                            sx={{fontWeight: 700, borderRadius: 0}}>
                         닫기
                     </Button>
                 </DialogActions>
@@ -360,7 +421,7 @@ const Contact = () => {
                         key={idx}
                         variant={page === idx ? 'contained' : 'outlined'}
                         size="small"
-                        sx={{mx: 0.5, minWidth: 36}}
+                        sx={{mx: 0.5, minWidth: 36, borderRadius: 0}}
                         onClick={() => handlePageChange(idx)}
                     >
                         {idx + 1}
