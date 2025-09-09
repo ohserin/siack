@@ -1,5 +1,5 @@
 import {
-    Typography, TextField, Divider, Box, useTheme, Avatar, IconButton, CircularProgress,
+    Typography, TextField, Divider, Box, useTheme, Avatar, IconButton, CircularProgress, Tooltip,
 } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import EditIcon from '@mui/icons-material/Edit';
@@ -144,20 +144,67 @@ function ProfileSettings() {
                 mb: 2,
                 overflow: 'hidden'
             }}>
-                <Typography variant="h5" fontWeight={400} p={2}>프로필</Typography>
-                <Divider sx={{my: 2, margin: 0}}/>
                 <Box sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 2,
+                    gap: 1,
+                    p: 2,
+                    backgroundColor: 'transparent',
+                }}>
+                    <Typography variant="h5" fontWeight={400}>프로필</Typography>
+                    {userData && (
+                        <Typography variant="body2" sx={{
+                            fontSize: 13,
+                            color: 'white',
+                            bgcolor: '#4eb100',
+                            borderRadius: 1,
+                            px: 1,
+                            py: 0.2,
+                            fontWeight: 500,
+                            whiteSpace: 'nowrap',
+                            display: 'inline-block',
+                            ml: 1,
+                        }}>
+                            {getRoleLabel()}
+                        </Typography>
+                    )}
+                </Box>
+                <Divider sx={{my: 2, margin: 0}}/>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: { xs: 2, sm: 2 },
                     backgroundColor: theme.palette.grey[200],
-                    p: 2
+                    p: 2,
+                    justifyContent: 'flex-start',
+                    textAlign: 'left',
+                    flexWrap: { xs: 'nowrap', sm: 'nowrap' },
+                    overflowX: { xs: 'auto', sm: 'visible' },
                 }}>
                     <ProfileImageEditor profileImage={profileImage} onEditClick={handleEditClick}
                                         fileInputRef={fileInputRef} onImageChange={handleImageChange}/>
-                    <Box>
-                        <Typography variant="h6" fontWeight={300}>{userData?.username}</Typography>
-                        <Typography fontWeight={200}>{userData ? getRoleLabel() : ''}</Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.5, minWidth: 0 }}>
+                        <Typography variant="h6" fontWeight={700} sx={{ fontSize: 22, mb: 0.5 }}>
+                            {userData?.nickname || '-'}
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0, maxWidth: { xs: 140, sm: 220 } }}>
+                            <Tooltip title={userData?.userid || ''} arrow>
+                                <Typography variant="body2" color="text.secondary" sx={{
+                                    fontSize: 15,
+                                    mr: 1,
+                                    whiteSpace: 'nowrap',
+                                    textOverflow: 'ellipsis',
+                                    overflow: 'hidden',
+                                    maxWidth: { xs: 100, sm: 180 },
+                                    minWidth: 0,
+                                    display: 'block',
+                                    cursor: 'pointer',
+                                }}>
+                                    {userData?.userid ? `@${userData.username}` : ''}
+                                </Typography>
+                            </Tooltip>
+                        </Box>
                     </Box>
                 </Box>
             </Box>
@@ -171,8 +218,8 @@ function ProfileSettings() {
             }}>
                 <Typography variant="h6" fontWeight={400} p={2}>정보 수정</Typography>
                 <Divider sx={{my: 2, margin: 0}}/>
-                <EditableField label="이메일" value={email} onConfirm={(v) => handleSave({email: v})}/>
                 <EditableField label="닉네임" value={nickname} onConfirm={(v) => handleSave({nickname: v})}/>
+                <EditableField label="이메일" value={email} onConfirm={(v) => handleSave({email: v})}/>
                 <EditableField label="휴대전화번호" value={phone} onConfirm={(v) => handleSave({phone: v})}/>
             </Box>
         </Box>
@@ -206,8 +253,8 @@ function ProfileImageEditor({profileImage, onEditClick, fileInputRef, onImageCha
         <Box sx={{display: 'flex', alignItems: 'center', padding: 1, borderRadius: 1, position: 'relative'}}>
             <Box sx={{
                 position: 'relative',
-                width: 80,
-                height: 80,
+                width: 90,
+                height: 90,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -218,24 +265,30 @@ function ProfileImageEditor({profileImage, onEditClick, fileInputRef, onImageCha
                 boxSizing: 'border-box',
             }}>
                 {loading ? (
-                    <CircularProgress size={40} sx={{color: 'white'}}/>
+                    <CircularProgress size={52} sx={{color: 'white'}}/>
                 ) : (error || !profileImage) ? (
-                    <AccountCircleIcon sx={{fontSize: 78, color: 'secondary.main'}}/>
+                    <AccountCircleIcon sx={{fontSize: 88, color: 'secondary.main'}}/>
                 ) : (
-                    <Avatar src={profileImage} sx={{width: 78, height: 78}}/>
+                    <Avatar src={profileImage} sx={{width: 88, height: 88}}/>
                 )}
 
-                <IconButton size="small" sx={{
+                <IconButton size="large" sx={{
                     position: 'absolute',
-                    bottom: 0,
-                    right: 0,
+                    bottom: 1,
+                    right: 1,
                     backgroundColor: 'white',
-                    border: `1px solid ${theme.palette.grey[400]}`,
-                    width: 26,
-                    height: 26,
-                    '&:hover': {backgroundColor: theme.palette.grey[200]}
+                    border: `1.5px solid ${theme.palette.grey[400]}`,
+                    width: 30,
+                    height: 30,
+                    boxShadow: 1,
+                    p: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '&:hover': {backgroundColor: theme.palette.grey[200]},
+                    zIndex: 2
                 }} onClick={onEditClick}>
-                    <EditIcon sx={{fontSize: 16, color: 'grey.800'}}/>
+                    <EditIcon sx={{fontSize: 22, color: 'grey.800'}}/>
                 </IconButton>
                 <input type="file" accept="image/*" ref={fileInputRef} style={{display: 'none'}}
                        onChange={onImageChange}/>
