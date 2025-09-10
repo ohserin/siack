@@ -6,10 +6,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "sdu_board")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Board extends Timestamp {
@@ -27,6 +29,9 @@ public class Board extends Timestamp {
 
     @Column(name = "CONTENT", nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "ISDELETED", nullable = false)
+    private Integer isDeleted = 0;
 
     public Board(Long userId, BoardRequestDTO dto) {
         this.userId = userId;
