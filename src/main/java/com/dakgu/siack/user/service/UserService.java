@@ -194,22 +194,29 @@ public class UserService {
         return new UserResponseDTO(HttpStatus.OK.value(), "로그인이 성공적으로 완료되었습니다.", jwt, request.getUsername(), nickname);
     }
 
+    /**
+     * 인증 객체에서 사용자(User)를 조회합니다.
+     *
+     * @param authentication 인증 정보 (Spring Security Authentication)
+     * @return User 객체 (없으면 null)
+     */
+    public User getUserFromAuthentication(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) return null;
+        return userRepository.findByUsername(authentication.getName());
+    }
+
+    /**
+     * 사용자 정보를 조회합니다.
+     *
+     * @param authentication 인증 정보
+     * @return 사용자 정보 또는 오류 메시지 ResponseDTO
+     */
     public ResponseDTO getUserData(Authentication authentication) {
-        String username = authentication.getName();
-
-        if (username == null) {
-            return new ResponseDTO(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
-        }
-
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
-        }
+        User user = getUserFromAuthentication(authentication);
+        if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
         UserProfile profile  = userProfileRepository.findByUserid(user.getUserid());
-        if (profile  == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
-        }
+        if (profile  == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
 
         return new UserResponseDTO(
                 HttpStatus.OK.value(),
@@ -225,31 +232,27 @@ public class UserService {
         );
     }
 
+    /**
+     * 사용자 정보를 수정합니다.
+     *
+     * @param authentication 인증 정보
+     * @param request 변경 요청 DTO
+     * @return 처리 결과 ResponseDTO
+     */
     @Transactional
     public ResponseDTO setUserData(Authentication authentication, UserRequestDTO request) {
-        String username = authentication.getName();
-        if (username == null) {
-            return new ResponseDTO(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
-        }
-
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
-        }
+        User user = getUserFromAuthentication(authentication);
+        if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
         UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
-        if (profile == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
-        }
+        if (profile == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
 
         String currentEmail = user.getEmail();
         String currentPhone = user.getPhone();
         String currentNickname = profile.getNickname();
-
         String newEmail = request.getEmail();
         String newPhone = request.getPhone() != null ? request.getPhone().trim() : null;
         String newNickname = request.getNickname();
-
         List<String> updatedFields = new ArrayList<>();
 
         // 이메일 변경 처리
@@ -307,20 +310,22 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "사용자 정보가 성공적으로 업데이트되었습니다.");
     }
 
+    /**
+     * 프로필 이미지를 변경합니다.
+     *
+     * @param authentication 인증 정보
+     * @param file 업로드할 이미지 파일
+     * @return 처리 결과 ResponseDTO
+     * @throws IOException 파일 처리 오류
+     */
     @Transactional
     public ResponseDTO updateProfileImage(Authentication authentication, MultipartFile file) throws IOException {
-        String username = authentication.getName();
-        if (username == null) {
-            return new ResponseDTO(HttpStatus.UNAUTHORIZED.value(), "인증되지 않은 사용자입니다.");
-        }
-        User user = userRepository.findByUsernameAndUseyn(username, true);
-        if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 삭제된 계정입니다.");
-        }
+        User user = getUserFromAuthentication(authentication);
+        if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
+
         UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
-        if (profile == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
-        }
+        if (profile == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
+
         Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
         profile.setProfileimg(fileId);
         userProfileRepository.save(profile);
@@ -334,6 +339,12 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
     }
 
+    /**
+     * 사용자 프로필 이미지를 조회합니다.
+     *
+     * @param userid 사용자 ID
+     * @return 이미지 데이터 ResponseEntity (없으면 null)
+     */
     public ResponseEntity<byte[]> getUserProfileImage(String userid) {
         if (userid == null) return null;
         User user = userRepository.findByUseridAndUseyn(Long.valueOf(userid), true);
@@ -369,16 +380,12 @@ public class UserService {
      */
     @Transactional
     public ResponseDTO changePassword(Authentication authentication, String newPassword) {
-        String username = authentication.getName();
-        User user = userRepository.findByUsernameAndUseyn(username, true);
-        if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 삭제된 계정입니다.");
-        }
+        User user = getUserFromAuthentication(authentication);
+        if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
         if (!userValidationService.isValidPasswordFormat(newPassword)) {
             return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비밀번호 형식이 올바르지 않습니다. 최소 8자, 영문, 숫자, 특수문자를 포함해야 합니다.");
         }
-
         String encodedPassword = encodePassword(newPassword);
         user.setPassword(encodedPassword);
 
@@ -402,16 +409,12 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public ResponseDTO verifyCurrentPassword(Authentication authentication, String currentPassword) {
-        String username = authentication.getName();
-        User user = userRepository.findByUsernameAndUseyn(username, true);
-        if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 삭제된 계정입니다.");
-        }
+        User user = getUserFromAuthentication(authentication);
+        if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
         if(!passwordEncoder.matches(currentPassword, user.getPassword())){
             return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다.");
         }
-
         return new ResponseDTO(HttpStatus.OK.value(), "비밀번호가 일치합니다.");
     }
 
@@ -424,11 +427,8 @@ public class UserService {
      */
     @Transactional
     public ResponseDTO deleteUser(Authentication authentication, String password) {
-        String username = authentication.getName();
-        User user = userRepository.findByUsernameAndUseyn(username, true);
-        if (user == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없거나 이미 삭제된 계정입니다.");
-        }
+        User user = getUserFromAuthentication(authentication);
+        if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
         if(!passwordEncoder.matches(password, user.getPassword())){
             // 탈퇴 실패 로그 기록
@@ -454,7 +454,12 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "회원 탈퇴가 성공적으로 처리되었습니다.");
     }
 
-    // 비밀번호 인코딩 메서드
+    /**
+     * 비밀번호를 인코딩합니다.
+     *
+     * @param password 평문 비밀번호
+     * @return 인코딩된 비밀번호
+     */
     private String encodePassword(String password) {
         return passwordEncoder.encode(password);
     }
