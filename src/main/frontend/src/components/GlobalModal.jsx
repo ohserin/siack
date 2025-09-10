@@ -1,4 +1,4 @@
-import { Modal, Typography, Box, IconButton } from "@mui/material";
+import { Modal, Typography, Box, IconButton, Button } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { useModal } from "../contexts/ModalContext.jsx";
 
@@ -11,8 +11,8 @@ export default function GlobalModal() {
         <Modal
             open={modal.open}
             onClose={(event, reason) => {
-                if (reason === 'backdropClick') return; // 외부 클릭 방지
-                closeModal();
+                if (reason === 'backdropClick') return;
+                closeModal(false);
             }}
             BackdropProps={{ style: { backgroundColor: 'rgba(0,0,0,0.2)' } }}
             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -29,21 +29,29 @@ export default function GlobalModal() {
                     animation: 'fadeIn 0.3s ease-out',
                 }}
             >
-                {/* X 버튼 */}
                 <IconButton
-                    onClick={closeModal}
+                    onClick={() => closeModal(false)}
                     sx={{ position: 'absolute', top: 8, right: 8, color: 'grey.600' }}
                 >
                     <CloseIcon />
                 </IconButton>
-
-                {/* 타이틀과 내용 왼쪽 정렬 */}
                 <Typography variant="h6" fontWeight={600} mb={2} sx={{ textAlign: 'left' }}>
                     {modal.title}
                 </Typography>
-                <Typography variant="body1" sx={{ textAlign: 'left' }}>
+                <Typography variant="body1" sx={{ textAlign: 'left', mb: 3 }}>
                     {modal.message}
                 </Typography>
+                {/* 확인/취소 버튼 */}
+                {modal.confirm ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                        <Button variant="outlined" color="inherit" onClick={() => closeModal(false)}>
+                            취소
+                        </Button>
+                        <Button variant="contained" color="primary" onClick={() => closeModal(true)}>
+                            확인
+                        </Button>
+                    </Box>
+                ) : null}
             </Box>
         </Modal>
     );

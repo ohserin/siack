@@ -29,4 +29,16 @@ public class BoardRestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
+    @DeleteMapping("/delete/{boardId}")
+    public ResponseEntity<?> delete(Authentication authentication, @PathVariable("boardId") Long boardId) {
+        ResponseDTO response = boardService.deleteBoard(authentication, boardId);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
+    @PutMapping("/update/{boardId}")
+    public ResponseEntity<?> update(Authentication authentication, @PathVariable("boardId") Long boardId, @RequestBody BoardRequestDTO boardDto) {
+        ResponseDTO response = boardService.updateBoard(authentication, boardId, boardDto);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
 }

@@ -28,6 +28,9 @@ const Contact = () => {
     const [open, setOpen] = useState(false);
     const [viewOpen, setViewOpen] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editTitle, setEditTitle] = useState("");
+    const [editContent, setEditContent] = useState("");
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
     const writeButtonRef = useRef(null);
@@ -106,6 +109,48 @@ const Contact = () => {
     const handleViewPost = (post) => {
         setSelectedPost(post);
         setViewOpen(true);
+    };
+
+    const handleEditClick = () => {
+        setIsEditMode(true);
+        setEditTitle(selectedPost.title);
+        setEditContent(selectedPost.content);
+    };
+
+    const handleEditCancel = () => {
+        setIsEditMode(false);
+    };
+
+    const handleEditSubmit = async () => {
+        if (!editTitle.trim() || !editContent.trim()) {
+            showModal("입력 오류", "제목과 내용을 모두 입력해주세요.");
+            return;
+        }
+        try {
+            const response = await api.put(`/v1/board/update/${selectedPost.boardId}`, {
+                title: editTitle,
+                content: editContent,
+            });
+            showModal("수정 완료", response.data?.message || "게시물이 수정되었습니다!");
+            setIsEditMode(false);
+            setViewOpen(false);
+            fetchPosts(page);
+        } catch (error) {
+            showModal("오류", error.response?.data?.message || "게시물 수정 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handleDelete = async (boardId) => {
+        const confirmed = await showModal("정말 삭제하시겠습니까?", "삭제 후 복구할 수 없습니다.", { confirm: true });
+        if (!confirmed) return;
+        try {
+            const response = await api.delete(`/v1/board/delete/${boardId}`);
+            showModal("삭제 완료", response.data?.message || "게시물이 삭제되었습니다.");
+            setViewOpen(false);
+            fetchPosts(page);
+        } catch (error) {
+            showModal("오류", error.response?.data?.message || "게시물 삭제 중 오류가 발생했습니다.");
+        }
     };
 
     // 페이지네이션 버튼 클릭 핸들러
@@ -388,24 +433,54 @@ const Contact = () => {
                     {selectedPost?.title || '게시글 상세'}
                 </DialogTitle>
                 <DialogContent sx={{px: {xs: 2, sm: 4}, pt: 1, pb: 0}}>
-                    <Typography sx={{color: '#7b8a9b', fontSize: 15, mb: 1}}>
-                        작성자: {selectedPost?.author} | 작성일: {selectedPost?.dateTime}
-                    </Typography>
-                    <Typography sx={{fontSize: 16, color: '#222', whiteSpace: 'pre-line', mt: 2}}>
-                        {selectedPost?.content || '내용이 없습니다.'}
-                    </Typography>
+                    {isEditMode ? (
+                        <>
+                            <TextField
+                                label="제목"
+                                fullWidth
+                                margin="normal"
+                                value={editTitle}
+                                onChange={e => setEditTitle(e.target.value)}
+                                sx={{ mb: 2, background: '#f8fafc', borderRadius: 2 }}
+                            />
+                            <TextField
+                                label="내용"
+                                fullWidth
+                                multiline
+                                rows={isMobile ? 8 : 6}
+                                margin="normal"
+                                value={editContent}
+                                onChange={e => setEditContent(e.target.value)}
+                                sx={{ mb: 2, background: '#f8fafc', borderRadius: 2 }}
+                            />
+                        </>
+                    ) : (
+                        <>
+                            <Typography sx={{color: '#7b8a9b', fontSize: 15, mb: 1}}>
+                                작성자: {selectedPost?.author} | 작성일: {selectedPost?.dateTime}
+                            </Typography>
+                            <Typography sx={{fontSize: 16, color: '#222', whiteSpace: 'pre-line', mt: 2}}>
+                                {selectedPost?.content || '내용이 없습니다.'}
+                            </Typography>
+                        </>
+                    )}
                 </DialogContent>
                 <DialogActions sx={{px: {xs: 2, sm: 4}, pb: {xs: 2, sm: 3}}}>
-                    {isMyPost && (
+                    {isMyPost && !isEditMode && (
                         <>
-                            <Button variant="outlined"  sx={{ borderColor:"#bdbdbd",color:"#757575", fontWeight: 700, mr: 1, borderRadius: 0}}>
+                            <Button variant="outlined"  sx={{ borderColor:"#bdbdbd",color:"#757575", fontWeight: 700, mr: 1, borderRadius: 0}} onClick={handleEditClick}>
                                 수정
                             </Button>
-                            <Button variant="outlined" color="error" sx={{fontWeight: 700, mr: 1, borderRadius: 0}}>
+                            <Button variant="outlined" color="error" sx={{fontWeight: 700, mr: 1, borderRadius: 0}} onClick={() => handleDelete(selectedPost.boardId)}>
                                 삭제
                             </Button>
                         </>
 
+                    )}
+                    {isEditMode && (
+                        <Button onClick={handleEditSubmit} variant="contained" sx={{fontWeight: 700, borderRadius: 0, mr: 1, backgroundColor: '#43a047', color: '#fff', '&:hover': { backgroundColor: '#388e3c' }}}>
+                            수정 완료
+                        </Button>
                     )}
                     <Button onClick={handleCloseView} variant="contained" color="primary"
                             sx={{fontWeight: 700, borderRadius: 0}}>
