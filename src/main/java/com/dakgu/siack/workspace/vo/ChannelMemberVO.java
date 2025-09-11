@@ -6,7 +6,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "sdw_channel_member")
-@IdClass(ChannelMemberIdVO.class)
+@IdClass(ChannelMemberId.class)
 @Getter
 @Setter
 @NoArgsConstructor

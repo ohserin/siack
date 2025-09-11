@@ -6,10 +6,7 @@ import com.dakgu.siack.workspace.service.WorkspaceRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v1/workspace")
@@ -21,7 +18,19 @@ public class WorkspaceController {
     @PostMapping("/create")
     public ResponseEntity<?> createWorkspace(Authentication authentication, @RequestBody WorkspaceRequestDTO request) {
         ResponseDTO response = workspaceRequestService.createWorkspace(authentication, request);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
+        return ResponseEntity.status(200).body(response);
+    }
+
+    @DeleteMapping("/{workspaceId}")
+    public ResponseEntity<?> deleteWorkspace(Authentication authentication, @PathVariable Long workspaceId) {
+        ResponseDTO response = workspaceRequestService.deleteWorkspace(authentication, workspaceId);
+        return ResponseEntity.status(200).body(response);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<?> getWorkspaceList(Authentication authentication) {
+        ResponseDTO response = workspaceRequestService.getWorkspaceList(authentication);
+        return ResponseEntity.status(200).body(response);
     }
 
 
