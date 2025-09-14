@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class WorkspaceRequestDTO {
+public class CreateWorkspaceRequestDTO {
     private String name;
     private String description;
 }

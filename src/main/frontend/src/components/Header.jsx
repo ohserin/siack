@@ -54,7 +54,7 @@ function Header() {
     };
 
     return (<>
-            <AppBar position="static" color="primary">
+            <AppBar position="static" color="primary" elevation={0} sx={{ boxShadow: 'none' }}>
                 <Toolbar sx={{justifyContent: 'space-between'}}>
                     <Box sx={{display: 'flex', alignItems: 'center'}}>
                         {/* 모바일 화면에서 보여지는 햄버거 아이콘 */}

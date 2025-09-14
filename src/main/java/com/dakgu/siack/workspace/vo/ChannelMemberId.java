@@ -8,7 +8,7 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChannelMemberIdVO implements Serializable {
+public class ChannelMemberId implements Serializable {
     private Long channel;
     private Long user;
 }

@@ -12,6 +12,7 @@ import {ModalProvider} from "./contexts/ModalContext.jsx";
 import Contact from "./pages/Contact.jsx";
 import UserSettingsPage from "./pages/users/settings/UserSettingsPage.jsx";
 import DeletedAccount from './pages/users/DeletedAccount.jsx';
+import { CreateWorkspace } from './pages/workspace';
 
 function App() {
     const nav = useNavigate();
@@ -32,6 +33,7 @@ function App() {
                         <Route path="/contact" element={<Contact/>}/>
                         <Route path="/user-setting" element={<UserSettingsPage/>}/>
                         <Route path="/account-deleted" element={<DeletedAccount/>}/>
+                        <Route path="/workspace/create" element={<CreateWorkspace/>}/>
                     </Routes>
                 </Container>
                 {/*<Footer/>*/}
