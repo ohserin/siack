@@ -1,13 +1,12 @@
 package com.dakgu.siack.user.controller;
 
+import com.dakgu.siack.user.dto.UserProfileUrlResponseDTO;
 import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
 
 @RequiredArgsConstructor
 @RequestMapping("/v1/user")
@@ -59,13 +58,16 @@ public class UserRestController {
     }
 
     @GetMapping("/get-userprofile-image")
-    public ResponseEntity<byte[]> getUserProfileImage(@RequestParam("userid") String userid) throws IOException {
+    public ResponseEntity<byte[]> getUserProfileImage(@RequestParam("userid") String userid) {
         ResponseEntity<byte[]> imageData = userService.getUserProfileImage(userid);
-
-        if (imageData == null) {
-            return ResponseEntity.ok().build();
-        }
+        if (imageData == null) return ResponseEntity.ok().build();
         return imageData;
+    }
+
+    @GetMapping("/get-userprofile")
+    public ResponseEntity<UserProfileUrlResponseDTO> getUserProfile(@RequestParam("userid") String userid) {
+        UserProfileUrlResponseDTO dto = userService.getUserProfileURL(userid);
+        return ResponseEntity.ok(dto);
     }
 
 }
