@@ -25,7 +25,7 @@ public class WorkspaceController {
     }
 
     @DeleteMapping("/{workspaceId}")
-    public ResponseEntity<?> deleteWorkspace(Authentication authentication, @PathVariable Long workspaceId) {
+    public ResponseEntity<?> deleteWorkspace(Authentication authentication, @PathVariable("workspaceId") Long workspaceId) {
         ResponseDTO response = workspaceRequestService.deleteWorkspace(authentication, workspaceId);
         return ResponseEntity.status(200).body(response);
     }

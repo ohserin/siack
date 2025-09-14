@@ -5,7 +5,6 @@ import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.CreateWorkspaceRequestDTO;
 import com.dakgu.siack.workspace.dto.GetWorkspaceResponseDTO;
-import com.dakgu.siack.workspace.dto.WorkspaceUserDTO;
 import com.dakgu.siack.workspace.repository.ChannelRepository;
 import com.dakgu.siack.workspace.repository.ChannelMemberRepository;
 import com.dakgu.siack.workspace.repository.WorkspaceRepository;
@@ -19,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,7 +43,7 @@ public class WorkspaceRequestService {
      * 생성자는 해당 채널의 운영자(ADMIN)로 등록됩니다.
      *
      * @param authentication 인증 정보 (로그인 사용자)
-     * @param request 워크스페이스 생성 요청 DTO (이름, 설명 등)
+     * @param request        워크스페이스 생성 요청 DTO (이름, 설명 등)
      * @return ResponseDTO (201: 성공, 404: 사용자 없음)
      */
     public ResponseDTO createWorkspace(Authentication authentication, CreateWorkspaceRequestDTO request) {
@@ -86,7 +86,7 @@ public class WorkspaceRequestService {
      * 워크스페이스를 삭제(비활성화)합니다.
      *
      * @param authentication 인증 정보 (로그인 사용자)
-     * @param workspaceId 삭제할 워크스페이스 ID
+     * @param workspaceId    삭제할 워크스페이스 ID
      * @return ResponseDTO (200: 성공, 403: 권한없음, 404: 없음)
      */
     public ResponseDTO deleteWorkspace(Authentication authentication, Long workspaceId) {
@@ -106,10 +106,23 @@ public class WorkspaceRequestService {
         return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스가 삭제(비활성화)되었습니다.");
     }
 
+    /**
+     * 사용자가 속한 모든 워크스페이스 목록을 조회합니다.
+     * <p>
+     * - 인증된 사용자의 워크스페이스 멤버십을 기준으로, 활성화된(비활성화되지 않은) 워크스페이스만 반환합니다.
+     * - 각 워크스페이스의 소유자(ownerId), 이름, 설명, 멤버 목록(users)을 포함합니다.
+     * - 멤버 목록에는 각 멤버의 userid, 닉네임, 프로필 이미지 ID가 포함됩니다.
+     * - 비활성화된 계정(탈퇴/정지 등)은 멤버 목록에서 제외됩니다.
+     *
+     * @param authentication 인증 정보 (로그인 사용자)
+     * @return 사용자가 속한 워크스페이스 목록 (GetWorkspaceResponseDTO 리스트)
+     * (인증 실패 시 빈 리스트 반환)
+     */
+    @Transactional
     public List<GetWorkspaceResponseDTO> getWorkspaceList(Authentication authentication) {
         User user = userService.getUserFromAuthentication(authentication);
         if (user == null) {
-            return new ArrayList<>(); // 사용자 정보 없을 때 빈 리스트 반환
+            return new ArrayList<>();
         }
 
         List<WorkspaceMemberVO> myMemberships = workspaceMemberRepository.findByUser_Userid(user.getUserid());
@@ -118,11 +131,17 @@ public class WorkspaceRequestService {
 
         for (WorkspaceMemberVO membership : myMemberships) {
             WorkspaceVO workspace = membership.getWorkspace();
-            if (workspace == null || !workspace.isStatus() || workspaceIdSet.contains(workspace.getWorkspaceId())) continue;
+            if (workspace == null || !workspace.isStatus() || workspaceIdSet.contains(workspace.getWorkspaceId()))
+                continue;
             workspaceIdSet.add(workspace.getWorkspaceId());
 
-            List<WorkspaceMemberVO> members = workspaceMemberRepository.findByWorkspace_Id(workspace.getWorkspaceId());
-            List<WorkspaceUserDTO> userDTOList = new ArrayList<>();
+            Long ownerId = null;
+            if (workspace.getOwner() != null) {
+                ownerId = workspace.getOwner().getUserid();
+            }
+
+            List<WorkspaceMemberVO> members = workspaceMemberRepository.findByWorkspace_WorkspaceId(workspace.getWorkspaceId());
+            List<com.dakgu.siack.workspace.dto.WorkspaceUserDTO> userDTOList = new ArrayList<>();
             for (WorkspaceMemberVO member : members) {
                 User memberUser = member.getUser();
                 if (memberUser == null || !memberUser.isUseyn()) continue;
@@ -146,7 +165,7 @@ public class WorkspaceRequestService {
             dto.setWorkspaceId(workspace.getWorkspaceId());
             dto.setName(workspace.getName());
             dto.setDescription(workspace.getDescription());
-            dto.setOwnerId(workspace.getOwner() != null ? workspace.getOwner().getUserid() : null);
+            dto.setOwnerId(ownerId);
             dto.setUsers(userDTOList);
             workspaceList.add(dto);
         }
