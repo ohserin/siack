@@ -22,13 +22,21 @@ function Header() {
     const [drawerOpen, setDrawerOpen] = useState(false);
 
     useEffect(() => {
-        if (userData?.userid) {
-            const cacheBuster = userData.profileimg || Date.now();
-            const imageUrl = `${api.defaults.baseURL}/v1/user/get-userprofile-image?userid=${userData.userid}&v=${cacheBuster}`;
-            setProfileImageUrl(imageUrl);
-        } else {
-            setProfileImageUrl(null);
-        }
+        const fetchProfileImage = async () => {
+            if (userData?.userid) {
+                try {
+                    const response = await api.get('/v1/user/profileImg', {
+                        params: {userid: userData.userid}
+                    });
+                    setProfileImageUrl(response.data.url || null);
+                } catch (error) {
+                    setProfileImageUrl(null);
+                }
+            } else {
+                setProfileImageUrl(null);
+            }
+        };
+        fetchProfileImage();
     }, [userData]);
 
     const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);

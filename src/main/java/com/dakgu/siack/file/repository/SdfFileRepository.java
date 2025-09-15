@@ -9,9 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SdfFileRepository extends JpaRepository<SdfFile, Long> {
 
-    @Query("SELECT sf.path FROM SdfFile sf WHERE sf.fileId = :fileId")
-    String findPathByFileId(@Param("fileId") Long fileId);
-
     @Query("SELECT sf.storedName FROM SdfFile sf WHERE sf.fileId = :fileId")
     String findStoredFileNameByFileId(@Param("fileId") Long fileId);
 }

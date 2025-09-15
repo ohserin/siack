@@ -57,14 +57,8 @@ public class UserRestController {
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    @GetMapping("/get-userprofile-image")
-    public ResponseEntity<byte[]> getUserProfileImage(@RequestParam("userid") String userid) {
-        ResponseEntity<byte[]> imageData = userService.getUserProfileImage(userid);
-        if (imageData == null) return ResponseEntity.ok().build();
-        return imageData;
-    }
 
-    @GetMapping("/get-userprofile")
+    @GetMapping("/profileImg")
     public ResponseEntity<UserProfileUrlResponseDTO> getUserProfile(@RequestParam("userid") String userid) {
         UserProfileUrlResponseDTO dto = userService.getUserProfileURL(userid);
         return ResponseEntity.ok(dto);

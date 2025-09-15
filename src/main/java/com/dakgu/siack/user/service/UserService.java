@@ -343,37 +343,6 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
     }
 
-    /**
-     * 사용자 프로필 이미지를 조회합니다.
-     *
-     * @param userid 사용자 ID
-     * @return 이미지 데이터 ResponseEntity (없으면 null)
-     */
-    public ResponseEntity<byte[]> getUserProfileImage(String userid) {
-        if (userid == null) return null;
-        User user = userRepository.findByUseridAndUseyn(Long.valueOf(userid), true);
-        if (user == null) return null;
-        UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
-        if (profile == null || profile.getProfileimg() == null) return null;
-        Long fileId = profile.getProfileimg();
-        String path = fileRepository.findPathByFileId(fileId);
-        if (path == null || path.isEmpty()) return null;
-        String extension = "";
-        int i = path.lastIndexOf('.');
-        if (i > 0) {
-            extension = path.substring(i + 1);
-        }
-        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        if (extension.equalsIgnoreCase("png")) {
-            mediaType = MediaType.IMAGE_PNG;
-        } else if (extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg")) {
-            mediaType = MediaType.IMAGE_JPEG;
-        } else if (extension.equalsIgnoreCase("gif")) {
-            mediaType = MediaType.IMAGE_GIF;
-        }
-        byte[] bytes = fileService.readFile(path);
-        return ResponseEntity.ok().contentType(mediaType).body(bytes);
-    }
 
     public UserProfileUrlResponseDTO getUserProfileURL(String userid) {
         User user = userRepository.findByUseridAndUseyn(Long.valueOf(userid), true);
