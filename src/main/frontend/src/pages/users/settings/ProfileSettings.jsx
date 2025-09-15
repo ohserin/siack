@@ -30,11 +30,13 @@ function ProfileSettings() {
 
     useEffect(() => {
         if (userData?.userid) {
-            let imageUrl = `${api.defaults.baseURL}/v1/user/get-userprofile-image?userid=${userData.userid}`;
-            if (userData.profileimg) {
-                imageUrl += `&v=${userData.profileimg}`;
-            }
-            setProfileImage(imageUrl);
+            api.get('/v1/user/profileImg', {params: {userid: userData.userid}})
+                .then(res => {
+                    setProfileImage(res.data.url || null);
+                })
+                .catch(() => {
+                    setProfileImage(null);
+                });
         } else {
             setProfileImage(null);
         }

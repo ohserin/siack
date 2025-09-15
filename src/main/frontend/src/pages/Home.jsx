@@ -18,11 +18,20 @@ function Home() {
     const [showNicknameIdx, setShowNicknameIdx] = useState(null);
     const [confirmModal, setConfirmModal] = useState({ open: false, workspaceId: null });
     const [resultModal, setResultModal] = useState({ open: false, title: '', message: '' });
+    const [profileImages, setProfileImages] = useState({});
+    const requestQueueRef = React.useRef([]);
+    const requestingSetRef = React.useRef(new Set());
+    const requestedSetRef = React.useRef(new Set());
+    const MAX_CONCURRENT_REQUESTS = 5;
 
     // 모바일 환경 감지
     const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
+    // 로그인 상태가 아니면 워크스페이스를 로드하지 않고 안내 문구만 표시
+    const isLoggedIn = !!userData;
+
     useEffect(() => {
+        if (!isLoggedIn) return;
         setLoading(true);
         api.get("/v1/workspace/list")
             .then(res => {
@@ -33,7 +42,45 @@ function Home() {
                 setError("워크스페이스 목록을 불러오지 못했습니다.");
                 setLoading(false);
             });
-    }, []);
+    }, [isLoggedIn]);
+
+    useEffect(() => {
+        // 모든 워크스페이스의 사용자 id를 수집
+        const allUserIds = workspaces.flatMap(ws => (ws.users || []).slice(0, 3).map(u => u.id));
+        const uniqueUserIds = Array.from(new Set(allUserIds));
+        // 새로 요청해야 하는 id만 큐에 추가
+        uniqueUserIds.forEach(userid => {
+            if (!userid) return;
+            if (profileImages[userid] !== undefined) return;
+            if (requestedSetRef.current.has(userid)) return;
+            if (requestQueueRef.current.includes(userid)) return;
+            requestQueueRef.current.push(userid);
+        });
+        // 요청 처리 함수
+        const processQueue = () => {
+            while (
+                requestQueueRef.current.length > 0 &&
+                requestingSetRef.current.size < MAX_CONCURRENT_REQUESTS
+            ) {
+                const userid = requestQueueRef.current.shift();
+                if (!userid) continue;
+                requestingSetRef.current.add(userid);
+                api.get('/v1/user/profileImg', { params: { userid } })
+                    .then(res => {
+                        setProfileImages(prev => ({ ...prev, [userid]: res.data.url || null }));
+                    })
+                    .catch(() => {
+                        setProfileImages(prev => ({ ...prev, [userid]: null }));
+                    })
+                    .finally(() => {
+                        requestingSetRef.current.delete(userid);
+                        requestedSetRef.current.add(userid);
+                        processQueue();
+                    });
+            }
+        };
+        processQueue();
+    }, [workspaces, profileImages]);
 
     // 모달 오픈 핸들러
     const handleDevModal = () => {
@@ -104,7 +151,30 @@ function Home() {
                 </Typography>
             </Box>
             <Box sx={{p: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
-                {loading ? (
+                {!isLoggedIn ? (
+                    <>
+                        <Typography sx={{color: '#888', fontSize: 18, mt: 6, mb: 2, fontWeight: 600, textAlign: 'center'}}>
+                            워크스페이스를 사용하려면 회원가입 또는 로그인이 필요합니다.<br/>
+                            회원가입 후 워크스페이스를 만들어보세요!
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            sx={{
+                                borderRadius: 2,
+                                py: 1.2,
+                                px: 4,
+                                fontSize: 16,
+                                fontWeight: 600,
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+                                mt: 2
+                            }}
+                            onClick={() => navigate('/join')}
+                        >
+                            회원가입 하러가기
+                        </Button>
+                    </>
+                ) : loading ? (
                     <Typography sx={{color: '#888', mt: 4}}>불러오는 중...</Typography>
                 ) : error ? (
                     <Typography color="error" sx={{mt: 4}}>{error}</Typography>
@@ -181,8 +251,6 @@ function Home() {
                                         }}>{workspace.description}</Typography>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
                                             {sortedUsers.slice(0, 3).map((m, idx) => {
-                                                const cacheBuster = m.profileimg || Date.now();
-                                                const imageUrl = `${api.defaults.baseURL}/v1/user/get-userprofile-image?userid=${m.id}&v=${cacheBuster}`;
                                                 const uniqueIdx = `${workspace.workspaceId}-${idx}`;
                                                 // 닉네임 표시 핸들러
                                                 const handleShow = () => setShowNicknameIdx(uniqueIdx);
@@ -229,10 +297,10 @@ function Home() {
                                                                 ml: idx === 0 ? 0 : -1.2,
                                                                 zIndex: 10 - idx,
                                                             }}
-                                                            src={imageUrl && imageUrl.trim() !== '' && imageUrl !== 'null' && imageUrl !== 'undefined' ? imageUrl : undefined}
+                                                            src={profileImages[m.id] && profileImages[m.id].trim() !== '' && profileImages[m.id] !== 'null' && profileImages[m.id] !== 'undefined' ? profileImages[m.id] : undefined}
                                                             alt={m.nickname || ''}
                                                         >
-                                                            {(!imageUrl || imageUrl === 'null' || imageUrl === 'undefined' || imageUrl === '') && (m.nickname ? m.nickname[0] : '?')}
+                                                            {(!profileImages[m.id] || profileImages[m.id] === 'null' || profileImages[m.id] === 'undefined' || profileImages[m.id] === '') && (m.nickname ? m.nickname[0] : '?')}
                                                         </Avatar>
                                                     </Box>
                                                 );
@@ -316,3 +384,4 @@ function Home() {
 }
 
 export default Home;
+

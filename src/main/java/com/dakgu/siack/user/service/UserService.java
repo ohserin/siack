@@ -8,6 +8,7 @@ import com.dakgu.siack.log.service.UserLogService;
 import com.dakgu.siack.log.vo.UserLog;
 import com.dakgu.siack.user.dto.UserRequestDTO;
 import com.dakgu.siack.user.dto.UserResponseDTO;
+import com.dakgu.siack.user.dto.UserProfileUrlResponseDTO;
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.vo.UserProfile;
 import com.dakgu.siack.user.repository.UserProfileRepository;
@@ -15,6 +16,7 @@ import com.dakgu.siack.user.repository.UserRepository;
 import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +24,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class UserService {
+
+    @Value("${ssh.host}")
+    private String HOST;
 
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
@@ -339,36 +343,21 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
     }
 
-    /**
-     * 사용자 프로필 이미지를 조회합니다.
-     *
-     * @param userid 사용자 ID
-     * @return 이미지 데이터 ResponseEntity (없으면 null)
-     */
-    public ResponseEntity<byte[]> getUserProfileImage(String userid) {
-        if (userid == null) return null;
+
+    public UserProfileUrlResponseDTO getUserProfileURL(String userid) {
         User user = userRepository.findByUseridAndUseyn(Long.valueOf(userid), true);
-        if (user == null) return null;
+        if (user == null) {
+            return new UserProfileUrlResponseDTO("유저 아이디가 존재하지 않습니다.", "");
+        }
+
         UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
-        if (profile == null || profile.getProfileimg() == null) return null;
+        if (profile == null || profile.getProfileimg() == null) {
+            return new UserProfileUrlResponseDTO("유저 프로필 이미지가 존재하지 않습니다.", "");
+        }
+
         Long fileId = profile.getProfileimg();
-        String path = fileRepository.findPathByFileId(fileId);
-        if (path == null || path.isEmpty()) return null;
-        String extension = "";
-        int i = path.lastIndexOf('.');
-        if (i > 0) {
-            extension = path.substring(i + 1);
-        }
-        MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-        if (extension.equalsIgnoreCase("png")) {
-            mediaType = MediaType.IMAGE_PNG;
-        } else if (extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg")) {
-            mediaType = MediaType.IMAGE_JPEG;
-        } else if (extension.equalsIgnoreCase("gif")) {
-            mediaType = MediaType.IMAGE_GIF;
-        }
-        byte[] bytes = fileService.readFile(path);
-        return ResponseEntity.ok().contentType(mediaType).body(bytes);
+        String fileName = fileRepository.findStoredFileNameByFileId(fileId);
+        return new UserProfileUrlResponseDTO("조회 성공", "http://" + HOST +"/uploads/images/" + fileName);
     }
 
     /**
