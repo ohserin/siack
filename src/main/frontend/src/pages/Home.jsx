@@ -27,7 +27,11 @@ function Home() {
     // 모바일 환경 감지
     const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
+    // 로그인 상태가 아니면 워크스페이스를 로드하지 않고 안내 문구만 표시
+    const isLoggedIn = !!userData;
+
     useEffect(() => {
+        if (!isLoggedIn) return;
         setLoading(true);
         api.get("/v1/workspace/list")
             .then(res => {
@@ -38,7 +42,7 @@ function Home() {
                 setError("워크스페이스 목록을 불러오지 못했습니다.");
                 setLoading(false);
             });
-    }, []);
+    }, [isLoggedIn]);
 
     useEffect(() => {
         // 모든 워크스페이스의 사용자 id를 수집
@@ -147,7 +151,30 @@ function Home() {
                 </Typography>
             </Box>
             <Box sx={{p: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
-                {loading ? (
+                {!isLoggedIn ? (
+                    <>
+                        <Typography sx={{color: '#888', fontSize: 18, mt: 6, mb: 2, fontWeight: 600, textAlign: 'center'}}>
+                            워크스페이스를 사용하려면 회원가입 또는 로그인이 필요합니다.<br/>
+                            회원가입 후 워크스페이스를 만들어보세요!
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            sx={{
+                                borderRadius: 2,
+                                py: 1.2,
+                                px: 4,
+                                fontSize: 16,
+                                fontWeight: 600,
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+                                mt: 2
+                            }}
+                            onClick={() => navigate('/join')}
+                        >
+                            회원가입 하러가기
+                        </Button>
+                    </>
+                ) : loading ? (
                     <Typography sx={{color: '#888', mt: 4}}>불러오는 중...</Typography>
                 ) : error ? (
                     <Typography color="error" sx={{mt: 4}}>{error}</Typography>
