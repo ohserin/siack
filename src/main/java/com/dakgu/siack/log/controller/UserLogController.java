@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.dakgu.siack.log.dto.PageResponse;
+
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/v1/logs")
@@ -25,46 +28,21 @@ public class UserLogController {
     private final UserLogService userLogService;
     private final UserRepository userRepository;
 
-    class PageResponse<T> {
-        private final java.util.List<T> content;
-        private final int page;
-        private final int size;
-        private final long totalElements;
-        private final int totalPages;
-        public PageResponse(Page<T> page) {
-            this.content = page.getContent();
-            this.page = page.getNumber();
-            this.size = page.getSize();
-            this.totalElements = page.getTotalElements();
-            this.totalPages = page.getTotalPages();
-        }
-        public java.util.List<T> getContent() { return content; }
-        public int getPage() { return page; }
-        public int getSize() { return size; }
-        public long getTotalElements() { return totalElements; }
-        public int getTotalPages() { return totalPages; }
-    }
-
     @GetMapping("/user")
-    public ResponseEntity<PageResponse<UserLog>> getUserLogs(
+    public PageResponse<UserLog> getUserLogs(
             Authentication authentication,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
 
-        if (authentication == null) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+        if (authentication == null) return new PageResponse<>();
 
         String username = authentication.getName();
         User user = userRepository.findByUsername(username);
-        if (user == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        if (user == null) return new PageResponse<>();
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdat").descending());
-        Page<UserLog> logs = userLogService.getLogsByUserId(user.getUserid().intValue(), pageable);
 
-        return ResponseEntity.ok(new PageResponse<>(logs));
+        return userLogService.getLogsByUserId(user.getUserid().intValue(), pageable);
     }
 
 }

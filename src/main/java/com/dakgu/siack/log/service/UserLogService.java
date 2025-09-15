@@ -1,18 +1,17 @@
 package com.dakgu.siack.log.service;
 
+import com.dakgu.siack.log.dto.PageResponse;
 import com.dakgu.siack.log.repository.UserLogRepository;
 import com.dakgu.siack.log.vo.UserLog;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +34,8 @@ public class UserLogService {
         userLogRepository.save(userLog);
     }
 
-    public Page<UserLog> getLogsByUserId(int userid, Pageable pageable) {
-        return userLogRepository.findByUserid(userid, pageable);
+    public PageResponse<UserLog> getLogsByUserId(int userid, Pageable pageable) {
+        return new PageResponse<>(userLogRepository.findByUserid(userid, pageable));
     }
 
     private String getClientIp(HttpServletRequest request) {
