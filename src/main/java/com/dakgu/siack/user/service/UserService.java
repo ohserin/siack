@@ -16,10 +16,7 @@ import com.dakgu.siack.user.repository.UserRepository;
 import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -37,9 +34,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Service
 public class UserService {
-
-    @Value("${ssh.host}")
-    private String HOST;
 
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
@@ -357,7 +351,7 @@ public class UserService {
 
         Long fileId = profile.getProfileimg();
         String fileName = fileRepository.findStoredFileNameByFileId(fileId);
-        return new UserProfileUrlResponseDTO("조회 성공", "http://" + HOST +"/uploads/images/" + fileName);
+        return new UserProfileUrlResponseDTO("조회 성공", "https://devsiack.me/uploads/images/" + fileName);
     }
 
     /**
