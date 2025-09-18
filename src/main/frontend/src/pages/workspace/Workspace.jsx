@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import {Box, Typography, Button, Divider} from '@mui/material';
+import {Box, Typography} from '@mui/material';
 import {useNavigate, useParams} from 'react-router-dom';
-import theme from '../../theme';
 import api from '../../api/api';
 import {useAuth} from '../../contexts/AuthContext.jsx';
+import WorkspaceHeader from './components/Header.jsx';
 
 function Workspace() {
     const navigate = useNavigate();
@@ -46,17 +46,10 @@ function Workspace() {
             flexDirection: 'column',
             alignItems: 'center',
             background: '#f8f9fa',
-            pt: 4,
+            pt: 0,
         }}>
-            <Box sx={{width: '100%', maxWidth: 960, px: 2}}>
-                <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2}}>
-                    <Typography variant="h5" fontWeight={800} sx={{color: theme.palette.secondary.main}}>
-                        워크스페이스
-                    </Typography>
-                    <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}>뒤로</Button>
-                </Box>
-                <Divider sx={{mb: 3}}/>
-
+            <WorkspaceHeader channelName={workspace?.name || `워크스페이스 #${roomId}`} onExit={() => navigate('/')} />
+            <Box sx={{width: '100%', maxWidth: 960, px: 2, py: 2}}>
                 {loading ? (
                     <Typography sx={{color: '#888'}}>불러오는 중...</Typography>
                 ) : error ? (

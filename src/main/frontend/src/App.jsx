@@ -14,6 +14,7 @@ import UserSettingsPage from "./pages/users/settings/UserSettingsPage.jsx";
 import DeletedAccount from './pages/users/DeletedAccount.jsx';
 import {CreateWorkspace} from './pages/workspace';
 import {Workspace} from './pages/workspace';
+import {WorkspaceSettings} from './pages/workspace';
 
 function App() {
     const nav = useNavigate();
@@ -28,7 +29,7 @@ function App() {
         <AuthProvider><ModalProvider>
             <Box display="flex" flexDirection="column" minHeight="100vh">
                 {!hideHeader && <Header/>}
-                <Container sx={{flex: 1}}>
+                <Container maxWidth={false} disableGutters sx={{ flex: 1, px: 0 }}>
                     <Routes>
                         <Route path="/" element={<Home/>}/>
                         <Route path="/join" element={<Join/>}/>
@@ -38,6 +39,7 @@ function App() {
                         <Route path="/account-deleted" element={<DeletedAccount/>}/>
                         <Route path="/workspace/create" element={<CreateWorkspace/>}/>
                         <Route path="/workspace/room/:roomId" element={<Workspace/>}/>
+                        <Route path="/workspace/room/:roomId/settings" element={<WorkspaceSettings/>}/>
                     </Routes>
                 </Container>
                 {/*<Footer/>*/}
