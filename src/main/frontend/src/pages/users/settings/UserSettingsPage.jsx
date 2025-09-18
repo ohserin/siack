@@ -5,17 +5,19 @@ import PasswordSettings from './PasswordSettings';
 import LogHistorySettings from './LogHistorySettings.jsx';
 import WithdrawalSettings from './WithdrawalSettings.jsx';
 import {useAuth} from '../../../contexts/AuthContext';
-import { Swiper, SwiperSlide } from 'swiper/react';
+import {Swiper, SwiperSlide} from 'swiper/react';
 import 'swiper/css';
 
 function UserSettingsPage() {
     const [currentTab, setCurrentTab] = useState(0);
-    const {guard} = useAuth();
+    const {guard, loading: authLoading} = useAuth();
     const swiperRef = useRef(null);
 
     useEffect(() => {
-        guard(true, '/');
-    }, []);
+        if (!authLoading) {
+            guard(true, '/');
+        }
+    }, [authLoading, guard]);
 
     const handleSwiperSlideChange = (swiper) => {
         setCurrentTab(swiper.activeIndex);
@@ -65,28 +67,32 @@ function UserSettingsPage() {
                 style={{width: '100%'}}
             >
                 <SwiperSlide>
-                    <Container component="main" sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <Container component="main"
+                               sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                         <Box sx={{width: '100%', maxWidth: getMaxWidth()}}>
                             <ProfileSettings/>
                         </Box>
                     </Container>
                 </SwiperSlide>
                 <SwiperSlide>
-                    <Container component="main" sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <Container component="main"
+                               sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                         <Box sx={{width: '100%', maxWidth: getMaxWidth()}}>
                             <PasswordSettings/>
                         </Box>
                     </Container>
                 </SwiperSlide>
                 <SwiperSlide>
-                    <Container component="main" sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <Container component="main"
+                               sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                         <Box sx={{width: '100%', maxWidth: getMaxWidth()}}>
                             <LogHistorySettings/>
                         </Box>
                     </Container>
                 </SwiperSlide>
                 <SwiperSlide>
-                    <Container component="main" sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                    <Container component="main"
+                               sx={{py: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                         <Box sx={{width: '100%', maxWidth: getMaxWidth()}}>
                             <WithdrawalSettings/>
                         </Box>

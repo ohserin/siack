@@ -1,10 +1,11 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {Box, Typography, TextField, Button, Paper, Divider, Avatar, Fade, Modal} from "@mui/material";
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {useNavigate} from "react-router-dom";
 import theme from "../../theme";
 import api from "../../api/api";
+import {useAuth} from "../../contexts/AuthContext.jsx";
 
 function CreateWorkspace() {
     const [name, setName] = useState("");
@@ -13,6 +14,13 @@ function CreateWorkspace() {
     const [loading, setLoading] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
     const navigate = useNavigate();
+    const {loading: authLoading, guard} = useAuth();
+
+    useEffect(() => {
+        if (!authLoading) {
+            guard(true, "/");
+        }
+    }, [authLoading, guard]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
