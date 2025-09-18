@@ -1,23 +1,20 @@
 import React, {useEffect, useState} from "react";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
 import {Box, Typography, Button, Paper, Avatar} from '@mui/material';
 import theme from "../theme.js";
-import {useModal} from "../contexts/ModalContext";
 import {useNavigate} from "react-router-dom";
 import api from "../api/api";
 import {useAuth} from "../contexts/AuthContext";
 
 function Home() {
-    const {showModal} = useModal();
     const navigate = useNavigate();
     const {userData} = useAuth();
     const [workspaces, setWorkspaces] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [showNicknameIdx, setShowNicknameIdx] = useState(null);
-    const [confirmModal, setConfirmModal] = useState({ open: false, workspaceId: null });
-    const [resultModal, setResultModal] = useState({ open: false, title: '', message: '' });
+    const [confirmModal, setConfirmModal] = useState({open: false, workspaceId: null});
+    const [resultModal, setResultModal] = useState({open: false, title: '', message: ''});
     const [profileImages, setProfileImages] = useState({});
     const requestQueueRef = React.useRef([]);
     const requestingSetRef = React.useRef(new Set());
@@ -61,16 +58,16 @@ function Home() {
             while (
                 requestQueueRef.current.length > 0 &&
                 requestingSetRef.current.size < MAX_CONCURRENT_REQUESTS
-            ) {
+                ) {
                 const userid = requestQueueRef.current.shift();
                 if (!userid) continue;
                 requestingSetRef.current.add(userid);
-                api.get('/v1/user/profileImg', { params: { userid } })
+                api.get('/v1/user/profileImg', {params: {userid}})
                     .then(res => {
-                        setProfileImages(prev => ({ ...prev, [userid]: res.data.url || null }));
+                        setProfileImages(prev => ({...prev, [userid]: res.data.url || null}));
                     })
                     .catch(() => {
-                        setProfileImages(prev => ({ ...prev, [userid]: null }));
+                        setProfileImages(prev => ({...prev, [userid]: null}));
                     })
                     .finally(() => {
                         requestingSetRef.current.delete(userid);
@@ -81,17 +78,6 @@ function Home() {
         };
         processQueue();
     }, [workspaces, profileImages]);
-
-    // 모달 오픈 핸들러
-    const handleDevModal = () => {
-        showModal(
-            <Box sx={{display: 'flex', alignItems: 'center'}}>
-                <BuildRoundedIcon sx={{mr: 1, color: theme.palette.secondary.main}}/>
-                개발중
-            </Box>,
-            "준비중인 기능입니다."
-        );
-    };
 
     // 워크스페이스 생성 페이지 이동 핸들러
     const handleCreateWorkspace = () => {
@@ -108,27 +94,27 @@ function Home() {
 
     // 삭제 버튼 클릭 시 확인 모달 오픈
     const openDeleteConfirm = (workspaceId) => {
-        setConfirmModal({ open: true, workspaceId });
+        setConfirmModal({open: true, workspaceId});
     };
     // 삭제 확인 모달에서 삭제 진행
     const handleDeleteConfirmed = async () => {
         const workspaceId = confirmModal.workspaceId;
-        setConfirmModal({ open: false, workspaceId: null });
+        setConfirmModal({open: false, workspaceId: null});
         try {
             await api.delete(`/v1/workspace/${workspaceId}`);
             setWorkspaces(prev => prev.filter(w => w.workspaceId !== workspaceId));
-            setResultModal({ open: true, title: '삭제가 완료되었습니다', message: '' });
+            setResultModal({open: true, title: '삭제가 완료되었습니다', message: ''});
         } catch (err) {
-            setResultModal({ open: true, title: '삭제에 실패했습니다.', message: err?.response?.data?.message || '' });
+            setResultModal({open: true, title: '삭제에 실패했습니다.', message: err?.response?.data?.message || ''});
         }
     };
     // 삭제 확인 모달에서 취소
     const handleDeleteCancel = () => {
-        setConfirmModal({ open: false, workspaceId: null });
+        setConfirmModal({open: false, workspaceId: null});
     };
     // 결과 모달 닫기
     const handleResultModalClose = () => {
-        setResultModal({ open: false, title: '', message: '' });
+        setResultModal({open: false, title: '', message: ''});
     };
 
     return (
@@ -153,7 +139,8 @@ function Home() {
             <Box sx={{p: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
                 {!isLoggedIn ? (
                     <>
-                        <Typography sx={{color: '#888', fontSize: 18, mt: 6, mb: 2, fontWeight: 600, textAlign: 'center'}}>
+                        <Typography
+                            sx={{color: '#888', fontSize: 18, mt: 6, mb: 2, fontWeight: 600, textAlign: 'center'}}>
                             워크스페이스를 사용하려면 회원가입 또는 로그인이 필요합니다.<br/>
                             회원가입 후 워크스페이스를 만들어보세요!
                         </Typography>
@@ -227,15 +214,27 @@ function Home() {
                                     mb: 3,
                                     boxSizing: 'border-box',
                                 }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mr: 2 }}>
-                                        <Box sx={{ fontSize: 36 }}>💼</Box>
+                                    <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', mr: 2}}>
+                                        <Box sx={{fontSize: 36}}>💼</Box>
                                         {/* 삭제 버튼: ownerId가 본인일 때만 노출, 아이콘 아래에 작게 */}
                                         {userData && workspace.ownerId === userData.userid && (
                                             <Button
                                                 variant="outlined"
                                                 color="error"
                                                 size="small"
-                                                sx={{ mt: 0.5, fontSize: 11, px: 1.2, py: 0.2, minWidth: 0, borderRadius: 2, borderColor: '#fbb', color: '#d22', lineHeight: 1, fontWeight: 600, opacity: 0.7 }}
+                                                sx={{
+                                                    mt: 0.5,
+                                                    fontSize: 11,
+                                                    px: 1.2,
+                                                    py: 0.2,
+                                                    minWidth: 0,
+                                                    borderRadius: 2,
+                                                    borderColor: '#fbb',
+                                                    color: '#d22',
+                                                    lineHeight: 1,
+                                                    fontWeight: 600,
+                                                    opacity: 0.7
+                                                }}
                                                 onClick={() => openDeleteConfirm(workspace.workspaceId)}
                                             >
                                                 삭제
@@ -243,13 +242,13 @@ function Home() {
                                         )}
                                     </Box>
                                     <Box sx={{flex: 1}}>
-                                        <Typography fontWeight={600} fontSize={18}>{workspace.name}</Typography>
+                                        <Typography fontWeight={600} fontSize={18} className="line-clamp-1">{workspace.name}</Typography>
                                         <Typography sx={{
                                             color: '#888',
                                             fontSize: 15,
                                             mt: 0.5
-                                        }}>{workspace.description}</Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                                        }} className="line-clamp-2">{workspace.description}</Typography>
+                                        <Box sx={{display: 'flex', alignItems: 'center', mt: 1}}>
                                             {sortedUsers.slice(0, 3).map((m, idx) => {
                                                 const uniqueIdx = `${workspace.workspaceId}-${idx}`;
                                                 // 닉네임 표시 핸들러
@@ -261,10 +260,10 @@ function Home() {
                                                     setShowNicknameIdx(showNicknameIdx === uniqueIdx ? null : uniqueIdx);
                                                 };
                                                 return (
-                                                    <Box key={m.id} sx={{ position: 'relative', display: 'inline-block' }}
-                                                        onMouseEnter={!isMobile ? handleShow : undefined}
-                                                        onMouseLeave={!isMobile ? handleHide : undefined}
-                                                        onTouchStart={isMobile ? handleTouch : undefined}
+                                                    <Box key={m.id} sx={{position: 'relative', display: 'inline-block'}}
+                                                         onMouseEnter={!isMobile ? handleShow : undefined}
+                                                         onMouseLeave={!isMobile ? handleHide : undefined}
+                                                         onTouchStart={isMobile ? handleTouch : undefined}
                                                     >
                                                         {showNicknameIdx === uniqueIdx && (
                                                             <Box sx={{
@@ -313,7 +312,7 @@ function Home() {
                                         </Box>
                                     </Box>
                                     <ArrowForwardIosIcon sx={{fontSize: 24, color: '#bbb', ml: 2, cursor: 'pointer'}}
-                                                         onClick={handleDevModal}/>
+                                                         onClick={() => navigate(`/workspace/room/${workspace.workspaceId}`)}/>
                                 </Paper>
                             );
                         })}
@@ -342,18 +341,28 @@ function Home() {
                     position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', zIndex: 2000,
                     bgcolor: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <Box sx={{ bgcolor: '#fff', borderRadius: 3, p: 4, minWidth: 280, maxWidth: 360, boxShadow: 8, textAlign: 'center' }}>
-                        <Typography fontWeight={700} fontSize={20} sx={{ mb: 3, textAlign: 'left' }}>
+                    <Box sx={{
+                        bgcolor: '#fff',
+                        borderRadius: 3,
+                        p: 4,
+                        minWidth: 280,
+                        maxWidth: 360,
+                        boxShadow: 8,
+                        textAlign: 'center'
+                    }}>
+                        <Typography fontWeight={700} fontSize={20} sx={{mb: 3, textAlign: 'left'}}>
                             워크스페이스 삭제
                         </Typography>
-                        <Typography variant="h6" fontWeight={400} sx={{ mb: 2, textAlign: 'left' }}>
+                        <Typography variant="h6" fontWeight={400} sx={{mb: 2, textAlign: 'left'}}>
                             워크스페이스를 삭제하시겠습니까?
                         </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 3 }}>
-                            <Button variant="outlined" color="inherit" fullWidth sx={{ fontWeight: 600, fontSize: 16, py: 1.2 }} onClick={handleDeleteCancel}>
+                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 1.5, mt: 3}}>
+                            <Button variant="outlined" color="inherit" fullWidth
+                                    sx={{fontWeight: 600, fontSize: 16, py: 1.2}} onClick={handleDeleteCancel}>
                                 취소
                             </Button>
-                            <Button variant="contained" color="error" fullWidth sx={{ fontWeight: 700, fontSize: 16, py: 1.2 }} onClick={handleDeleteConfirmed}>
+                            <Button variant="contained" color="error" fullWidth
+                                    sx={{fontWeight: 700, fontSize: 16, py: 1.2}} onClick={handleDeleteConfirmed}>
                                 워크스페이스 삭제하기
                             </Button>
                         </Box>
@@ -366,12 +375,20 @@ function Home() {
                     position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', zIndex: 2000,
                     bgcolor: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <Box sx={{ bgcolor: '#fff', borderRadius: 3, p: 4, minWidth: 280, maxWidth: 360, boxShadow: 8, textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
+                    <Box sx={{
+                        bgcolor: '#fff',
+                        borderRadius: 3,
+                        p: 4,
+                        minWidth: 280,
+                        maxWidth: 360,
+                        boxShadow: 8,
+                        textAlign: 'center'
+                    }}>
+                        <Typography variant="h6" fontWeight={800} sx={{mb: 2}}>
                             {resultModal.title}
                         </Typography>
                         {resultModal.message && (
-                            <Typography sx={{ color: 'error.main', mb: 2 }}>{resultModal.message}</Typography>
+                            <Typography sx={{color: 'error.main', mb: 2}}>{resultModal.message}</Typography>
                         )}
                         <Button variant="contained" color="secondary" onClick={handleResultModalClose}>
                             닫기
@@ -384,4 +401,3 @@ function Home() {
 }
 
 export default Home;
-
