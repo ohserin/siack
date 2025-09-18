@@ -7,7 +7,7 @@ import {useAuth} from '../../contexts/AuthContext.jsx';
 
 function Workspace() {
     const navigate = useNavigate();
-    const {workspaceId} = useParams();
+    const {roomId} = useParams();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [workspace, setWorkspace] = useState(null);
@@ -23,7 +23,7 @@ function Workspace() {
         let mounted = true;
         setLoading(true);
         api
-            .get(`/v1/workspace/${workspaceId}`)
+            .get(`/v1/workspace/${roomId}`)
             .then((res) => {
                 if (!mounted) return;
                 setWorkspace(res.data || null);
@@ -37,7 +37,7 @@ function Workspace() {
         return () => {
             mounted = false;
         };
-    }, [workspaceId]);
+    }, [roomId]);
 
     return (
         <Box component="main" sx={{
@@ -63,13 +63,13 @@ function Workspace() {
                     <Typography color="error">{error}</Typography>
                 ) : (
                     <Box sx={{bgcolor: '#fff', borderRadius: 3, p: 3, boxShadow: '0 2px 8px rgba(0,0,0,0.07)'}}>
-                        <Typography variant="h6" fontWeight={700} sx={{mb: 1}}>
-                            {workspace?.name || `워크스페이스 #${workspaceId}`}
+                        <Typography variant="h6" fontWeight={700} sx={{mb: 1}} className="line-clamp-1">
+                            {workspace?.name || `워크스페이스 #${roomId}`}
                         </Typography>
                         {workspace?.description && (
-                            <Typography sx={{color: '#666', mb: 2}}>{workspace.description}</Typography>
+                            <Typography sx={{color: '#666', mb: 2}} className="line-clamp-3">{workspace.description}</Typography>
                         )}
-                        <Typography sx={{color: '#999'}}>ID: {workspaceId}</Typography>
+                        <Typography sx={{color: '#999'}}>ID: {roomId}</Typography>
                     </Box>
                 )}
             </Box>

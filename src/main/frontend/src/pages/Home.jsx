@@ -1,15 +1,12 @@
 import React, {useEffect, useState} from "react";
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import BuildRoundedIcon from '@mui/icons-material/BuildRounded';
 import {Box, Typography, Button, Paper, Avatar} from '@mui/material';
 import theme from "../theme.js";
-import {useModal} from "../contexts/ModalContext";
 import {useNavigate} from "react-router-dom";
 import api from "../api/api";
 import {useAuth} from "../contexts/AuthContext";
 
 function Home() {
-    const {showModal} = useModal();
     const navigate = useNavigate();
     const {userData} = useAuth();
     const [workspaces, setWorkspaces] = useState([]);
@@ -81,17 +78,6 @@ function Home() {
         };
         processQueue();
     }, [workspaces, profileImages]);
-
-    // 모달 오픈 핸들러
-    const handleDevModal = () => {
-        showModal(
-            <Box sx={{display: 'flex', alignItems: 'center'}}>
-                <BuildRoundedIcon sx={{mr: 1, color: theme.palette.secondary.main}}/>
-                개발중
-            </Box>,
-            "준비중인 기능입니다."
-        );
-    };
 
     // 워크스페이스 생성 페이지 이동 핸들러
     const handleCreateWorkspace = () => {
@@ -256,12 +242,12 @@ function Home() {
                                         )}
                                     </Box>
                                     <Box sx={{flex: 1}}>
-                                        <Typography fontWeight={600} fontSize={18}>{workspace.name}</Typography>
+                                        <Typography fontWeight={600} fontSize={18} className="line-clamp-1">{workspace.name}</Typography>
                                         <Typography sx={{
                                             color: '#888',
                                             fontSize: 15,
                                             mt: 0.5
-                                        }}>{workspace.description}</Typography>
+                                        }} className="line-clamp-2">{workspace.description}</Typography>
                                         <Box sx={{display: 'flex', alignItems: 'center', mt: 1}}>
                                             {sortedUsers.slice(0, 3).map((m, idx) => {
                                                 const uniqueIdx = `${workspace.workspaceId}-${idx}`;
@@ -326,7 +312,7 @@ function Home() {
                                         </Box>
                                     </Box>
                                     <ArrowForwardIosIcon sx={{fontSize: 24, color: '#bbb', ml: 2, cursor: 'pointer'}}
-                                                         onClick={() => navigate(`/workspace/${workspace.workspaceId}`)}/>
+                                                         onClick={() => navigate(`/workspace/room/${workspace.workspaceId}`)}/>
                                 </Paper>
                             );
                         })}
