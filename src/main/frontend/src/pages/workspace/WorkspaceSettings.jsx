@@ -108,9 +108,9 @@ function WorkspaceSettings() {
             </Paper>
 
             {/* 구성원/채널 2열 배치 */}
-            <Grid container spacing={2}>
-              {/* 구���원 리스트 */}
-              <Grid item xs={12} md={12}>
+            <Grid container spacing={2} sx={{ width: '100%' }}>
+              {/* 구성원 리스트 */}
+              <Grid item xs={12} md={12} sx={{ width: { xs: '100%', md: 'auto' } }}>
                 <Paper elevation={0} sx={{ width: '100%', p: { xs: 2, md: 2.5 }, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -147,7 +147,7 @@ function WorkspaceSettings() {
               </Grid>
 
               {/* 채널 리스트 */}
-              <Grid item xs={12} md={12}>
+              <Grid item xs={12} md={12} sx={{ width: { xs: '100%', md: 'auto' } }}>
                 <Paper elevation={0} sx={{ width: '100%', p: { xs: 2, md: 2.5 }, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
