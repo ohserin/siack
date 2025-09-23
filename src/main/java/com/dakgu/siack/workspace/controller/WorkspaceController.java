@@ -3,6 +3,7 @@ package com.dakgu.siack.workspace.controller;
 import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.CreateWorkspaceRequestDTO;
 import com.dakgu.siack.workspace.dto.GetWorkspaceResponseDTO;
+import com.dakgu.siack.workspace.dto.ModifyWorkspaceRequestDTO;
 import com.dakgu.siack.workspace.service.WorkspaceRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,12 @@ public class WorkspaceController {
     @GetMapping("/list")
     public ResponseEntity<?> getWorkspaceList(Authentication authentication) {
         List<GetWorkspaceResponseDTO> response = workspaceRequestService.getWorkspaceList(authentication);
+        return ResponseEntity.status(200).body(response);
+    }
+
+    @PatchMapping("/modify")
+    public ResponseEntity<?> modifyWorkspace(Authentication authentication, @RequestBody ModifyWorkspaceRequestDTO request) {
+        ResponseDTO response = workspaceRequestService.modifyWorkspace(authentication, request);
         return ResponseEntity.status(200).body(response);
     }
 
