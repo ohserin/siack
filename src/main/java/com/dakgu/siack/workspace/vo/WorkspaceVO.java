@@ -4,6 +4,7 @@ import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.utils.Timestamp;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "sdw_workspace")
 public class WorkspaceVO extends Timestamp {

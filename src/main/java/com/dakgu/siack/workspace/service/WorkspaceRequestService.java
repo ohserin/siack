@@ -2,6 +2,7 @@ package com.dakgu.siack.workspace.service;
 
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.user.vo.User;
+import com.dakgu.siack.user.vo.UserProfile;
 import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.CreateWorkspaceRequestDTO;
 import com.dakgu.siack.workspace.dto.GetWorkspaceResponseDTO;
@@ -202,13 +203,13 @@ public class WorkspaceRequestService {
             User memberUser = member.getUser();
             if (memberUser == null || !memberUser.isUseyn()) continue;
             String nickname = Optional.ofNullable(memberUser.getUserProfile())
-                    .map(profile -> profile.getNickname())
+                    .map(UserProfile::getNickname)
                     .orElse(memberUser.getUsername());
             Long profileImage = Optional.ofNullable(memberUser.getUserProfile())
-                    .map(profile -> profile.getProfileimg())
+                    .map(UserProfile::getProfileimg)
                     .orElse(null);
             userDTOList.add(WorkspaceUserDTO.builder()
-                    .userId(String.valueOf(memberUser.getUserid()))
+                    .id(String.valueOf(memberUser.getUserid()))
                     .nickname(nickname)
                     .profileImage(profileImage)
                     .build());
