@@ -1,13 +1,12 @@
 package com.dakgu.siack.workspace.service;
 
+import com.dakgu.siack.file.service.FileUploadService;
+import com.dakgu.siack.log.vo.UserLog;
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.vo.UserProfile;
 import com.dakgu.siack.utils.ResponseDTO;
-import com.dakgu.siack.workspace.dto.CreateWorkspaceRequestDTO;
-import com.dakgu.siack.workspace.dto.GetWorkspaceResponseDTO;
-import com.dakgu.siack.workspace.dto.ModifyWorkspaceRequestDTO;
-import com.dakgu.siack.workspace.dto.WorkspaceUserDTO;
+import com.dakgu.siack.workspace.dto.*;
 import com.dakgu.siack.workspace.repository.ChannelMemberRepository;
 import com.dakgu.siack.workspace.repository.ChannelRepository;
 import com.dakgu.siack.workspace.repository.WorkspaceMemberRepository;
@@ -22,7 +21,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 
 @Slf4j
@@ -34,6 +35,7 @@ public class WorkspaceRequestService {
     private final ChannelRepository channelRepository;
     private final ChannelMemberRepository channelMemberRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
+    private final FileUploadService uploadService;
 
     /**
      * 워크스페이스를 생성합니다. (기본 채널 및 OWNER 멤버 자동 생성)
@@ -154,6 +156,18 @@ public class WorkspaceRequestService {
         return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스 정보가 수정되었습니다.");
     }
 
+    @Transactional
+    public ResponseDTO uploadWorkspaceImage(Authentication authentication, MultipartFile file, UploadWorkspaceImage request) throws IOException {
+        User user = getAuthenticatedUser(authentication);
+        WorkspaceVO workspace = getWorkspaceOrThrow(request.getWorkspaceId());
+
+        Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
+
+
+        return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
+    }
+
+
     // === Private Helper Methods ===
 
     /**
@@ -175,8 +189,12 @@ public class WorkspaceRequestService {
      */
     private WorkspaceVO getWorkspaceOrThrow(Long workspaceId) {
         if (workspaceId == null) throw new IllegalArgumentException("워크스페이스 ID가 필요합니다.");
-        return workspaceRepository.findById(workspaceId)
+        WorkspaceVO workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
+        if (!workspace.isStatus()) {
+            throw new IllegalArgumentException("삭제된 워크스페이스입니다.");
+        }
+        return workspace;
     }
 
     /**
