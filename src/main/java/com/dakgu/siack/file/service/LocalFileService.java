@@ -23,7 +23,6 @@ import java.util.UUID;
 public class LocalFileService implements FileService {
 
     private final String uploadPath;
-    private static final Set<String> IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png");
 
     public LocalFileService(@Value("${file.local.upload-path:uploads}") String uploadPath) {
         this.uploadPath = uploadPath;
@@ -59,19 +58,4 @@ public class LocalFileService implements FileService {
         }
     }
 
-    private String getFileCategory(String extension) {
-        if (IMAGE_EXTENSIONS.contains(extension)) return "images";
-        throw new IllegalArgumentException("지원하지 않는 파일 형식입니다: " + extension);
-    }
-
-    /**
-     * 파일명에서 확장자를 추출합니다.
-     * @param filename 원본 파일명
-     * @return 확장자 (없으면 빈 문자열)
-     */
-    private String getExtension(String filename) {
-        if (filename == null) return "";
-        int idx = filename.lastIndexOf('.');
-        return (idx > 0 && idx < filename.length() - 1) ? filename.substring(idx + 1).toLowerCase() : "";
-    }
 }
