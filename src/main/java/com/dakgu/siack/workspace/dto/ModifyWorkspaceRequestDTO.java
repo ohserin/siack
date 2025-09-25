@@ -12,6 +12,5 @@ public class ModifyWorkspaceRequestDTO {
     private Long userId;
     private String name;
     private String description;
-    private Long imageId;
 }
 
