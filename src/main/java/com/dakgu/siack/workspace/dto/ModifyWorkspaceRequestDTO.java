@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ModifyWorkspaceRequestDTO {
     private Long workspaceId;
-    private Long userId;
     private String name;
     private String description;
 }
