@@ -1,7 +1,6 @@
 package com.dakgu.siack.workspace.service;
 
 import com.dakgu.siack.file.service.FileUploadService;
-import com.dakgu.siack.log.vo.UserLog;
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.vo.UserProfile;
@@ -146,10 +145,6 @@ public class WorkspaceRequestService {
             workspace.setDescription(request.getDescription());
             changed = true;
         }
-        if (request.getImageId() != null && !request.getImageId().equals(workspace.getImageId())) {
-            workspace.setImageId(request.getImageId());
-            changed = true;
-        }
         if (changed) {
             workspaceRepository.save(workspace);
         }
@@ -157,18 +152,31 @@ public class WorkspaceRequestService {
     }
 
     @Transactional
-    public ResponseDTO uploadWorkspaceImage(Authentication authentication, MultipartFile file, UploadWorkspaceImage request) throws IOException {
-        User user = getAuthenticatedUser(authentication);
-        WorkspaceVO workspace = getWorkspaceOrThrow(request.getWorkspaceId());
+    public ResponseDTO uploadWorkspaceImage(Authentication authentication, MultipartFile file, Long workspaceId) throws IOException {
+        getAuthenticatedUser(authentication);
+        WorkspaceVO workspace = getWorkspaceOrThrow(workspaceId);
+
+        if (!isAllowedImageExtension(file)) {
+            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "이미지 파일(jpg, jpeg, png)만 업로드 가능합니다.");
+        }
 
         Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
+        workspace.setImageId(fileId);
+        workspaceRepository.save(workspace);
 
-
-        return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
+        return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스 이미지 업데이트되었습니다.");
     }
 
-
     // === Private Helper Methods ===
+
+    /**
+     * 이미지 파일 확장자(jpg, jpeg, png)만 허용하는 검증 메서드
+     */
+    private static boolean isAllowedImageExtension(MultipartFile file) {
+        String extension = org.springframework.util.StringUtils.getFilenameExtension(file.getOriginalFilename());
+        Set<String> allowedExtensions = Set.of("jpg", "jpeg", "png");
+        return extension != null && allowedExtensions.contains(extension.toLowerCase());
+    }
 
     /**
      * 인증 정보에서 사용자 엔티티를 조회합니다. (없으면 예외)
