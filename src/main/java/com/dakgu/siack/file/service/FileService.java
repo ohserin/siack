@@ -16,9 +16,9 @@ public interface FileService {
     byte[] readFile(String path);
 
     /**
-     * 파일 바이트 배열과 확장자를 받아 물리 스토리지에 파일을 저장하고, 그 결과를 반환합니다.
+     * 파일 바이트 배열과 확장자를 받아 저장하고, 저장 결과를 반환합니다.
      *
-     * @param content   파일의 실제 바이트 데이터
+     * @param content 파일의 실제 바이트 데이터
      * @param extension 파일 확장자
      * @return 파일 저장 결과를 담은 DTO
      */

@@ -4,6 +4,7 @@ import com.dakgu.siack.user.vo.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+@Builder
 @Entity
 @Table(name = "sdw_channel_member")
 @IdClass(ChannelMemberId.class)
@@ -28,4 +29,3 @@ public class ChannelMemberVO {
     @Column(name = "STATUS", nullable = false)
     private boolean status = true;
 }
-
