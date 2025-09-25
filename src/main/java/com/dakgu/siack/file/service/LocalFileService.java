@@ -41,21 +41,18 @@ public class LocalFileService implements FileService {
 
     @Override
     public FileStorageResult writeFile(byte[] content, String extension) {
-        String lowercasedExtension = (extension != null) ? extension.toLowerCase() : "";
-        String category = getFileCategory(lowercasedExtension);
-
         String uuid = UUID.randomUUID().toString();
+        String lowercasedExtension = (extension != null && !extension.isBlank()) ? extension.toLowerCase() : "bin";
         String newFilename = uuid + "." + lowercasedExtension;
-        Path directoryPath = Paths.get(uploadPath, category);
+        String yearMonth = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM"));
+        Path directoryPath = Paths.get(uploadPath, yearMonth);
         Path finalPath = directoryPath.resolve(newFilename);
 
         try {
             Files.createDirectories(directoryPath);
             Files.write(finalPath, content);
-
             log.info("로컬 파일 쓰기 성공: {}", finalPath);
-            return new FileStorageResult(newFilename, finalPath.toString(), category, lowercasedExtension);
-
+            return new FileStorageResult(newFilename, finalPath.toString(), null, lowercasedExtension);
         } catch (IOException e) {
             log.error("로컬 파일 쓰기 실패: path={}, error={}", finalPath, e.getMessage(), e);
             throw new RuntimeException("로컬 파일 쓰기에 실패했습니다. 경로: " + finalPath, e);
@@ -65,5 +62,16 @@ public class LocalFileService implements FileService {
     private String getFileCategory(String extension) {
         if (IMAGE_EXTENSIONS.contains(extension)) return "images";
         throw new IllegalArgumentException("지원하지 않는 파일 형식입니다: " + extension);
+    }
+
+    /**
+     * 파일명에서 확장자를 추출합니다.
+     * @param filename 원본 파일명
+     * @return 확장자 (없으면 빈 문자열)
+     */
+    private String getExtension(String filename) {
+        if (filename == null) return "";
+        int idx = filename.lastIndexOf('.');
+        return (idx > 0 && idx < filename.length() - 1) ? filename.substring(idx + 1).toLowerCase() : "";
     }
 }
