@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -323,6 +324,12 @@ public class UserService {
 
         UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
         if (profile == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
+
+        String extension = org.springframework.util.StringUtils.getFilenameExtension(file.getOriginalFilename());
+        Set<String> allowedExtensions = Set.of("jpg", "jpeg", "png");
+        if (extension == null || !allowedExtensions.contains(extension.toLowerCase())) {
+            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "이미지 파일(jpg, jpeg, png)만 업로드 가능합니다.");
+        }
 
         Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
         profile.setProfileimg(fileId);
