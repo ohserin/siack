@@ -2,7 +2,6 @@ package com.dakgu.siack.user.service;
 
 import com.dakgu.siack.config.jwt.JwtTokenProvider;
 import com.dakgu.siack.file.repository.SdfFileRepository;
-import com.dakgu.siack.file.service.FileService;
 import com.dakgu.siack.file.service.FileUploadService;
 import com.dakgu.siack.log.service.UserLogService;
 import com.dakgu.siack.log.vo.UserLog;
@@ -44,7 +43,6 @@ public class UserService {
     private final UserValidationService userValidationService;
     private final FileUploadService uploadService;
     private final SdfFileRepository fileRepository;
-    private final FileService fileService;
     private final UserLogService userLogService;
 
     /* username 사용 가능한지 확인 */
@@ -344,7 +342,13 @@ public class UserService {
         return new ResponseDTO(HttpStatus.OK.value(), "프로필 이미지가 성공적으로 업데이트되었습니다.");
     }
 
-
+    /**
+     * 주어진 사용자 ID(userid)로 해당 사용자의 프로필 이미지 URL을 조회합니다.
+     * 프로필 이미지가 없거나 사용자가 존재하지 않으면 적절한 메시지를 반환합니다.
+     *
+     * @param userid 조회할 사용자 ID (String)
+     * @return UserProfileUrlResponseDTO (프로필 이미지 URL 및 메시지)
+     */
     public UserProfileUrlResponseDTO getUserProfileURL(String userid) {
         User user = userRepository.findByUseridAndUseyn(Long.valueOf(userid), true);
         if (user == null) {
