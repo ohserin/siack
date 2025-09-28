@@ -4,7 +4,9 @@ import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.CreateWorkspaceRequestDTO;
 import com.dakgu.siack.workspace.dto.GetWorkspaceResponseDTO;
 import com.dakgu.siack.workspace.dto.ModifyWorkspaceRequestDTO;
+import com.dakgu.siack.workspace.dto.InviteWorkspaceMemberRequestDTO;
 import com.dakgu.siack.workspace.service.WorkspaceRequestService;
+import com.dakgu.siack.workspace.service.WorkspaceMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,7 @@ import java.util.List;
 public class WorkspaceController {
 
     private final WorkspaceRequestService workspaceRequestService;
+    private final WorkspaceMemberService workspaceMemberService; // 멤버 초대/추방 서비스 주입
 
     @PostMapping("/create")
     public ResponseEntity<?> createWorkspace(Authentication authentication, @RequestBody CreateWorkspaceRequestDTO request) {
@@ -49,10 +52,24 @@ public class WorkspaceController {
             Authentication authentication,
             @PathVariable("workspaceId") Long workspaceId,
             @RequestPart("file") MultipartFile file
-        ) throws java.io.IOException {
+    ) throws java.io.IOException {
         ResponseDTO response = workspaceRequestService.uploadWorkspaceImage(authentication, file, workspaceId);
         return ResponseEntity.status(200).body(response);
     }
 
+    @PostMapping("/{workspaceId}/members/invite")
+    public ResponseEntity<?> inviteMember(Authentication authentication,
+                                          @PathVariable("workspaceId") Long workspaceId,
+                                          @RequestBody InviteWorkspaceMemberRequestDTO request) {
+        ResponseDTO response = workspaceMemberService.inviteMember(authentication, workspaceId, request);
+        return ResponseEntity.status(200).body(response);
+    }
 
+    @DeleteMapping("/{workspaceId}/members/{userId}")
+    public ResponseEntity<?> removeMember(Authentication authentication,
+                                          @PathVariable("workspaceId") Long workspaceId,
+                                          @PathVariable("userId") Long userId) {
+        ResponseDTO response = workspaceMemberService.removeMember(authentication, workspaceId, userId);
+        return ResponseEntity.status(200).body(response);
+    }
 }
