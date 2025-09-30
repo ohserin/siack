@@ -33,10 +33,7 @@ public class WorkspaceMemberService {
     private static final Set<String> ALLOWED_ROLES = Set.of("MEMBER", "ADMIN");
 
     /**
-     * 워크스페이스 운영자(OWNER)가 멤버를 초대합니다. (닉네임 기반)
-     * - 이미 활성 멤버이면 409
-     * - 비활성 멤버였다면 재활성화 및 역할 갱신
-     * - 허용되지 않은 역할이면 기본 MEMBER
+     * 워크스페이스 운영자(OWNER)가 멤버를 초대합니다. (닉네임 기반, 활성 사용자만)
      */
     @Transactional
     public ResponseDTO inviteMember(Authentication authentication, Long workspaceId, InviteWorkspaceMemberRequestDTO request) {
@@ -52,15 +49,15 @@ public class WorkspaceMemberService {
         validateOwner(operator, workspace);
 
         String nickname = request.getNickname().trim();
-        UserProfile profile = userProfileRepository.findByNickname(nickname);
+        // 활성 사용자(useyn=true)만 조회
+        UserProfile profile = userProfileRepository.findByNicknameAndUser_Useyn(nickname, true);
         if (profile == null) {
-            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "닉네임에 해당하는 사용자를 찾을 수 없습니다.");
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "닉네임을 찾을 수 없습니다.");
         }
         User target = profile.getUser();
         if (target == null) {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보가 올바르지 않습니다.");
         }
-        if (!target.isUseyn()) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비활성 사용자입니다.");
         if (target.getUserid().equals(workspace.getOwner().getUserid())) {
             return new ResponseDTO(HttpStatus.CONFLICT.value(), "소유자는 이미 멤버입니다.");
         }
@@ -95,8 +92,7 @@ public class WorkspaceMemberService {
     @Transactional
     public ResponseDTO removeMember(Authentication authentication, Long workspaceId, Long targetUserId) {
         User operator = getAuthUser(authentication);
-        if (workspaceId == null || targetUserId == null)
-            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "워크스페이스 ID와 사용자 ID가 필요합니다.");
+        if (workspaceId == null || targetUserId == null) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "워크스페이스 ID와 사용자 ID가 필요합니다.");
 
         WorkspaceVO workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
