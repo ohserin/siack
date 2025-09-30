@@ -6,14 +6,13 @@ import lombok.Setter;
 
 /**
  * 워크스페이스 멤버 초대 요청 DTO
- * userId : 초대할 사용자 ID (필수)
- * role   : 부여할 역할 (선택, 기본 MEMBER)
+ * nickname : 초대할 사용자 닉네임 (필수, 고유)
+ * role     : 부여할 역할 (선택, 기본 MEMBER)
  */
 @Getter
 @Setter
 @NoArgsConstructor
 public class InviteWorkspaceMemberRequestDTO {
-    private Long userId;
+    private String nickname;
     private String role = "MEMBER";
 }
-
