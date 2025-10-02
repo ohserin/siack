@@ -1,99 +1,108 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, Avatar, Tooltip, IconButton } from '@mui/material';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext.jsx';
-import api from '../../../api/api';
+import React, {useState} from 'react';
+import {Box, IconButton, TextField} from '@mui/material';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
+import {useNavigate} from 'react-router-dom';
 
-function WorkspaceHeader({ channelName, onExit }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { roomId } = useParams();
-  const { userData } = useAuth();
-  const [avatarUrl, setAvatarUrl] = useState(null);
+function WorkspaceHeader({onSearchChange, onHelp}) {
+    const navigate = useNavigate();
+    const [query, setQuery] = useState('');
 
-  const handleExit = () => {
-    if (onExit) onExit();
-    else navigate('/');
-  };
+    const handleSearch = (e) => {
+        const v = e.target.value;
+        setQuery(v);
+        onSearchChange && onSearchChange(v);
+    };
 
-  const goSettings = () => {
-    if (!roomId) return;
-    if (!location.pathname.endsWith('/settings')) {
-      navigate(`/workspace/room/${roomId}/settings`);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-    const uid = userData?.userid;
-    if (!uid) { setAvatarUrl(null); return; }
-    api.get('/v1/user/profileImg', { params: { userid: uid } })
-      .then(res => { if (mounted) setAvatarUrl(res?.data?.url || null); })
-      .catch(() => { if (mounted) setAvatarUrl(null); });
-    return () => { mounted = false; };
-  }, [userData?.userid]);
-
-  const pickValid = (v) => (v && v !== 'null' && v !== 'undefined' && String(v).trim() !== '') ? v : undefined;
-  const avatarSrc = pickValid(avatarUrl) || pickValid(userData?.profileimg) || undefined;
-  const avatarFallback = userData?.nickname ? userData.nickname[0] : '?';
-
-  return (
-    <Box
-      component="header"
-      sx={{
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 2,
-        py: 1,
-        px: { xs: 1.5, md: 2 },
-        bgcolor: 'primary.main',
-        color: 'common.white',
-        borderBottom: '1px solid',
-        borderColor: 'primary.dark',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}
-    >
-      {/* 좌측: 둥근 사각형 아이콘(클릭 시 설정으로) + 채널명 */}
-      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
-        <Tooltip title="설정으로 이동" arrow>
-          <Box
-            role="button"
-            tabIndex={0}
-            onClick={goSettings}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') goSettings(); }}
-            sx={{ width: 24, height: 24, borderRadius: '6px', bgcolor: 'common.white', mr: 1, opacity: 0.95, cursor: 'pointer' }}
-          />
-        </Tooltip>
-        <Typography
-          variant="h6"
-          fontWeight={800}
-          className="line-clamp-1"
-          sx={{ minWidth: 0, color: 'inherit' }}
+    return (
+        <Box
+            component="header"
+            sx={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                py: 0.1,
+                minHeight: 40,
+                px: {xs: 1, md: 1.5},
+                bgcolor: 'primary.main',
+                color: 'common.white',
+                borderBottom: '1px solid',
+                borderColor: 'primary.dark',
+                position: 'sticky',
+                top: 0,
+                zIndex: 10
+            }}
         >
-          {channelName}
-        </Typography>
-      </Box>
+            {/* 중앙: 이전/이후 버튼 + 검색창 */}
+            <Box sx={{ flex: 1, minWidth: 80, maxWidth: 500, mx: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                {/* 이전/이후 버튼 */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
+                    <span>
+                        <IconButton
+                            size="small"
+                            onClick={() => navigate(-1)}
+                            sx={{ color: 'common.white', p: 0.5, minWidth: 28, minHeight: 28 }}
+                        >
+                            <ArrowBackRoundedIcon fontSize="inherit" />
+                        </IconButton>
+                    </span>
+                    <span>
+                        <IconButton
+                            size="small"
+                            onClick={() => navigate(1)}
+                            sx={{ color: 'common.white', p: 0.5, minWidth: 28, minHeight: 28 }}
+                        >
+                            <ArrowForwardRoundedIcon fontSize="inherit" />
+                        </IconButton>
+                    </span>
+                </Box>
+                {/* 검색창 */}
+                <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="검색..."
+                    value={query}
+                    onChange={handleSearch}
+                    slotProps={{ input: { 'aria-label': '검색' } }}
+                    sx={{
+                        maxWidth: 800,
+                        ml: 0.5,
+                        '& .MuiInputBase-root': {
+                            bgcolor: 'rgba(255,255,255,0.13)',
+                            color: 'common.white',
+                            backdropFilter: 'blur(2px)',
+                            height: 28,
+                            fontSize: 13,
+                            minHeight: 28,
+                            px: 1
+                        },
+                        '& .MuiInputBase-input': {
+                            py: 0.5,
+                            fontSize: 13,
+                            height: 18
+                        },
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+                        '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.6)' }
+                    }}
+                />
+            </Box>
 
-      {/* 우측: 유저 아이콘 + 나가기 아이콘 버튼 */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        <Tooltip title={userData?.nickname || ''} arrow>
-          <Avatar src={avatarSrc} alt={userData?.nickname || ''} sx={{ width: 30, height: 30, border: '1px solid rgba(255,255,255,0.5)' }}>
-            {!avatarSrc && avatarFallback}
-          </Avatar>
-        </Tooltip>
-        <Tooltip title="나가기" arrow>
-          <IconButton color="inherit" onClick={handleExit} aria-label="나가기" sx={{ color: 'inherit' }}>
-            <LogoutRoundedIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    </Box>
-  );
+            {/* 우측: 도움말 */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <IconButton
+                    size="small"
+                    onClick={() => onHelp && onHelp()}
+                    aria-label="도움말"
+                    sx={{ color: 'common.white', p: 0.5, minWidth: 28, minHeight: 28 }}
+                >
+                    <HelpOutlineRoundedIcon fontSize="inherit" />
+                </IconButton>
+            </Box>
+        </Box>
+    );
 }
 
 export default WorkspaceHeader;
