@@ -33,7 +33,7 @@ public class WorkspaceMemberService {
     private static final Set<String> ALLOWED_ROLES = Set.of("MEMBER", "ADMIN");
 
     /**
-     * 워크스페이스 운영자(OWNER)가 멤버를 초대합니다. (닉네임 기반, 활성 사용자만)
+     * 워크스페이스에 속한 모든 유저가 멤버를 초대할 수 있습니다. (닉네임 기반, 활성 사용자만)
      */
     @Transactional
     public ResponseDTO inviteMember(Authentication authentication, Long workspaceId, InviteWorkspaceMemberRequestDTO request) {
@@ -46,7 +46,6 @@ public class WorkspaceMemberService {
         WorkspaceVO workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
         if (!workspace.isStatus()) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "삭제된 워크스페이스입니다.");
-        validateOwner(operator, workspace);
 
         String nickname = request.getNickname().trim();
         // 활성 사용자(useyn=true)만 조회
