@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import {Box} from '@mui/material';
 import {useNavigate, useParams} from 'react-router-dom';
-import api from '../../api/api';
-import {useAuth} from '../../contexts/AuthContext.jsx';
-import WorkspaceHeader from './components/Header.jsx';
-import Sidebar from './components/Sidebar.jsx';
-import WorkspaceInfo from './WorkspaceInfo.jsx';
+import api from '../../../api/api.js';
+import {useAuth} from '../../../contexts/AuthContext.jsx';
+import Header from '../components/Header.jsx';
+import Sidebar from '../components/Sidebar.jsx';
+import WorkspaceInfo from './Workspace-Info.jsx';
 
 function Workspace() {
     const navigate = useNavigate();
@@ -52,7 +52,7 @@ function Workspace() {
             background: '#f8f9fa',
             pt: 0,
         }}>
-            <WorkspaceHeader channelName={workspace?.name || `워크스페이스 #${roomId}`} onExit={() => navigate('/')}/>
+            <Header channelName={workspace?.name || `워크스페이스 #${roomId}`} onExit={() => navigate('/')}/>
             <Box sx={{flex: 1, display: 'flex', flexDirection: 'row', alignItems: 'stretch', position: 'relative'}}>
                 <Sidebar mainContent={mainContent} setMainContent={setMainContent} openPanel={openPanel}
                          setOpenPanel={setOpenPanel} panelWidth={panelWidth}/>
