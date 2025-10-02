@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Box, Typography, Divider, Avatar, Chip, Button, Grid, Stack, List, ListItem, ListItemText
+  Box, Typography, Divider, Avatar, Chip, Button, Stack, List, ListItem, ListItemText
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
@@ -45,17 +45,24 @@ function WorkspaceInfo() {
         </Button>
       </Box>
       <Divider sx={{ mb: 3 }} />
-      {/* 정보 그리드 */}
-      <Grid container spacing={2} mb={2}>
-        <Grid item xs={12} sm={6}><Typography>설명: {workspaceInfo.description}</Typography></Grid>
-        <Grid item xs={6} sm={3}><Typography>생성일: {workspaceInfo.createdAt}</Typography></Grid>
-        <Grid item xs={6} sm={3}><Typography>소유자: {workspaceInfo.owner}</Typography></Grid>
-        <Grid item xs={6} sm={3}><Typography>내 역할: {workspaceInfo.myRole}</Typography></Grid>
-        <Grid item xs={6} sm={3}><Typography>플랜: {workspaceInfo.plan}</Typography></Grid>
-        <Grid item xs={6} sm={3}><Typography>저장소: {workspaceInfo.storage.used} / {workspaceInfo.storage.total}</Typography></Grid>
-        <Grid item xs={6} sm={3}><Typography>멤버 수: {workspaceInfo.memberCount}명</Typography></Grid>
-        <Grid item xs={6} sm={3}><Typography>최근 활동: {workspaceInfo.lastActive}</Typography></Grid>
-      </Grid>
+      {/* 정보 그리드 (MUI Grid v2 대응: display='grid' 사용) */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' },
+          gap: 2,
+          mb: 2,
+        }}
+      >
+        <Box><Typography>설명: {workspaceInfo.description}</Typography></Box>
+        <Box><Typography>생성일: {workspaceInfo.createdAt}</Typography></Box>
+        <Box><Typography>소유자: {workspaceInfo.owner}</Typography></Box>
+        <Box><Typography>내 역할: {workspaceInfo.myRole}</Typography></Box>
+        <Box><Typography>플랜: {workspaceInfo.plan}</Typography></Box>
+        <Box><Typography>저장소: {workspaceInfo.storage.used} / {workspaceInfo.storage.total}</Typography></Box>
+        <Box><Typography>멤버 수: {workspaceInfo.memberCount}명</Typography></Box>
+        <Box><Typography>최근 활동: {workspaceInfo.lastActive}</Typography></Box>
+      </Box>
       {/* 멤버 리스트 */}
       <Box mb={2}>
         <Typography fontWeight={600} mb={1}>대표 멤버</Typography>
