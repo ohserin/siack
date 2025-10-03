@@ -1,8 +1,9 @@
 package com.dakgu.siack.workspace.service;
 
-import com.dakgu.siack.user.repository.UserRepository;
+import com.dakgu.siack.user.repository.UserProfileRepository;
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.user.vo.User;
+import com.dakgu.siack.user.vo.UserProfile;
 import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.InviteWorkspaceMemberRequestDTO;
 import com.dakgu.siack.workspace.repository.WorkspaceMemberRepository;
@@ -26,31 +27,36 @@ public class WorkspaceMemberService {
 
     private final WorkspaceRepository workspaceRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
-    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final UserService userService;
 
-    private static final Set<String> ALLOWED_ROLES = Set.of("MEMBER","ADMIN");
+    private static final Set<String> ALLOWED_ROLES = Set.of("MEMBER", "ADMIN");
 
     /**
-     * 워크스페이스 운영자(OWNER)가 멤버를 초대합니다.
-     * - 이미 활성 멤버이면 409
-     * - 비활성 멤버였다면 재활성화 및 역할 갱신
-     * - 허용되지 않은 역할이면 기본 MEMBER
+     * 워크스페이스에 속한 모든 유저가 멤버를 초대할 수 있습니다. (닉네임 기반, 활성 사용자만)
      */
     @Transactional
     public ResponseDTO inviteMember(Authentication authentication, Long workspaceId, InviteWorkspaceMemberRequestDTO request) {
         User operator = getAuthUser(authentication);
         if (workspaceId == null) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "워크스페이스 ID가 필요합니다.");
-        if (request == null || request.getUserId() == null) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "초대할 사용자 ID가 필요합니다.");
+        if (request == null || request.getNickname() == null || request.getNickname().trim().isEmpty()) {
+            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "초대할 사용자 닉네임이 필요합니다.");
+        }
 
         WorkspaceVO workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
         if (!workspace.isStatus()) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "삭제된 워크스페이스입니다.");
-        validateOwner(operator, workspace);
 
-        User target = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        if (!target.isUseyn()) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비활성 사용자입니다.");
+        String nickname = request.getNickname().trim();
+        // 활성 사용자(useyn=true)만 조회
+        UserProfile profile = userProfileRepository.findByNicknameAndUser_Useyn(nickname, true);
+        if (profile == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "닉네임을 찾을 수 없습니다.");
+        }
+        User target = profile.getUser();
+        if (target == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보가 올바르지 않습니다.");
+        }
         if (target.getUserid().equals(workspace.getOwner().getUserid())) {
             return new ResponseDTO(HttpStatus.CONFLICT.value(), "소유자는 이미 멤버입니다.");
         }
@@ -125,4 +131,3 @@ public class WorkspaceMemberService {
         }
     }
 }
-
