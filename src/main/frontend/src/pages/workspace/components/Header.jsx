@@ -65,7 +65,16 @@ function WorkspaceHeader({onSearchChange, onHelp}) {
                     placeholder="검색..."
                     value={query}
                     onChange={handleSearch}
-                    slotProps={{ input: { 'aria-label': '검색' } }}
+                    autoComplete="off"
+                    name="workspace-search-nohistory"
+                    slotProps={{
+                        input: {
+                            'aria-label': '검색',
+                            autoComplete: 'off',
+                            autoCorrect: 'off',
+                            spellCheck: 'false'
+                        }
+                    }}
                     sx={{
                         maxWidth: 800,
                         ml: 0.5,
