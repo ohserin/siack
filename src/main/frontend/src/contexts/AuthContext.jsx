@@ -26,6 +26,7 @@ const fetchUserDataFromAPI = async (token) => {
                 phone: data.phone,
                 nickname: data.nickname,
                 profileimg: data.profileimg,
+                profileImageUrl: data.profileImageUrl || null,
                 statusmsg: data.statusmsg,
                 role: data.role,
             };
