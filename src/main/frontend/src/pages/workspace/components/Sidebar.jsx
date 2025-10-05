@@ -86,7 +86,7 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
                 >
                     <BottomNavigationAction label="홈" value="home" icon={<HomeIcon/>}/>
                     <BottomNavigationAction label="DM" value="dm" icon={<AccountCircleIcon/>}/>
-                    <BottomNavigationAction label="워크스페이스" value="setting" icon={<Box sx={{
+                    <BottomNavigationAction label="정보" value="setting" icon={<Box sx={{
                         width: 24,
                         height: 24,
                         borderRadius: 1,
