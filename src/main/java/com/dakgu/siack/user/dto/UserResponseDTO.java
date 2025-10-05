@@ -18,6 +18,7 @@ public class UserResponseDTO extends ResponseDTO {
     private String email;
     private String phone;
     private Long profileimg;
+    private String profileImageUrl;
     private String statusmsg;
     private Integer role;
 

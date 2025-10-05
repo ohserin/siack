@@ -33,6 +33,9 @@ public class WorkspaceMemberVO {
     @Column(name = "STATUS")
     private boolean status = true;
 
+    @Column(name = "BANYN")
+    private boolean banyn = false;
+
     @PrePersist
     public void prePersist() {
         if (joinedAt == null) {

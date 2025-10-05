@@ -1,7 +1,7 @@
 package com.dakgu.siack.workspace.controller;
 
 import com.dakgu.siack.utils.ResponseDTO;
-import com.dakgu.siack.workspace.dto.CreateChannelRequestDTO;
+import com.dakgu.siack.workspace.dto.ReqDTO_CreateChannel;
 import com.dakgu.siack.workspace.service.ChannelRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ public class ChannelController {
     @PostMapping("/{workspaceId}/create")
     public ResponseEntity<?> createChannel(Authentication authentication,
                                            @PathVariable("workspaceId") Long workspaceId,
-                                           @RequestBody CreateChannelRequestDTO request) {
+                                           @RequestBody ReqDTO_CreateChannel request) {
         ResponseDTO response = channelRequestService.createChannel(authentication, workspaceId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -50,7 +50,7 @@ public class UserService {
         if (!userValidationService.isValidUsernameFormat(username)) {
             return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "사용자 이름 형식이 올바르지 않습니다.");
         }
-        if (userValidationService.isUsernameDuplicated(username)){
+        if (userValidationService.isUsernameDuplicated(username)) {
             return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 사용 중인 사용자 이름입니다.");
         }
         return new ResponseDTO(HttpStatus.OK.value(), "사용 가능한 사용자 이름입니다.");
@@ -212,10 +212,10 @@ public class UserService {
         User user = getUserFromAuthentication(authentication);
         if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
-        UserProfile profile  = userProfileRepository.findByUserid(user.getUserid());
-        if (profile  == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
+        UserProfile profile = userProfileRepository.findByUserid(user.getUserid());
+        if (profile == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "프로필 정보가 존재하지 않습니다.");
 
-        return new UserResponseDTO(
+        UserResponseDTO dto = new UserResponseDTO(
                 HttpStatus.OK.value(),
                 "success",
                 user.getUserid(),
@@ -227,13 +227,25 @@ public class UserService {
                 profile.getStatusmsg(),
                 user.getRole()
         );
+        // 프로필 이미지 URL 세팅 (있을 때만 조회)
+        try {
+            if (profile.getProfileimg() != null) {
+                UserProfileUrlResponseDTO urlDto = getUserProfileURL(String.valueOf(user.getUserid()));
+                if (urlDto != null && urlDto.getUrl() != null && !urlDto.getUrl().isBlank()) {
+                    dto.setProfileImageUrl(urlDto.getUrl());
+                }
+            }
+        } catch (Exception ignore) {
+            // URL 조회 실패 시 무시하고 null 유지
+        }
+        return dto;
     }
 
     /**
      * 사용자 정보를 수정합니다.
      *
      * @param authentication 인증 정보
-     * @param request 변경 요청 DTO
+     * @param request        변경 요청 DTO
      * @return 처리 결과 ResponseDTO
      */
     @Transactional
@@ -311,7 +323,7 @@ public class UserService {
      * 프로필 이미지를 변경합니다.
      *
      * @param authentication 인증 정보
-     * @param file 업로드할 이미지 파일
+     * @param file           업로드할 이미지 파일
      * @return 처리 결과 ResponseDTO
      * @throws IOException 파일 처리 오류
      */
@@ -368,8 +380,8 @@ public class UserService {
     /**
      * 사용자 비밀번호를 변경합니다.
      *
-     * @param authentication  현재 인증된 사용자 정보
-     * @param newPassword     새 비밀번호
+     * @param authentication 현재 인증된 사용자 정보
+     * @param newPassword    새 비밀번호
      * @return ResponseDTO 처리 결과
      */
     @Transactional
@@ -406,7 +418,7 @@ public class UserService {
         User user = getUserFromAuthentication(authentication);
         if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
-        if(!passwordEncoder.matches(currentPassword, user.getPassword())){
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "비밀번호가 일치하지 않습니다.");
         }
         return new ResponseDTO(HttpStatus.OK.value(), "비밀번호가 일치합니다.");
@@ -415,8 +427,8 @@ public class UserService {
     /**
      * 회원 탈퇴를 처리합니다.
      *
-     * @param authentication  현재 인증된 사용자 정보
-     * @param password        확인할 비밀번호
+     * @param authentication 현재 인증된 사용자 정보
+     * @param password       확인할 비밀번호
      * @return ResponseDTO 처리 결과
      */
     @Transactional
@@ -424,7 +436,7 @@ public class UserService {
         User user = getUserFromAuthentication(authentication);
         if (user == null) return new ResponseDTO(HttpStatus.NOT_FOUND.value(), "사용자 정보를 찾을 수 없습니다.");
 
-        if(!passwordEncoder.matches(password, user.getPassword())){
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             // 탈퇴 실패 로그 기록
             UserLog userLog = new UserLog();
             userLog.setUserid(user.getUserid().intValue());

@@ -20,7 +20,6 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
 import {useNavigate} from 'react-router-dom';
 import {useAuth} from '../../../contexts/AuthContext.jsx';
-import api from '../../../api/api.js';
 
 function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
     const sidebarWidth = 56;
@@ -30,30 +29,7 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
 
     // --- 프로필 이미지 상태 & 메뉴 상태 ---
     const {user, userData, logout} = useAuth();
-    const [profileImageUrl, setProfileImageUrl] = React.useState(null);
     const [profileAnchorEl, setProfileAnchorEl] = React.useState(null);
-
-    React.useEffect(() => {
-        let cancelled = false;
-        const fetchProfileImage = async () => {
-            if (userData?.userid) {
-                try {
-                    const response = await api.get('/v1/user/profileImg', {params: {userid: userData.userid}});
-                    if (!cancelled) {
-                        setProfileImageUrl(response.data.url || null);
-                    }
-                } catch {
-                    if (!cancelled) setProfileImageUrl(null);
-                }
-            } else {
-                setProfileImageUrl(null);
-            }
-        };
-        void fetchProfileImage();
-        return () => {
-            cancelled = true;
-        };
-    }, [userData]);
 
     const openProfileMenu = (e) => setProfileAnchorEl(e.currentTarget);
     const closeProfileMenu = () => setProfileAnchorEl(null);
@@ -67,6 +43,12 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
         logout();
         navigate('/login');
     };
+
+    // 서버에서 내려준 URL만 사용
+    const avatarUrl = (typeof userData?.profileImageUrl === 'string'
+        && userData.profileImageUrl.trim() !== ''
+        && userData.profileImageUrl !== 'null'
+        && userData.profileImageUrl !== 'undefined') ? userData.profileImageUrl : undefined;
 
     // 모바일 하단 네비게이션
     if (isMobile) {
@@ -86,7 +68,7 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
                 >
                     <BottomNavigationAction label="홈" value="home" icon={<HomeIcon/>}/>
                     <BottomNavigationAction label="DM" value="dm" icon={<AccountCircleIcon/>}/>
-                    <BottomNavigationAction label="워크스페이스" value="setting" icon={<Box sx={{
+                    <BottomNavigationAction label="정보" value="setting" icon={<Box sx={{
                         width: 24,
                         height: 24,
                         borderRadius: 1,
@@ -177,10 +159,10 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
                         <Tooltip title={userData?.nickname || '내 프로필'} placement="right">
                             <IconButton size="medium" onClick={openProfileMenu} sx={{p: 0}}>
                                 <Avatar
-                                    src={typeof profileImageUrl === 'string' && profileImageUrl.trim() && profileImageUrl !== 'null' && profileImageUrl !== 'undefined' ? profileImageUrl : undefined}
+                                    src={avatarUrl}
                                     sx={{width: 32, height: 32, bgcolor: 'secondary.main'}}
                                 >
-                                    {(!profileImageUrl || profileImageUrl === 'null' || profileImageUrl === 'undefined' || profileImageUrl === '') && (
+                                    {!avatarUrl && (
                                         <AccountCircleIcon sx={{fontSize: 24, color: 'white'}}/>
                                     )}
                                 </Avatar>

@@ -3,7 +3,7 @@ package com.dakgu.siack.workspace.service;
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.utils.ResponseDTO;
-import com.dakgu.siack.workspace.dto.CreateChannelRequestDTO;
+import com.dakgu.siack.workspace.dto.ReqDTO_CreateChannel;
 import com.dakgu.siack.workspace.repository.*;
 import com.dakgu.siack.workspace.vo.*;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class ChannelRequestService {
      * @return ResponseDTO (201 성공, 400 잘못된 요청, 403 권한없음, 409 중복이름)
      */
     @Transactional
-    public ResponseDTO createChannel(Authentication authentication, Long workspaceId, CreateChannelRequestDTO request) {
+    public ResponseDTO createChannel(Authentication authentication, Long workspaceId, ReqDTO_CreateChannel request) {
         User user = Optional.ofNullable(userService.getUserFromAuthentication(authentication))
                 .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
 

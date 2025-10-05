@@ -15,11 +15,6 @@ function Home() {
     const [showNicknameIdx, setShowNicknameIdx] = useState(null);
     const [confirmModal, setConfirmModal] = useState({open: false, workspaceId: null});
     const [resultModal, setResultModal] = useState({open: false, title: '', message: ''});
-    const [profileImages, setProfileImages] = useState({});
-    const requestQueueRef = React.useRef([]);
-    const requestingSetRef = React.useRef(new Set());
-    const requestedSetRef = React.useRef(new Set());
-    const MAX_CONCURRENT_REQUESTS = 5;
 
     // 모바일 환경 감지
     const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -40,44 +35,6 @@ function Home() {
                 setLoading(false);
             });
     }, [isLoggedIn]);
-
-    useEffect(() => {
-        // 모든 워크스페이스의 사용자 id를 수집
-        const allUserIds = workspaces.flatMap(ws => (ws.users || []).slice(0, 3).map(u => u.id));
-        const uniqueUserIds = Array.from(new Set(allUserIds));
-        // 새로 요청해야 하는 id만 큐에 추가
-        uniqueUserIds.forEach(userid => {
-            if (!userid) return;
-            if (profileImages[userid] !== undefined) return;
-            if (requestedSetRef.current.has(userid)) return;
-            if (requestQueueRef.current.includes(userid)) return;
-            requestQueueRef.current.push(userid);
-        });
-        // 요청 처리 함수
-        const processQueue = () => {
-            while (
-                requestQueueRef.current.length > 0 &&
-                requestingSetRef.current.size < MAX_CONCURRENT_REQUESTS
-                ) {
-                const userid = requestQueueRef.current.shift();
-                if (!userid) continue;
-                requestingSetRef.current.add(userid);
-                api.get('/v1/user/profileImg', {params: {userid}})
-                    .then(res => {
-                        setProfileImages(prev => ({...prev, [userid]: res.data.url || null}));
-                    })
-                    .catch(() => {
-                        setProfileImages(prev => ({...prev, [userid]: null}));
-                    })
-                    .finally(() => {
-                        requestingSetRef.current.delete(userid);
-                        requestedSetRef.current.add(userid);
-                        processQueue();
-                    });
-            }
-        };
-        processQueue();
-    }, [workspaces, profileImages]);
 
     // 워크스페이스 생성 페이지 이동 핸들러
     const handleCreateWorkspace = () => {
@@ -242,7 +199,8 @@ function Home() {
                                         )}
                                     </Box>
                                     <Box sx={{flex: 1}}>
-                                        <Typography fontWeight={600} fontSize={18} className="line-clamp-1">{workspace.name}</Typography>
+                                        <Typography fontWeight={600} fontSize={18}
+                                                    className="line-clamp-1">{workspace.name}</Typography>
                                         <Typography sx={{
                                             color: '#888',
                                             fontSize: 15,
@@ -259,6 +217,9 @@ function Home() {
                                                     e.stopPropagation();
                                                     setShowNicknameIdx(showNicknameIdx === uniqueIdx ? null : uniqueIdx);
                                                 };
+                                                // 서버가 내려준 URL만 사용하고, 없으면 이니셜 표시
+                                                const avatarUrl = (m.profileImageUrl && m.profileImageUrl.trim() !== '' && m.profileImageUrl !== 'null' && m.profileImageUrl !== 'undefined') ? m.profileImageUrl : undefined;
+                                                const showInitial = !avatarUrl;
                                                 return (
                                                     <Box key={m.id} sx={{position: 'relative', display: 'inline-block'}}
                                                          onMouseEnter={!isMobile ? handleShow : undefined}
@@ -296,10 +257,10 @@ function Home() {
                                                                 ml: idx === 0 ? 0 : -1.2,
                                                                 zIndex: 10 - idx,
                                                             }}
-                                                            src={profileImages[m.id] && profileImages[m.id].trim() !== '' && profileImages[m.id] !== 'null' && profileImages[m.id] !== 'undefined' ? profileImages[m.id] : undefined}
+                                                            src={avatarUrl}
                                                             alt={m.nickname || ''}
                                                         >
-                                                            {(!profileImages[m.id] || profileImages[m.id] === 'null' || profileImages[m.id] === 'undefined' || profileImages[m.id] === '') && (m.nickname ? m.nickname[0] : '?')}
+                                                            {showInitial && (m.nickname ? m.nickname[0] : '?')}
                                                         </Avatar>
                                                     </Box>
                                                 );

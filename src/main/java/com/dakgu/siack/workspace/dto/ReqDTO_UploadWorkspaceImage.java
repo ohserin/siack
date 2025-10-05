@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModifyWorkspaceRequestDTO {
+public class ReqDTO_UploadWorkspaceImage {
     private Long workspaceId;
-    private String name;
-    private String description;
 }
-
