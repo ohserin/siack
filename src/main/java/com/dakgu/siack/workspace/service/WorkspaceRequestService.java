@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
@@ -167,6 +168,87 @@ public class WorkspaceRequestService {
         return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스 이미지 업데이트되었습니다.");
     }
 
+    /**
+     * 단일 워크스페이스 상세 정보를 조회합니다.
+     * 멤버만 조회 가능하며, 활성 워크스페이스만 반환합니다.
+     * 반환 객체의 statusCode/message 에 결과 코드를 담습니다.
+     */
+    @Transactional(readOnly = true)
+    public ResDTO_WorkspaceInfo getWorkspaceInfo(Authentication authentication, Long workspaceId) {
+        User user = Optional.ofNullable(userService.getUserFromAuthentication(authentication))
+                .orElse(null);
+        if (workspaceId == null) {
+            ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
+            dto.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            dto.setMessage("워크스페이스 ID가 필요합니다.");
+            return dto;
+        }
+
+        Optional<WorkspaceVO> opt = workspaceRepository.findById(workspaceId);
+        if (opt.isEmpty()) {
+            ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
+            dto.setStatusCode(HttpStatus.NOT_FOUND.value());
+            dto.setMessage("워크스페이스를 찾을 수 없습니다.");
+            return dto;
+        }
+        WorkspaceVO workspace = opt.get();
+        if (!workspace.isStatus()) {
+            ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
+            dto.setStatusCode(HttpStatus.BAD_REQUEST.value());
+            dto.setMessage("삭제된 워크스페이스입니다.");
+            return dto;
+        }
+
+        // 멤버십 확인 (인증 실패 시에도 조회 거부)
+        boolean isMember = (user != null) && workspaceMemberRepository
+                .findByWorkspace_WorkspaceIdAndUser_Userid(workspaceId, user.getUserid())
+                .filter(WorkspaceMemberVO::isStatus)
+                .isPresent();
+        if (!isMember) {
+            ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
+            dto.setStatusCode(HttpStatus.FORBIDDEN.value());
+            dto.setMessage("워크스페이스 멤버만 조회할 수 있습니다.");
+            return dto;
+        }
+
+        // 소유자 이름: 프로필 닉네임 우선, 없으면 username
+        String ownerName = Optional.ofNullable(workspace.getOwner())
+                .map(o -> {
+                    UserProfile p = o.getUserProfile();
+                    return (p != null && p.getNickname() != null && !p.getNickname().isBlank())
+                            ? p.getNickname() : o.getUsername();
+                })
+                .orElse(null);
+
+        // 생성일 포맷팅
+        String createdAtStr = null;
+        if (workspace.getCreatedat() != null) {
+            createdAtStr = workspace.getCreatedat().toLocalDateTime()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+
+        List<ResDTO_WorkspaceUser> userDTOList = getWorkspaceUserDTOList(workspaceId);
+        int memberCount = userDTOList.size();
+        long channelCount = channelRepository.countByWorkspace_WorkspaceIdAndStatusTrue(workspaceId);
+
+        ResDTO_WorkspaceInfo dto = ResDTO_WorkspaceInfo.builder()
+                .workspaceId(workspace.getWorkspaceId())
+                .workspaceName(workspace.getName())
+                .workspaceDesc(workspace.getDescription())
+                .createDate(createdAtStr)
+                .workspaceImage(workspace.getImageId())
+                .ownerName(ownerName)
+                .planName("Free")
+                .usedStorage(0.0)
+                .memberCount(memberCount)
+                .channelCount((int) channelCount)
+                .users(userDTOList)
+                .build();
+        dto.setStatusCode(HttpStatus.OK.value());
+        dto.setMessage("워크스페이스 정보");
+        return dto;
+    }
+
     // === Private Helper Methods ===
 
     /**
@@ -226,18 +308,27 @@ public class WorkspaceRequestService {
         List<WorkspaceMemberVO> members = workspaceMemberRepository.findByWorkspace_WorkspaceId(workspaceId);
         List<ResDTO_WorkspaceUser> userDTOList = new ArrayList<>();
         for (WorkspaceMemberVO member : members) {
+            if (member == null || !member.isStatus()) continue; // 비활성 멤버 제외
             User memberUser = member.getUser();
-            if (memberUser == null || !memberUser.isUseyn()) continue;
+            if (memberUser == null || !memberUser.isUseyn()) continue; // 비활성 사용자 제외
             String nickname = Optional.ofNullable(memberUser.getUserProfile())
                     .map(UserProfile::getNickname)
                     .orElse(memberUser.getUsername());
             Long profileImage = Optional.ofNullable(memberUser.getUserProfile())
                     .map(UserProfile::getProfileimg)
                     .orElse(null);
+            String profileUrl = null;
+            try {
+                var urlDto = userService.getUserProfileURL(String.valueOf(memberUser.getUserid()));
+                profileUrl = (urlDto != null) ? urlDto.getUrl() : null;
+            } catch (Exception ignore) {
+                profileUrl = null;
+            }
             userDTOList.add(ResDTO_WorkspaceUser.builder()
                     .id(String.valueOf(memberUser.getUserid()))
                     .nickname(nickname)
                     .profileImage(profileImage)
+                    .profileImageUrl((profileUrl != null && !profileUrl.isBlank()) ? profileUrl : null)
                     .build());
         }
         return userDTOList;

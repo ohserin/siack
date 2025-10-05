@@ -5,6 +5,7 @@ import com.dakgu.siack.workspace.dto.ReqDTO_CreateWorkspace;
 import com.dakgu.siack.workspace.dto.ResDTO_GetWorkspace;
 import com.dakgu.siack.workspace.dto.ReqDTO_ModifyWorkspace;
 import com.dakgu.siack.workspace.dto.ReqDTO_InviteWorkspaceMember;
+import com.dakgu.siack.workspace.dto.ResDTO_WorkspaceInfo;
 import com.dakgu.siack.workspace.service.WorkspaceRequestService;
 import com.dakgu.siack.workspace.service.WorkspaceMemberService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,12 @@ public class WorkspaceController {
     public ResponseEntity<?> getWorkspaceList(Authentication authentication) {
         List<ResDTO_GetWorkspace> response = workspaceRequestService.getWorkspaceList(authentication);
         return ResponseEntity.status(200).body(response);
+    }
+
+    @GetMapping("/{workspaceId}/info")
+    public ResponseEntity<?> getWorkspaceInfo(Authentication authentication, @PathVariable("workspaceId") Long workspaceId) {
+        ResDTO_WorkspaceInfo dto = workspaceRequestService.getWorkspaceInfo(authentication, workspaceId);
+        return ResponseEntity.status(200).body(dto);
     }
 
     @PatchMapping("/modify")

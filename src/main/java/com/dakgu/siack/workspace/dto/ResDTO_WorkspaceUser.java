@@ -10,4 +10,5 @@ public class ResDTO_WorkspaceUser {
     private String id;
     private String nickname;
     private Long profileImage;
+    private String profileImageUrl;
 }
