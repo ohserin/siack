@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class CreateChannelRequestDTO {
+public class ReqDTO_CreateChannel {
     private String name;
     private String description;
     private boolean isPrivate = false;

@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class InviteWorkspaceMemberRequestDTO {
+public class ReqDTO_InviteWorkspaceMember {
     private String nickname;
     private String role = "MEMBER";
 }

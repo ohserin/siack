@@ -1,10 +1,10 @@
 package com.dakgu.siack.workspace.controller;
 
 import com.dakgu.siack.utils.ResponseDTO;
-import com.dakgu.siack.workspace.dto.CreateWorkspaceRequestDTO;
-import com.dakgu.siack.workspace.dto.GetWorkspaceResponseDTO;
-import com.dakgu.siack.workspace.dto.ModifyWorkspaceRequestDTO;
-import com.dakgu.siack.workspace.dto.InviteWorkspaceMemberRequestDTO;
+import com.dakgu.siack.workspace.dto.ReqDTO_CreateWorkspace;
+import com.dakgu.siack.workspace.dto.ResDTO_GetWorkspace;
+import com.dakgu.siack.workspace.dto.ReqDTO_ModifyWorkspace;
+import com.dakgu.siack.workspace.dto.ReqDTO_InviteWorkspaceMember;
 import com.dakgu.siack.workspace.service.WorkspaceRequestService;
 import com.dakgu.siack.workspace.service.WorkspaceMemberService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class WorkspaceController {
     private final WorkspaceMemberService workspaceMemberService; // 멤버 초대/추방 서비스 주입
 
     @PostMapping("/create")
-    public ResponseEntity<?> createWorkspace(Authentication authentication, @RequestBody CreateWorkspaceRequestDTO request) {
+    public ResponseEntity<?> createWorkspace(Authentication authentication, @RequestBody ReqDTO_CreateWorkspace request) {
         ResponseDTO response = workspaceRequestService.createWorkspace(authentication, request);
         return ResponseEntity.status(200).body(response);
     }
@@ -37,12 +37,12 @@ public class WorkspaceController {
 
     @GetMapping("/list")
     public ResponseEntity<?> getWorkspaceList(Authentication authentication) {
-        List<GetWorkspaceResponseDTO> response = workspaceRequestService.getWorkspaceList(authentication);
+        List<ResDTO_GetWorkspace> response = workspaceRequestService.getWorkspaceList(authentication);
         return ResponseEntity.status(200).body(response);
     }
 
     @PatchMapping("/modify")
-    public ResponseEntity<?> modifyWorkspace(Authentication authentication, @RequestBody ModifyWorkspaceRequestDTO request) {
+    public ResponseEntity<?> modifyWorkspace(Authentication authentication, @RequestBody ReqDTO_ModifyWorkspace request) {
         ResponseDTO response = workspaceRequestService.modifyWorkspace(authentication, request);
         return ResponseEntity.status(200).body(response);
     }
@@ -60,7 +60,7 @@ public class WorkspaceController {
     @PostMapping("/{workspaceId}/members/invite")
     public ResponseEntity<?> inviteMember(Authentication authentication,
                                           @PathVariable("workspaceId") Long workspaceId,
-                                          @RequestBody InviteWorkspaceMemberRequestDTO request) {
+                                          @RequestBody ReqDTO_InviteWorkspaceMember request) {
         ResponseDTO response = workspaceMemberService.inviteMember(authentication, workspaceId, request);
         return ResponseEntity.status(200).body(response);
     }

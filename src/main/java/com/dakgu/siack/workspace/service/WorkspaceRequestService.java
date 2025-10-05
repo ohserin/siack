@@ -43,7 +43,7 @@ public class WorkspaceRequestService {
      * @return 생성 결과 ResponseDTO (201: 성공, 404: 사용자 없음)
      */
     @Transactional
-    public ResponseDTO createWorkspace(Authentication authentication, CreateWorkspaceRequestDTO request) {
+    public ResponseDTO createWorkspace(Authentication authentication, ReqDTO_CreateWorkspace request) {
         User user = getAuthenticatedUser(authentication);
         WorkspaceVO workspace = WorkspaceVO.builder()
                 .name(request.getName())
@@ -103,18 +103,18 @@ public class WorkspaceRequestService {
      * @return 워크스페이스 목록 (GetWorkspaceResponseDTO 리스트)
      */
     @Transactional(readOnly = true)
-    public List<GetWorkspaceResponseDTO> getWorkspaceList(Authentication authentication) {
+    public List<ResDTO_GetWorkspace> getWorkspaceList(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
         List<WorkspaceMemberVO> myMemberships = workspaceMemberRepository.findByUser_Userid(user.getUserid());
         Set<Long> workspaceIdSet = new HashSet<>();
-        List<GetWorkspaceResponseDTO> workspaceList = new ArrayList<>();
+        List<ResDTO_GetWorkspace> workspaceList = new ArrayList<>();
 
         for (WorkspaceMemberVO membership : myMemberships) {
             WorkspaceVO workspace = membership.getWorkspace();
             if (workspace == null || !workspace.isStatus() || !workspaceIdSet.add(workspace.getWorkspaceId())) continue;
             Long ownerId = Optional.ofNullable(workspace.getOwner()).map(User::getUserid).orElse(null);
-            List<WorkspaceUserDTO> userDTOList = getWorkspaceUserDTOList(workspace.getWorkspaceId());
-            workspaceList.add(GetWorkspaceResponseDTO.builder()
+            List<ResDTO_WorkspaceUser> userDTOList = getWorkspaceUserDTOList(workspace.getWorkspaceId());
+            workspaceList.add(ResDTO_GetWorkspace.builder()
                     .workspaceId(workspace.getWorkspaceId())
                     .name(workspace.getName())
                     .description(workspace.getDescription())
@@ -132,7 +132,7 @@ public class WorkspaceRequestService {
      * @return 수정 결과 ResponseDTO (200: 성공, 403: 권한없음, 404: 없음)
      */
     @Transactional
-    public ResponseDTO modifyWorkspace(Authentication authentication, ModifyWorkspaceRequestDTO request) {
+    public ResponseDTO modifyWorkspace(Authentication authentication, ReqDTO_ModifyWorkspace request) {
         User user = getAuthenticatedUser(authentication);
         WorkspaceVO workspace = getWorkspaceOrThrow(request.getWorkspaceId());
         validateOwner(user, workspace);
@@ -222,9 +222,9 @@ public class WorkspaceRequestService {
      * @param workspaceId 워크스페이스 ID
      * @return WorkspaceUserDTO 리스트
      */
-    private List<WorkspaceUserDTO> getWorkspaceUserDTOList(Long workspaceId) {
+    private List<ResDTO_WorkspaceUser> getWorkspaceUserDTOList(Long workspaceId) {
         List<WorkspaceMemberVO> members = workspaceMemberRepository.findByWorkspace_WorkspaceId(workspaceId);
-        List<WorkspaceUserDTO> userDTOList = new ArrayList<>();
+        List<ResDTO_WorkspaceUser> userDTOList = new ArrayList<>();
         for (WorkspaceMemberVO member : members) {
             User memberUser = member.getUser();
             if (memberUser == null || !memberUser.isUseyn()) continue;
@@ -234,7 +234,7 @@ public class WorkspaceRequestService {
             Long profileImage = Optional.ofNullable(memberUser.getUserProfile())
                     .map(UserProfile::getProfileimg)
                     .orElse(null);
-            userDTOList.add(WorkspaceUserDTO.builder()
+            userDTOList.add(ResDTO_WorkspaceUser.builder()
                     .id(String.valueOf(memberUser.getUserid()))
                     .nickname(nickname)
                     .profileImage(profileImage)

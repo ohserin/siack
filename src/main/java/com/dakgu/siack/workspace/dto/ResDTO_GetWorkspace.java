@@ -10,10 +10,10 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GetWorkspaceResponseDTO extends ResponseDTO {
+public class ResDTO_GetWorkspace extends ResponseDTO {
     private Long workspaceId;
     private String name;
     private String description;
     private Long ownerId;
-    private List<WorkspaceUserDTO> users;
+    private List<ResDTO_WorkspaceUser> users;
 }

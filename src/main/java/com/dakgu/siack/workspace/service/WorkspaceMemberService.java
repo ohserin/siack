@@ -5,7 +5,7 @@ import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.vo.UserProfile;
 import com.dakgu.siack.utils.ResponseDTO;
-import com.dakgu.siack.workspace.dto.InviteWorkspaceMemberRequestDTO;
+import com.dakgu.siack.workspace.dto.ReqDTO_InviteWorkspaceMember;
 import com.dakgu.siack.workspace.repository.WorkspaceMemberRepository;
 import com.dakgu.siack.workspace.repository.WorkspaceRepository;
 import com.dakgu.siack.workspace.vo.WorkspaceMemberVO;
@@ -36,7 +36,7 @@ public class WorkspaceMemberService {
      * 워크스페이스에 속한 모든 유저가 멤버를 초대할 수 있습니다. (닉네임 기반, 활성 사용자만)
      */
     @Transactional
-    public ResponseDTO inviteMember(Authentication authentication, Long workspaceId, InviteWorkspaceMemberRequestDTO request) {
+    public ResponseDTO inviteMember(Authentication authentication, Long workspaceId, ReqDTO_InviteWorkspaceMember request) {
         User operator = getAuthUser(authentication);
         if (workspaceId == null) return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "워크스페이스 ID가 필요합니다.");
         if (request == null || request.getNickname() == null || request.getNickname().trim().isEmpty()) {

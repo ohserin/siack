@@ -6,7 +6,7 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class WorkspaceUserDTO {
+public class ResDTO_WorkspaceUser {
     private String id;
     private String nickname;
     private Long profileImage;
