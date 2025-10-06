@@ -41,6 +41,16 @@ function WorkspaceInfo() {
     // API 응답 -> 화면 표시용 맵핑
     const vm = useMemo(() => {
         if (!data) return null;
+
+        const translateRole = (role) => {
+            switch (role) {
+                case 'OWNER': return '소유자';
+                case 'ADMIN': return '관리자';
+                case 'MEMBER': return '멤버';
+                default: return '-';
+            }
+        };
+
         return {
             name: data.workspaceName || `워크스페이스 #${data.workspaceId || roomId}`,
             description: data.workspaceDesc || '-',
@@ -59,7 +69,7 @@ function WorkspaceInfo() {
             plan: data.planName || 'Free',
             storage: { used: (data.usedStorage ?? 0) + ' MB', total: '-' },
             notice: [],
-            myRole: '-',
+            myRole: translateRole(data.userRole),
         };
     }, [data, roomId]);
 
