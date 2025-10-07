@@ -199,17 +199,20 @@ public class WorkspaceRequestService {
             return dto;
         }
 
-        // 멤버십 확인 (인증 실패 시에도 조회 거부)
-        boolean isMember = (user != null) && workspaceMemberRepository
+        // 멤버십 확인 및 사용자 역할 조회
+        Optional<WorkspaceMemberVO> membershipOpt = (user != null) ? workspaceMemberRepository
                 .findByWorkspace_WorkspaceIdAndUser_Userid(workspaceId, user.getUserid())
-                .filter(WorkspaceMemberVO::isStatus)
-                .isPresent();
-        if (!isMember) {
+                .filter(WorkspaceMemberVO::isStatus) : Optional.empty();
+
+        if (membershipOpt.isEmpty()) {
             ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
             dto.setStatusCode(HttpStatus.FORBIDDEN.value());
             dto.setMessage("워크스페이스 멤버만 조회할 수 있습니다.");
             return dto;
         }
+
+        // 현재 사용자의 워크스페이스 역할 가져오기
+        String userRole = membershipOpt.get().getRole();
 
         // 소유자 이름: 프로필 닉네임 우선, 없으면 username
         String ownerName = Optional.ofNullable(workspace.getOwner())
@@ -238,6 +241,7 @@ public class WorkspaceRequestService {
                 .createDate(createdAtStr)
                 .workspaceImage(workspace.getImageId())
                 .ownerName(ownerName)
+                .userRole(userRole)
                 .planName("Free")
                 .usedStorage(0.0)
                 .memberCount(memberCount)

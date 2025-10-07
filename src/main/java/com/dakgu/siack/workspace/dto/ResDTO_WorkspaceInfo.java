@@ -17,6 +17,7 @@ public class ResDTO_WorkspaceInfo extends ResponseDTO {
     private String createDate;
     private Long workspaceImage;
     private String ownerName;
+    private String userRole;
     private String planName = "Free"; // 미구현
     private double usedStorage = 0.0; // 미구현
     private int memberCount;
