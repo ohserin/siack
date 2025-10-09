@@ -55,4 +55,32 @@ public class FileUploadService {
 
         return savedFile.getFileId();
     }
+
+    @Transactional
+    public FileStorageResult uploadAndReturnStorageResult(MultipartFile multipartFile, Authentication authentication) throws IOException {
+        if (authentication == null) {
+            throw new SecurityException("인증 정보가 없습니다. 로그인이 필요합니다.");
+        }
+        if (multipartFile == null || multipartFile.isEmpty()) {
+            throw new IllegalArgumentException("업로드할 파일이 없습니다.");
+        }
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다: " + username);
+        }
+        String extension = StringUtils.getFilenameExtension(multipartFile.getOriginalFilename());
+        FileStorageResult storageResult = fileService.writeFile(multipartFile.getBytes(), extension);
+        SdfFile sdfFile = SdfFile.builder()
+                .originalName(multipartFile.getOriginalFilename())
+                .storedName(storageResult.getStoredName())
+                .path(storageResult.getFullPath())
+                .extension(storageResult.getExtension())
+                .size(multipartFile.getSize())
+                .contentType(multipartFile.getContentType())
+                .userId(user.getUserid())
+                .build();
+        sdfFileRepository.save(sdfFile);
+        return storageResult;
+    }
 }

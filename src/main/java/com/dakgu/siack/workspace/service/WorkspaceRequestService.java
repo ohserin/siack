@@ -1,5 +1,6 @@
 package com.dakgu.siack.workspace.service;
 
+import com.dakgu.siack.workspace.dto.ResDTO_UploadWorkspaceImage;
 import com.dakgu.siack.file.service.FileUploadService;
 import com.dakgu.siack.user.service.UserService;
 import com.dakgu.siack.user.vo.User;
@@ -14,6 +15,7 @@ import com.dakgu.siack.workspace.vo.ChannelMemberVO;
 import com.dakgu.siack.workspace.vo.ChannelVO;
 import com.dakgu.siack.workspace.vo.WorkspaceMemberVO;
 import com.dakgu.siack.workspace.vo.WorkspaceVO;
+import com.dakgu.siack.file.dto.FileStorageResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -153,19 +155,49 @@ public class WorkspaceRequestService {
     }
 
     @Transactional
-    public ResponseDTO uploadWorkspaceImage(Authentication authentication, MultipartFile file, Long workspaceId) throws IOException {
+    public ResDTO_UploadWorkspaceImage uploadWorkspaceImage(Authentication authentication, MultipartFile file, Long workspaceId) throws IOException {
         getAuthenticatedUser(authentication);
         WorkspaceVO workspace = getWorkspaceOrThrow(workspaceId);
 
         if (!isAllowedImageExtension(file)) {
-            return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "이미지 파일(jpg, jpeg, png)만 업로드 가능합니다.");
+            return new ResDTO_UploadWorkspaceImage(HttpStatus.BAD_REQUEST.value(), "이미지 파일(jpg, jpeg, png)만 업로드 가능합니다.", null);
         }
 
-        Long fileId = uploadService.uploadAndSaveMetadata(file, authentication);
-        workspace.setImageId(fileId);
+        FileStorageResult fileStorageResult = uploadService.uploadAndReturnStorageResult(file, authentication);
+
+        String fullPath = fileStorageResult != null ? fileStorageResult.getFullPath() : null;
+        String imageUrl = null;
+        if (fullPath != null && !fullPath.isBlank()) {
+            String normalized = fullPath.replace("\\", "/");
+            String marker = "/uploads/";
+            String relative = normalized;
+
+            int lastIdx = normalized.lastIndexOf(marker);
+            if (lastIdx >= 0) {
+                relative = normalized.substring(lastIdx + marker.length());
+            }
+
+            int nestedIdx = relative.lastIndexOf("uploads/");
+            if (nestedIdx >= 0) {
+                relative = relative.substring(nestedIdx + "uploads/".length());
+            }
+
+            while (relative.startsWith("/")) {
+                relative = relative.substring(1);
+            }
+            relative = relative.replace("..", "");
+            while (relative.contains("//")) {
+                relative = relative.replace("//", "/");
+            }
+            if (!relative.isBlank()) {
+                imageUrl = "https://devsiack.me/uploads/" + relative;
+            }
+        }
+
+        workspace.setImageUrl(imageUrl);
         workspaceRepository.save(workspace);
 
-        return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스 이미지 업데이트되었습니다.");
+        return new ResDTO_UploadWorkspaceImage(200, "워크스페이스 이미지 업데이트되었습니다.", imageUrl);
     }
 
     /**
@@ -175,8 +207,7 @@ public class WorkspaceRequestService {
      */
     @Transactional(readOnly = true)
     public ResDTO_WorkspaceInfo getWorkspaceInfo(Authentication authentication, Long workspaceId) {
-        User user = Optional.ofNullable(userService.getUserFromAuthentication(authentication))
-                .orElse(null);
+        User user = userService.getUserFromAuthentication(authentication);
         if (workspaceId == null) {
             ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
             dto.setStatusCode(HttpStatus.BAD_REQUEST.value());
@@ -239,7 +270,7 @@ public class WorkspaceRequestService {
                 .workspaceName(workspace.getName())
                 .workspaceDesc(workspace.getDescription())
                 .createDate(createdAtStr)
-                .workspaceImage(workspace.getImageId())
+                .workspaceImage(workspace.getImageUrl())
                 .ownerName(ownerName)
                 .userRole(userRole)
                 .planName("Free")
@@ -321,7 +352,7 @@ public class WorkspaceRequestService {
             Long profileImage = Optional.ofNullable(memberUser.getUserProfile())
                     .map(UserProfile::getProfileimg)
                     .orElse(null);
-            String profileUrl = null;
+            String profileUrl;
             try {
                 var urlDto = userService.getUserProfileURL(String.valueOf(memberUser.getUserid()));
                 profileUrl = (urlDto != null) ? urlDto.getUrl() : null;
