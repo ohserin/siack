@@ -122,6 +122,7 @@ public class WorkspaceRequestService {
                     .name(workspace.getName())
                     .description(workspace.getDescription())
                     .ownerId(ownerId)
+                    .workspaceImage(workspace.getImageUrl())
                     .users(userDTOList)
                     .build());
         }

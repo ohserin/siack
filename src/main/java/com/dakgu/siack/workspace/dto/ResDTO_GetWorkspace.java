@@ -15,5 +15,6 @@ public class ResDTO_GetWorkspace extends ResponseDTO {
     private String name;
     private String description;
     private Long ownerId;
+    private String workspaceImage;
     private List<ResDTO_WorkspaceUser> users;
 }
