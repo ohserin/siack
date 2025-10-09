@@ -33,7 +33,7 @@ function WorkspaceEdit({ onDone }) {
                 setFields({
                     workspaceName: body.workspaceName || '',
                     workspaceDesc: body.workspaceDesc || '',
-                    iconUrl: body.iconUrl || '',
+                    iconUrl: body.workspaceImage || '',
                 });
             })
             .catch(() => setError('워크스페이스 정보를 불러오지 못했습니다.'))
@@ -110,7 +110,16 @@ function WorkspaceEdit({ onDone }) {
             const res = await api.post(`/v1/workspace/${roomId}/image`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            // 서버가 URL을 반환하지 않으므로, 업로드 성공 시 별도 처리 없음 (이전 로직 취소)
+            const url = res?.data?.url;
+            if (typeof url === 'string' && url.trim() !== '' && url !== 'null' && url !== 'undefined') {
+                setFields(f => ({ ...f, iconUrl: url })); // 업로드 즉시 미리보기 갱신
+            } else {
+                // URL 없으면 재조회 (예비)
+                api.get(`/v1/workspace/${roomId}/info`).then(r => {
+                    const body = r.data || {};
+                    if (body.workspaceImage) setFields(f => ({ ...f, iconUrl: body.workspaceImage }));
+                }).catch(()=>{});
+            }
         } catch {
             setUploadError('이미지 업로드에 실패했습니다.');
         } finally {
