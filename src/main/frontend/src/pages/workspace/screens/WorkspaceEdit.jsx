@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
     Box, Typography, TextField, Button, Avatar, Stack, Alert, CircularProgress
 } from '@mui/material';
@@ -7,7 +7,6 @@ import api from '../../../api/api.js';
 
 function WorkspaceEdit({ onDone }) {
     const { roomId } = useParams();
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -17,7 +16,6 @@ function WorkspaceEdit({ onDone }) {
         workspaceDesc: '',
         iconUrl: '',
     });
-    const [origin, setOrigin] = useState(null);
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState('');
     const fileInputRef = React.useRef();
@@ -37,7 +35,6 @@ function WorkspaceEdit({ onDone }) {
                     workspaceDesc: body.workspaceDesc || '',
                     iconUrl: body.iconUrl || '',
                 });
-                setOrigin(body);
             })
             .catch(() => setError('워크스페이스 정보를 불러오지 못했습니다.'))
             .finally(() => setLoading(false));
@@ -59,7 +56,7 @@ function WorkspaceEdit({ onDone }) {
                 iconUrl: fields.iconUrl,
             });
             if (onDone) onDone();
-        } catch (err) {
+        } catch {
             setError('저장에 실패했습니다.');
         } finally {
             setSaving(false);
@@ -110,17 +107,11 @@ function WorkspaceEdit({ onDone }) {
             const filename = file.name.replace(/\.[^.]+$/, ext === 'png' ? '.png' : '.jpg');
             const formData = new FormData();
             formData.append('file', resized, filename);
-            // 실제 업로드 API 경로에 맞게 수정 필요
-            const res = await api.post('/v1/upload/image', formData, {
+            const res = await api.post(`/v1/workspace/${roomId}/image`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
-            const url = res.data?.url;
-            if (url) {
-                setFields(f => ({ ...f, iconUrl: url }));
-            } else {
-                setUploadError('업로드 실패: URL 반환 안됨');
-            }
-        } catch (err) {
+            // 서버가 URL을 반환하지 않으므로, 업로드 성공 시 별도 처리 없음 (이전 로직 취소)
+        } catch {
             setUploadError('이미지 업로드에 실패했습니다.');
         } finally {
             setUploading(false);
