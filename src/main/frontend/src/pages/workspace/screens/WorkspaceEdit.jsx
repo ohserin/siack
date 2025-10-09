@@ -66,14 +66,50 @@ function WorkspaceEdit({ onDone }) {
         }
     };
 
+    // 이미지 리사이즈 함수 (300x300, png/jpg 지원)
+    async function resizeImage(file, maxSize = 300) {
+        return new Promise((resolve, reject) => {
+            const img = new window.Image();
+            const reader = new FileReader();
+            reader.onload = e => {
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    // 정사각형 비율 유지
+                    const size = Math.min(img.width, img.height, maxSize);
+                    canvas.width = size;
+                    canvas.height = size;
+                    // 중앙 crop 후 draw
+                    const sx = (img.width - size) / 2;
+                    const sy = (img.height - size) / 2;
+                    ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
+                    // 확장자에 따라 포맷 결정
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+                    canvas.toBlob(blob => {
+                        if (blob) resolve(blob);
+                        else reject(new Error('이미지 변환 실패'));
+                    }, mime, 0.85);
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
     const handleFileChange = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setUploading(true);
         setUploadError('');
         try {
+            const resized = await resizeImage(file, 300);
+            const ext = file.name.split('.').pop().toLowerCase();
+            const filename = file.name.replace(/\.[^.]+$/, ext === 'png' ? '.png' : '.jpg');
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', resized, filename);
             // 실제 업로드 API 경로에 맞게 수정 필요
             const res = await api.post('/v1/upload/image', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
