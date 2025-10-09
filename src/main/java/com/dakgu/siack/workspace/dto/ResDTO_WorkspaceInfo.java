@@ -15,7 +15,7 @@ public class ResDTO_WorkspaceInfo extends ResponseDTO {
     private String workspaceName;
     private String workspaceDesc;
     private String createDate;
-    private Long workspaceImage;
+    private String workspaceImage;
     private String ownerName;
     private String userRole;
     private String planName = "Free"; // 미구현
