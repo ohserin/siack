@@ -36,6 +36,6 @@ public class WorkspaceVO extends Timestamp {
     @Column(nullable = false)
     private boolean status = true;
 
-    @Column(name = "IMAGEID")
-    private Long imageId;
+    @Column(name = "IMAGEURL", length = 255)
+    private String imageUrl;
 }
