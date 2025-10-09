@@ -157,6 +157,9 @@ function Home() {
                                 });
                             }
 
+                            const wsImageUrl = workspace.workspaceImage;
+                            const hasImage = !!(wsImageUrl && typeof wsImageUrl === 'string' && wsImageUrl.trim() !== '' && wsImageUrl !== 'null' && wsImageUrl !== 'undefined');
+
                             return (
                                 <Paper key={workspace.workspaceId} elevation={1} sx={{
                                     display: 'flex',
@@ -172,8 +175,27 @@ function Home() {
                                     boxSizing: 'border-box',
                                 }}>
                                     <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center', mr: 2}}>
-                                        <Box sx={{fontSize: 36}}>💼</Box>
-                                        {/* 삭제 버튼: ownerId가 본인일 때만 노출, 아이콘 아래에 작게 */}
+                                        {hasImage ? (
+                                            <Avatar
+                                                src={wsImageUrl}
+                                                variant="rounded"
+                                                onError={e => { e.currentTarget.src=''; }}
+                                                alt={workspace.name || 'W'}
+                                                sx={{
+                                                    width: 56,
+                                                    height: 56,
+                                                    borderRadius: 2,
+                                                    mb: 0.5,
+                                                    fontSize: 24,
+                                                    fontWeight: 600,
+                                                    bgcolor: '#f2f2f2',
+                                                    objectFit: 'cover'
+                                                }}
+                                            >{(workspace.name || 'W').charAt(0)}</Avatar>
+                                        ) : (
+                                            <Box sx={{fontSize: 36, lineHeight: 1, mb: 0.5}}>💼</Box>
+                                        )}
+                                        {/* 삭제 버튼: ownerId가 본인일 때만 노출 */}
                                         {userData && workspace.ownerId === userData.userid && (
                                             <Button
                                                 variant="outlined"
@@ -209,15 +231,12 @@ function Home() {
                                         <Box sx={{display: 'flex', alignItems: 'center', mt: 1}}>
                                             {sortedUsers.slice(0, 3).map((m, idx) => {
                                                 const uniqueIdx = `${workspace.workspaceId}-${idx}`;
-                                                // 닉네임 표시 핸들러
                                                 const handleShow = () => setShowNicknameIdx(uniqueIdx);
                                                 const handleHide = () => setShowNicknameIdx(null);
-                                                // 모바일: 터치 시 토글
                                                 const handleTouch = (e) => {
                                                     e.stopPropagation();
                                                     setShowNicknameIdx(showNicknameIdx === uniqueIdx ? null : uniqueIdx);
                                                 };
-                                                // 서버가 내려준 URL만 사용하고, 없으면 이니셜 표시
                                                 const avatarUrl = (m.profileImageUrl && m.profileImageUrl.trim() !== '' && m.profileImageUrl !== 'null' && m.profileImageUrl !== 'undefined') ? m.profileImageUrl : undefined;
                                                 const showInitial = !avatarUrl;
                                                 return (
