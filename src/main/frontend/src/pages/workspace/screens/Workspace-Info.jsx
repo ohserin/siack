@@ -60,12 +60,12 @@ function WorkspaceInfo({ setMainContent }) {
             memberCount: data.memberCount ?? 0,
             channelCount: data.channelCount ?? 0,
             status: '활성',
-            iconUrl: undefined,
+            iconUrl: data.workspaceImage || undefined,
             inviteCode: '-',
             members: Array.isArray(data.users) ? data.users.map(u => ({
                 id: u.id,
                 name: u.nickname || '?',
-                avatar: u.profileImageUrl || undefined, // 서버 제공 URL만 사용
+                avatar: u.profileImageUrl || undefined,
             })) : [],
             plan: data.planName || 'Free',
             storage: { used: (data.usedStorage ?? 0) + ' MB', total: '-' },
@@ -102,7 +102,9 @@ function WorkspaceInfo({ setMainContent }) {
         <Box sx={{mt: 3, mb: 5, p: 2}}>
             {/* 상단: 아이콘, 이름, 상태, 초대코드 */}
             <Box display="flex" alignItems="center" mb={2}>
-                <Avatar src={vm.iconUrl} variant="rounded" sx={{width: 56, height: 56, mr: 2, borderRadius: 2}}>{vm.name?.[0] || 'W'}</Avatar>
+                <Avatar src={vm.iconUrl} variant="rounded" sx={{width: 56, height: 56, mr: 2, borderRadius: 2}}
+                        onError={(e) => { e.currentTarget.src=''; }}
+                >{vm.name?.[0] || 'W'}</Avatar>
                 <Box>
                     <Typography variant="h5" fontWeight={700}>{vm.name}</Typography>
                     <Chip label={vm.status} color={vm.status === '활성' ? 'success' : 'default'}
