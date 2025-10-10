@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import {
     Box, Typography, TextField, Button, Avatar, Stack, Alert, CircularProgress
 } from '@mui/material';
-import api from '../../../api/api.js';
+import api from '@/api/api.js';
 
 function WorkspaceEdit({ onDone }) {
     const { roomId } = useParams();

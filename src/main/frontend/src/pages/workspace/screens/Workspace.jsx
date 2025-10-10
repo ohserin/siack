@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {Box} from '@mui/material';
 import {useNavigate, useParams} from 'react-router-dom';
-import api from '../../../api/api.js';
-import {useAuth} from '../../../contexts/AuthContext.jsx';
-import Header from '../components/Header.jsx';
-import Sidebar from '../components/Sidebar.jsx';
-import WorkspaceInfo from './Workspace-Info.jsx';
-import WorkspaceEdit from './WorkspaceEdit.jsx';
+import api from '@/api/api.js';
+import {useAuth} from '@/contexts/AuthContext.jsx';
+import Header from '@/pages/workspace/components/Header.jsx';
+import Sidebar from '@/pages/workspace//components/Sidebar.jsx';
+import WorkspaceInfo from '@/pages/workspace/screens/Workspace-Info.jsx';
+import WorkspaceEdit from '@/pages/workspace/screens/WorkspaceEdit.jsx';
 
 function Workspace() {
     const navigate = useNavigate();
