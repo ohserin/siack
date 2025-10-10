@@ -113,12 +113,6 @@ function WorkspaceEdit({ onDone }) {
             const url = res?.data?.url;
             if (typeof url === 'string' && url.trim() !== '' && url !== 'null' && url !== 'undefined') {
                 setFields(f => ({ ...f, iconUrl: url })); // 업로드 즉시 미리보기 갱신
-            } else {
-                // URL 없으면 재조회 (예비)
-                api.get(`/v1/workspace/${roomId}/info`).then(r => {
-                    const body = r.data || {};
-                    if (body.workspaceImage) setFields(f => ({ ...f, iconUrl: body.workspaceImage }));
-                }).catch(()=>{});
             }
         } catch {
             setUploadError('이미지 업로드에 실패했습니다.');
@@ -129,7 +123,7 @@ function WorkspaceEdit({ onDone }) {
     };
 
     if (loading) return <Box p={4} textAlign="center"><CircularProgress /></Box>;
-    if (forbidden) return <Box p={4}><Alert severity="error">오너만 접근할 수 있습니다.</Alert></Box>;
+    if (forbidden) return <Box p={4}><Alert severity="error">워크스페이스 소유자만 접근할 수 있습니다.</Alert></Box>;
     if (error) return <Box p={4}><Alert severity="error">{error}</Alert></Box>;
 
     return (
