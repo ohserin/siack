@@ -62,7 +62,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
         // 허용할 HTTP 메서드를 설정합니다 (GET, POST, PUT, DELETE, OPTIONS 등).
         // OPTIONS는 Preflight 요청에 사용되므로 반드시 포함해야 함.
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
         // 허용할 요청 헤더를 설정합니다.
         configuration.setAllowedHeaders(List.of("*"));
