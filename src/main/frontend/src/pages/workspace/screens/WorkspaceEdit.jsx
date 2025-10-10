@@ -50,10 +50,10 @@ function WorkspaceEdit({ onDone }) {
         setSaving(true);
         setError('');
         try {
-            await api.put(`/v1/workspace/${roomId}/info`, {
+            await api.patch(`/v1/workspace/modify`, {
+                workspaceId: Number(roomId),
                 workspaceName: fields.workspaceName,
                 workspaceDesc: fields.workspaceDesc,
-                iconUrl: fields.iconUrl,
             });
             if (onDone) onDone();
         } catch {
