@@ -141,12 +141,12 @@ public class WorkspaceRequestService {
         WorkspaceVO workspace = getWorkspaceOrThrow(request.getWorkspaceId());
         validateOwner(user, workspace);
         boolean changed = false;
-        if (request.getName() != null && !request.getName().equals(workspace.getName())) {
-            workspace.setName(request.getName());
+        if (request.getWorkspaceName() != null && !request.getWorkspaceName().equals(workspace.getName())) {
+            workspace.setName(request.getWorkspaceName());
             changed = true;
         }
-        if (request.getDescription() != null && !request.getDescription().equals(workspace.getDescription())) {
-            workspace.setDescription(request.getDescription());
+        if (request.getWorkspaceDesc() != null && !request.getWorkspaceDesc().equals(workspace.getDescription())) {
+            workspace.setDescription(request.getWorkspaceDesc());
             changed = true;
         }
         if (changed) {
