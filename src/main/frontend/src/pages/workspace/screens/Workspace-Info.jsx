@@ -3,10 +3,11 @@ import {
     Box, Typography, Divider, Avatar, Chip, Button, Stack, List, ListItem, ListItemText, Skeleton, Alert
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import SettingsIcon from '@mui/icons-material/Settings';
 import {useParams} from 'react-router-dom';
-import api from '../../../api/api.js';
+import api from '@/api/api.js';
 
-function WorkspaceInfo() {
+function WorkspaceInfo({ setMainContent }) {
     const {roomId} = useParams();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -59,12 +60,12 @@ function WorkspaceInfo() {
             memberCount: data.memberCount ?? 0,
             channelCount: data.channelCount ?? 0,
             status: '활성',
-            iconUrl: undefined,
+            iconUrl: data.workspaceImage || undefined,
             inviteCode: '-',
             members: Array.isArray(data.users) ? data.users.map(u => ({
                 id: u.id,
                 name: u.nickname || '?',
-                avatar: u.profileImageUrl || undefined, // 서버 제공 URL만 사용
+                avatar: u.profileImageUrl || undefined,
             })) : [],
             plan: data.planName || 'Free',
             storage: { used: (data.usedStorage ?? 0) + ' MB', total: '-' },
@@ -72,6 +73,9 @@ function WorkspaceInfo() {
             myRole: translateRole(data.userRole),
         };
     }, [data, roomId]);
+
+    // 오너만 설정 버튼 노출
+    const isOwner = vm?.myRole === '소유자';
 
     if (loading) {
         return (
@@ -98,7 +102,9 @@ function WorkspaceInfo() {
         <Box sx={{mt: 3, mb: 5, p: 2}}>
             {/* 상단: 아이콘, 이름, 상태, 초대코드 */}
             <Box display="flex" alignItems="center" mb={2}>
-                <Avatar src={vm.iconUrl} sx={{width: 56, height: 56, mr: 2}}>{vm.name?.[0] || 'W'}</Avatar>
+                <Avatar src={vm.iconUrl} variant="rounded" sx={{width: 56, height: 56, mr: 2, borderRadius: 2}}
+                        onError={(e) => { e.currentTarget.src=''; }}
+                >{vm.name?.[0] || 'W'}</Avatar>
                 <Box>
                     <Typography variant="h5" fontWeight={700}>{vm.name}</Typography>
                     <Chip label={vm.status} color={vm.status === '활성' ? 'success' : 'default'}
@@ -109,6 +115,17 @@ function WorkspaceInfo() {
                         onClick={() => navigator.clipboard.writeText(String(vm.inviteCode || ''))}>
                     초대코드: {vm.inviteCode}
                 </Button>
+                {isOwner && setMainContent && (
+                    <Button
+                        variant="text"
+                        size="small"
+                        sx={{ml: 1, minWidth: 0, p: 1}}
+                        onClick={() => setMainContent('edit')}
+                        aria-label="설정"
+                    >
+                        <SettingsIcon />
+                    </Button>
+                )}
             </Box>
             <Divider sx={{mb: 3}}/>
             {/* 정보 그리드 */}

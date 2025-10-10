@@ -3,9 +3,9 @@ import {Box, Typography, TextField, Button, Paper, Divider, Avatar, Fade, Modal}
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {useNavigate} from "react-router-dom";
-import theme from "../../../theme.js";
-import api from "../../../api/api.js";
-import {useAuth} from "../../../contexts/AuthContext.jsx";
+import theme from "@/theme.js";
+import api from "@/api/api.js";
+import {useAuth} from "@/contexts/AuthContext.jsx";
 
 function WorkspaceCreate() {
     const [name, setName] = useState("");

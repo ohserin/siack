@@ -1,5 +1,6 @@
 package com.dakgu.siack.workspace.controller;
 
+import com.dakgu.siack.workspace.dto.ResDTO_UploadWorkspaceImage;
 import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.ReqDTO_CreateWorkspace;
 import com.dakgu.siack.workspace.dto.ResDTO_GetWorkspace;
@@ -60,7 +61,7 @@ public class WorkspaceController {
             @PathVariable("workspaceId") Long workspaceId,
             @RequestPart("file") MultipartFile file
     ) throws java.io.IOException {
-        ResponseDTO response = workspaceRequestService.uploadWorkspaceImage(authentication, file, workspaceId);
+        ResDTO_UploadWorkspaceImage response = workspaceRequestService.uploadWorkspaceImage(authentication, file, workspaceId);
         return ResponseEntity.status(200).body(response);
     }
 

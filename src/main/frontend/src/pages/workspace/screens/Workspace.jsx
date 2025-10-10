@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {Box} from '@mui/material';
 import {useNavigate, useParams} from 'react-router-dom';
-import api from '../../../api/api.js';
-import {useAuth} from '../../../contexts/AuthContext.jsx';
-import Header from '../components/Header.jsx';
-import Sidebar from '../components/Sidebar.jsx';
-import WorkspaceInfo from './Workspace-Info.jsx';
+import api from '@/api/api.js';
+import {useAuth} from '@/contexts/AuthContext.jsx';
+import Header from '@/pages/workspace/components/Header.jsx';
+import Sidebar from '@/pages/workspace//components/Sidebar.jsx';
+import WorkspaceInfo from '@/pages/workspace/screens/Workspace-Info.jsx';
+import WorkspaceEdit from '@/pages/workspace/screens/WorkspaceEdit.jsx';
 
 function Workspace() {
     const navigate = useNavigate();
@@ -57,7 +58,8 @@ function Workspace() {
                 <Sidebar mainContent={mainContent} setMainContent={setMainContent} openPanel={openPanel}
                          setOpenPanel={setOpenPanel} panelWidth={panelWidth}/>
                 <Box sx={{flex: 1, p: 0, transition: 'margin-left 0.2s', ml: openPanel ? `${panelWidth}px` : 0}}>
-                    {mainContent === 'setting' && <WorkspaceInfo/>}
+                    {mainContent === 'setting' && <WorkspaceInfo setMainContent={setMainContent} />}
+                    {mainContent === 'edit' && <WorkspaceEdit onDone={() => setMainContent('setting')} />}
                     {mainContent === 'home' && <Box sx={{p: 4}}>[홈 컨텐츠]</Box>}
                     {mainContent === 'more' && <Box sx={{p: 4}}>[더보기 컨텐츠]</Box>}
                 </Box>

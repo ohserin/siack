@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {getCookie} from "../utils/cookie.js";
+import {getCookie} from "@/utils/cookie.js";
 
 /**
  * 환경별 baseURL 설정

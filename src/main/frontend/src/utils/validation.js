@@ -1,4 +1,4 @@
-import api from "../api/api.js";
+import api from "@/api/api.js";
 
 const regexPatterns = {
     username: /^[a-zA-Z0-9_@]{4,50}$/, // 4~50자, 영문/숫자/특수문자(_, @) 포함

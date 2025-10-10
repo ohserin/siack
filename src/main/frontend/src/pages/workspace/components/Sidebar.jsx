@@ -18,7 +18,8 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
+import api from '../../../api/api.js';
 import {useAuth} from '../../../contexts/AuthContext.jsx';
 
 function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
@@ -26,29 +27,46 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
     const isMobile = useMediaQuery('(max-width:600px)');
     const [mobileValue, setMobileValue] = React.useState('home');
     const navigate = useNavigate();
+    const { roomId } = useParams(); // 경로 파라미터(Workspace ID)
 
-    // --- 프로필 이미지 상태 & 메뉴 상태 ---
+    // --- 프로필 / 인증 정보 ---
     const {user, userData, logout} = useAuth();
     const [profileAnchorEl, setProfileAnchorEl] = React.useState(null);
-
     const openProfileMenu = (e) => setProfileAnchorEl(e.currentTarget);
     const closeProfileMenu = () => setProfileAnchorEl(null);
-
-    const handleMyInfo = () => {
-        closeProfileMenu();
-        navigate('/user-setting');
-    };
-    const handleLogout = () => {
-        closeProfileMenu();
-        logout();
-        navigate('/login');
-    };
-
-    // 서버에서 내려준 URL만 사용
+    const handleMyInfo = () => { closeProfileMenu(); navigate('/user-setting'); };
+    const handleLogout = () => { closeProfileMenu(); logout(); navigate('/login'); };
     const avatarUrl = (typeof userData?.profileImageUrl === 'string'
         && userData.profileImageUrl.trim() !== ''
         && userData.profileImageUrl !== 'null'
         && userData.profileImageUrl !== 'undefined') ? userData.profileImageUrl : undefined;
+
+    // 워크스페이스 이미지/이름 상태
+    const [wsImage, setWsImage] = React.useState(null);
+    const [wsName, setWsName] = React.useState('WS');
+
+    React.useEffect(() => {
+        let mounted = true;
+        if (!roomId) return;
+        api.get(`/v1/workspace/${roomId}/info`)
+            .then(res => {
+                if (!mounted) return;
+                const body = res.data;
+                if (body && body.statusCode === 200) {
+                    const url = body.workspaceImage;
+                    if (url && typeof url === 'string' && url.trim() !== '' && url !== 'null' && url !== 'undefined') {
+                        setWsImage(url);
+                    } else {
+                        setWsImage(null);
+                    }
+                    if (body.workspaceName) setWsName(body.workspaceName);
+                }
+            })
+            .catch(() => {/* fail silent */});
+        return () => { mounted = false; };
+    }, [roomId]);
+
+    const validWsImage = wsImage && wsImage.trim() !== '' && wsImage !== 'null' && wsImage !== 'undefined' ? wsImage : null;
 
     // 모바일 하단 네비게이션
     if (isMobile) {
@@ -68,18 +86,26 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
                 >
                     <BottomNavigationAction label="홈" value="home" icon={<HomeIcon/>}/>
                     <BottomNavigationAction label="DM" value="dm" icon={<AccountCircleIcon/>}/>
-                    <BottomNavigationAction label="정보" value="setting" icon={<Box sx={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 1,
-                        background: '#e0e0e0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: '#888'
-                    }}>WS</Box>}/>
+                    <BottomNavigationAction label="정보" value="setting" icon={validWsImage ? (
+                        <Avatar
+                            src={validWsImage}
+                            variant="rounded"
+                            sx={{width: 24, height: 24, borderRadius: 1}}
+                        >{wsName?.[0] || 'W'}</Avatar>
+                    ) : (
+                        <Box sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 1,
+                            background: '#e0e0e0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: 13,
+                            color: '#888'
+                        }}>WS</Box>
+                    )}/>
                     <BottomNavigationAction label="나가기" value="logout" icon={<LogoutIcon/>}/>
                 </BottomNavigation>
             </Paper>
@@ -131,11 +157,29 @@ function Sidebar({setMainContent, openPanel, setOpenPanel, panelWidth}) {
                             color: '#888',
                             mb: 1,
                             cursor: 'pointer',
+                            overflow: 'hidden'
                         }}
                         onClick={() => setMainContent && setMainContent('setting')}
                         title="워크스페이스 설정"
                     >
-                        WS
+                        {validWsImage ? (
+                            <Avatar
+                                src={validWsImage}
+                                variant="rounded"
+                                sx={{
+                                    width: '100%',
+                                    height: '100%',
+                                    borderRadius: 2,
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    bgcolor: '#f0f0f0'
+                                }}
+                                imgProps={{style: {objectFit: 'cover'}}}
+                                onError={(e) => { e.currentTarget.src = ''; }}
+                            >{wsName?.[0] || 'W'}</Avatar>
+                        ) : (
+                            'WS'
+                        )}
                     </Box>
                 </Box>
                 <Divider/>

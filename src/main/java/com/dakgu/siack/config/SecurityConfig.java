@@ -5,6 +5,7 @@ import com.dakgu.siack.config.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -41,6 +42,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                 )
                 // HTTP 요청에 대한 권한 부여 규칙을 설정
                 .authorizeHttpRequests(authorize -> authorize
+                        // 프리플라이트 허용
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // /v1/user/ 하위의 모든 경로는 인증 없이 접근 허용 (접근 허용하려면 콤마로 구분해서 추가
                         .requestMatchers("/v1/user/**", "/v1/board/list").permitAll()
                         // 그 외 모든 요청은 인증 필요
@@ -62,7 +65,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
         // 허용할 HTTP 메서드를 설정합니다 (GET, POST, PUT, DELETE, OPTIONS 등).
         // OPTIONS는 Preflight 요청에 사용되므로 반드시 포함해야 함.
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
         // 허용할 요청 헤더를 설정합니다.
         configuration.setAllowedHeaders(List.of("*"));
