@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Box} from '@mui/material';
 import {useNavigate, useParams} from 'react-router-dom';
-import api from '@/api/api.js';
 import {useAuth} from '@/contexts/AuthContext.jsx';
 import Header from '@/pages/workspace/components/Header.jsx';
 import Sidebar from '@/pages/workspace//components/Sidebar.jsx';
@@ -11,9 +10,7 @@ import WorkspaceEdit from '@/pages/workspace/screens/WorkspaceEdit.jsx';
 function Workspace() {
     const navigate = useNavigate();
     const {roomId} = useParams();
-    const [, setLoading] = useState(true);
-    const [, setError] = useState('');
-    const [workspace, setWorkspace] = useState(null);
+    const [workspace] = useState(null);
     const [mainContent, setMainContent] = useState('home');
     const [openPanel, setOpenPanel] = useState(false);
     const panelWidth = 220;
@@ -24,26 +21,6 @@ function Workspace() {
             guard(true, '/');
         }
     }, [authLoading, guard]);
-
-    useEffect(() => {
-        let mounted = true;
-        setLoading(true);
-        api
-            .get(`/v1/workspace/${roomId}`)
-            .then((res) => {
-                if (!mounted) return;
-                setWorkspace(res.data || null);
-                setLoading(false);
-            })
-            .catch(() => {
-                if (!mounted) return;
-                setError('워크스페이스 정보를 불러오지 못했습니다.');
-                setLoading(false);
-            });
-        return () => {
-            mounted = false;
-        };
-    }, [roomId]);
 
     return (
         <Box component="main" sx={{
