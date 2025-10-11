@@ -29,6 +29,9 @@ public class WorkspaceVO extends Timestamp {
     @Column(length = 500)
     private String description;
 
+    @Column(name = "INVITECODE", length = 20, unique = true)
+    private String inviteCode;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "OWNERID", nullable = false)
     private User owner;

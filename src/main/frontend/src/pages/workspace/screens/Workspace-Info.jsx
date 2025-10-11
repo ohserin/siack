@@ -6,12 +6,18 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import SettingsIcon from '@mui/icons-material/Settings';
 import {useParams} from 'react-router-dom';
 import api from '@/api/api.js';
+import Snackbar from '@mui/material/Snackbar';
 
 function WorkspaceInfo({ setMainContent }) {
     const {roomId} = useParams();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    // Snackbar 상태
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMsg, setSnackbarMsg] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
     useEffect(() => {
         let mounted = true;
@@ -61,7 +67,7 @@ function WorkspaceInfo({ setMainContent }) {
             channelCount: data.channelCount ?? 0,
             status: '활성',
             iconUrl: data.workspaceImage || undefined,
-            inviteCode: '-',
+            inviteCode: data.inviteCode || '-',
             members: Array.isArray(data.users) ? data.users.map(u => ({
                 id: u.id,
                 name: u.nickname || '?',
@@ -76,6 +82,29 @@ function WorkspaceInfo({ setMainContent }) {
 
     // 오너만 설정 버튼 노출
     const isOwner = vm?.myRole === '소유자';
+
+    // 초대코드 복사 (모바일/데스크탑 표준)
+    const handleCopyInviteCode = () => {
+        const code = String(vm.inviteCode || '');
+        if (!code || code === '-') return;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code)
+                .then(() => {
+                    setSnackbarMsg('초대코드가 복사되었습니다.');
+                    setSnackbarSeverity('success');
+                    setSnackbarOpen(true);
+                })
+                .catch(() => {
+                    setSnackbarMsg('복사에 실패했습니다.');
+                    setSnackbarSeverity('error');
+                    setSnackbarOpen(true);
+                });
+        } else {
+            setSnackbarMsg('복사 기능이 지원되지 않는 브라우저입니다.');
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+        }
+    };
 
     if (loading) {
         return (
@@ -107,25 +136,29 @@ function WorkspaceInfo({ setMainContent }) {
                 >{vm.name?.[0] || 'W'}</Avatar>
                 <Box>
                     <Typography variant="h5" fontWeight={700}>{vm.name}</Typography>
-                    <Chip label={vm.status} color={vm.status === '활성' ? 'success' : 'default'}
-                          size="small" sx={{mt: 0.5}}/>
+                    <Box display="flex" alignItems="center" mt={0.5}>
+                        <Chip label={vm.status} color={vm.status === '활성' ? 'success' : 'default'}
+                              size="small"/>
+                        {isOwner && setMainContent && (
+                            <Button
+                                variant="text"
+                                size="small"
+                                sx={{ml: 1, minWidth: 0, p: 1}}
+                                onClick={() => setMainContent('edit')}
+                                aria-label="설정"
+                            >
+                                <SettingsIcon />
+                            </Button>
+                        )}
+                    </Box>
                 </Box>
                 <Box flex={1}/>
-                <Button variant="outlined" size="small" startIcon={<ContentCopyIcon/>} sx={{ml: 2}}
-                        onClick={() => navigator.clipboard.writeText(String(vm.inviteCode || ''))}>
+                <Button variant="outlined" size="small" startIcon={<ContentCopyIcon/>}
+                        sx={{ml: 2}}
+                        onClick={handleCopyInviteCode}
+                        disabled={!vm.inviteCode || vm.inviteCode === '-'}>
                     초대코드: {vm.inviteCode}
                 </Button>
-                {isOwner && setMainContent && (
-                    <Button
-                        variant="text"
-                        size="small"
-                        sx={{ml: 1, minWidth: 0, p: 1}}
-                        onClick={() => setMainContent('edit')}
-                        aria-label="설정"
-                    >
-                        <SettingsIcon />
-                    </Button>
-                )}
             </Box>
             <Divider sx={{mb: 3}}/>
             {/* 정보 그리드 */}
@@ -173,6 +206,17 @@ function WorkspaceInfo({ setMainContent }) {
                 )}
                 <Button size="small">더보기</Button>
             </Box>
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={2000}
+                onClose={() => setSnackbarOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                sx={{ mt: '40px' }}
+            >
+                <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMsg}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }
