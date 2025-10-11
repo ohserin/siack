@@ -48,11 +48,13 @@ public class WorkspaceRequestService {
     @Transactional
     public ResponseDTO createWorkspace(Authentication authentication, ReqDTO_CreateWorkspace request) {
         User user = getAuthenticatedUser(authentication);
+        String inviteCode = getUniqueInviteCode();
         WorkspaceVO workspace = WorkspaceVO.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .owner(user)
                 .status(true)
+                .inviteCode(inviteCode)
                 .build();
         workspaceRepository.save(workspace);
 
@@ -278,11 +280,21 @@ public class WorkspaceRequestService {
                 .usedStorage(0.0)
                 .memberCount(memberCount)
                 .channelCount((int) channelCount)
+                .inviteCode(workspace.getInviteCode())
                 .users(userDTOList)
                 .build();
         dto.setStatusCode(HttpStatus.OK.value());
         dto.setMessage("워크스페이스 정보");
         return dto;
+    }
+
+    // 중복 없는 초대코드 생성 메서드
+    public String getUniqueInviteCode() {
+        String code;
+        do {
+            code = com.dakgu.siack.workspace.util.InviteCodeUtil.generateInviteCode();
+        } while (workspaceRepository.existsByInviteCode(code));
+        return code;
     }
 
     // === Private Helper Methods ===
