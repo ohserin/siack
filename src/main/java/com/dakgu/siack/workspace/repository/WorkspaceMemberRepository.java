@@ -15,4 +15,6 @@ public interface WorkspaceMemberRepository extends JpaRepository<WorkspaceMember
     List<WorkspaceMemberVO> findByWorkspace_WorkspaceId(Long workspaceId);
     // 특정 워크스페이스 + 사용자 조합 조회 (채널 생성 등 권한 확인 용)
     Optional<WorkspaceMemberVO> findByWorkspace_WorkspaceIdAndUser_Userid(Long workspaceId, Long userId);
+    // 특정 워크스페이스 + 사용자 조합 존재 여부 (중복 참여 방지)
+    boolean existsByWorkspace_WorkspaceIdAndUser_Userid(Long workspaceId, Long userId);
 }

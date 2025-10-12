@@ -157,6 +157,22 @@ public class WorkspaceRequestService {
         return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스 정보가 수정되었습니다.");
     }
 
+    /**
+     * 워크스페이스의 이미지를 업로드하고, 업로드된 이미지의 URL을 워크스페이스에 저장합니다.
+     * 처리 과정:
+     *   인증된 사용자인지 확인
+     *   워크스페이스 존재 및 권한 확인
+     *   파일 확장자(jpg, jpeg, png) 유효성 검사
+     *   파일 업로드 및 저장 경로 획득
+     *   업로드된 파일 경로로부터 imageUrl 추출
+     *   워크스페이스 엔티티에 imageUrl 저장
+     *   업로드 결과 DTO 반환
+     * @param authentication 인증 정보
+     * @param file 업로드할 이미지 파일 (jpg, jpeg, png)
+     * @param workspaceId 이미지 변경 대상 워크스페이스 ID
+     * @return 업로드 결과(상태, 메시지, imageUrl)
+     * @throws IOException 파일 업로드 실패 시
+     */
     @Transactional
     public ResDTO_UploadWorkspaceImage uploadWorkspaceImage(Authentication authentication, MultipartFile file, Long workspaceId) throws IOException {
         getAuthenticatedUser(authentication);
@@ -167,35 +183,7 @@ public class WorkspaceRequestService {
         }
 
         FileStorageResult fileStorageResult = uploadService.uploadAndReturnStorageResult(file, authentication);
-
-        String fullPath = fileStorageResult != null ? fileStorageResult.getFullPath() : null;
-        String imageUrl = null;
-        if (fullPath != null && !fullPath.isBlank()) {
-            String normalized = fullPath.replace("\\", "/");
-            String marker = "/uploads/";
-            String relative = normalized;
-
-            int lastIdx = normalized.lastIndexOf(marker);
-            if (lastIdx >= 0) {
-                relative = normalized.substring(lastIdx + marker.length());
-            }
-
-            int nestedIdx = relative.lastIndexOf("uploads/");
-            if (nestedIdx >= 0) {
-                relative = relative.substring(nestedIdx + "uploads/".length());
-            }
-
-            while (relative.startsWith("/")) {
-                relative = relative.substring(1);
-            }
-            relative = relative.replace("..", "");
-            while (relative.contains("//")) {
-                relative = relative.replace("//", "/");
-            }
-            if (!relative.isBlank()) {
-                imageUrl = "https://devsiack.me/uploads/" + relative;
-            }
-        }
+        String imageUrl = extractImageUrl(fileStorageResult);
 
         workspace.setImageUrl(imageUrl);
         workspaceRepository.save(workspace);
@@ -288,8 +276,41 @@ public class WorkspaceRequestService {
         return dto;
     }
 
-    // 중복 없는 초대코드 생성 메서드
-    public String getUniqueInviteCode() {
+    /**
+     * 초대코드로 워크스페이스에 참여합니다.
+     * @param authentication 인증 정보
+     * @param request 참여 요청 DTO (code)
+     * @return 참여 결과 ResponseDTO
+     */
+    @Transactional
+    public ResponseDTO joinWorkspace(Authentication authentication, ReqDTO_JoinWorkspace request) {
+        User user = getAuthenticatedUser(authentication);
+        String code = request.getCode();
+        // 워크스페이스 코드로 조회
+        WorkspaceVO workspace = workspaceRepository.findByInviteCode(code);
+        if (workspace == null) {
+            return new ResponseDTO(HttpStatus.NOT_FOUND.value(),"유효하지 않은 초대코드입니다.");
+        }
+        // 이미 멤버인지 확인
+        boolean isMember = workspaceMemberRepository.existsByWorkspace_WorkspaceIdAndUser_Userid(workspace.getWorkspaceId(), user.getUserid());
+        if (isMember) {
+            return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 참여한 워크스페이스입니다.");
+        }
+        // 멤버로 추가
+        WorkspaceMemberVO member = new WorkspaceMemberVO();
+        member.setWorkspace(workspace);
+        member.setUser(user);
+        member.setRole("MEMBER");
+        workspaceMemberRepository.save(member);
+        return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스에 참여했습니다.");
+    }
+
+    // === Private Helper Methods ===
+
+    /**
+     * 중복 없는 초대코드 생성 메서드
+     * */
+    private String getUniqueInviteCode() {
         String code;
         do {
             code = com.dakgu.siack.workspace.util.InviteCodeUtil.generateInviteCode();
@@ -297,7 +318,38 @@ public class WorkspaceRequestService {
         return code;
     }
 
-    // === Private Helper Methods ===
+    /**
+     * 파일 저장 결과에서 imageUrl을 추출합니다.
+     */
+    private String extractImageUrl(FileStorageResult fileStorageResult) {
+        String fullPath = fileStorageResult != null ? fileStorageResult.getFullPath() : null;
+        if (fullPath == null || fullPath.isBlank()) return null;
+        String normalized = fullPath.replace("\\", "/");
+        String marker = "/uploads/";
+        String relative = normalized;
+
+        int lastIdx = normalized.lastIndexOf(marker);
+        if (lastIdx >= 0) {
+            relative = normalized.substring(lastIdx + marker.length());
+        }
+
+        int nestedIdx = relative.lastIndexOf("uploads/");
+        if (nestedIdx >= 0) {
+            relative = relative.substring(nestedIdx + "uploads/".length());
+        }
+
+        while (relative.startsWith("/")) {
+            relative = relative.substring(1);
+        }
+        relative = relative.replace("..", "");
+        while (relative.contains("//")) {
+            relative = relative.replace("//", "/");
+        }
+        if (!relative.isBlank()) {
+            return "https://devsiack.me/uploads/" + relative;
+        }
+        return null;
+    }
 
     /**
      * 이미지 파일 확장자(jpg, jpeg, png)만 허용하는 검증 메서드
