@@ -43,20 +43,51 @@ function ProfileSettings() {
     }, [userData?.userid, userData?.profileimg]);
 
 
+    // 이미지 리사이즈 함수 (비율 유지, 500x500, 남는 공간 투명, 작은 이미지는 확대하지 않음)
+    async function resizeImage(file, maxSize = 500) {
+        return new Promise((resolve, reject) => {
+            const img = new window.Image();
+            const reader = new FileReader();
+            reader.onload = e => {
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = maxSize;
+                    canvas.height = maxSize;
+                    ctx.clearRect(0, 0, maxSize, maxSize);
+                    const scale = Math.min(1, maxSize / img.width, maxSize / img.height);
+                    const newW = Math.round(img.width * scale);
+                    const newH = Math.round(img.height * scale);
+                    const dx = Math.round((maxSize - newW) / 2);
+                    const dy = Math.round((maxSize - newH) / 2);
+                    ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, newW, newH);
+                    canvas.toBlob(blob => {
+                        if (blob) resolve(blob);
+                        else reject(new Error('이미지 변환 실패'));
+                    }, 'image/png', 0.95);
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
     const handleImageChange = async (event) => {
         const file = event.target.files[0];
         if (file) {
-            const formData = new FormData();
-            formData.append('file', file);
-
             try {
+                const resized = await resizeImage(file, 500);
+                const filename = file.name.replace(/\.[^.]+$/, '.png');
+                const formData = new FormData();
+                formData.append('file', resized, filename);
                 const response = await api.post('/v1/userinfo/modify-profile', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         Authorization: `Bearer ${user.token}`,
                     },
                 });
-
                 if (response.data.statusCode === 200) {
                     await fetchUserDataFromAPI(user.token);
                     showModal('성공', '프로필 이미지가 변경되었습니다.');
