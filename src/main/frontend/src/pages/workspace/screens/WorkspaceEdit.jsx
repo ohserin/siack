@@ -63,30 +63,32 @@ function WorkspaceEdit({ onDone }) {
         }
     };
 
-    // 이미지 리사이즈 함수 (300x300, png/jpg 지원)
+    // 이미지 리사이즈 함수 (비율 유지, 300x300, 남는 공간 투명)
     async function resizeImage(file, maxSize = 300) {
         return new Promise((resolve, reject) => {
             const img = new window.Image();
             const reader = new FileReader();
             reader.onload = e => {
                 img.onload = () => {
+                    // 캔버스는 항상 300x300, 투명 배경
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    // 정사각형 비율 유지
-                    const size = Math.min(img.width, img.height, maxSize);
-                    canvas.width = size;
-                    canvas.height = size;
-                    // 중앙 crop 후 draw
-                    const sx = (img.width - size) / 2;
-                    const sy = (img.height - size) / 2;
-                    ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
-                    // 확장자에 따라 포맷 결정
-                    const ext = file.name.split('.').pop().toLowerCase();
-                    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+                    canvas.width = maxSize;
+                    canvas.height = maxSize;
+                    ctx.clearRect(0, 0, maxSize, maxSize);
+                    // 비율 유지하여 축소/확대
+                    const scale = Math.min(maxSize / img.width, maxSize / img.height);
+                    const newW = Math.round(img.width * scale);
+                    const newH = Math.round(img.height * scale);
+                    // 중앙 배치
+                    const dx = Math.round((maxSize - newW) / 2);
+                    const dy = Math.round((maxSize - newH) / 2);
+                    ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, newW, newH);
+                    // 항상 PNG로 저장 (투명도 보존)
                     canvas.toBlob(blob => {
                         if (blob) resolve(blob);
                         else reject(new Error('이미지 변환 실패'));
-                    }, mime, 0.85);
+                    }, 'image/png', 0.95);
                 };
                 img.onerror = reject;
                 img.src = e.target.result;
@@ -103,8 +105,7 @@ function WorkspaceEdit({ onDone }) {
         setUploadError('');
         try {
             const resized = await resizeImage(file, 300);
-            const ext = file.name.split('.').pop().toLowerCase();
-            const filename = file.name.replace(/\.[^.]+$/, ext === 'png' ? '.png' : '.jpg');
+            const filename = file.name.replace(/\.[^.]+$/, '.png');
             const formData = new FormData();
             formData.append('file', resized, filename);
             const res = await api.post(`/v1/workspace/${roomId}/image`, formData, {

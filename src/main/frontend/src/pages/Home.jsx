@@ -41,6 +41,11 @@ function Home() {
         navigate("/workspace/create");
     };
 
+    // 워크스페이스 참여 페이지 이동 핸들러
+    const handleJoinWorkspace = () => {
+        navigate("/workspace/join");
+    };
+
     // 모바일에서 바깥 터치 시 닉네임 닫기 (map 바깥에서 관리)
     React.useEffect(() => {
         if (!isMobile || showNicknameIdx === null) return;
@@ -296,6 +301,24 @@ function Home() {
                                 </Paper>
                             );
                         })}
+
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={handleJoinWorkspace}
+                            sx={{
+                                borderRadius: 2,
+                                py: 1.2,
+                                px: 4,
+                                fontSize: 16,
+                                fontWeight: 600,
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+                                mt: 2
+                            }}
+                        >
+                            워크스페이스 참여하기
+                        </Button>
+
                         <Button
                             variant="contained"
                             color="secondary"
@@ -306,12 +329,14 @@ function Home() {
                                 fontSize: 16,
                                 fontWeight: 600,
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
-                                mt: 2
+                                mt: 2,
+                                mb: 2
                             }}
                             onClick={handleCreateWorkspace}
                         >
                             새 워크스페이스 만들기
                         </Button>
+
                     </>
                 )}
             </Box>

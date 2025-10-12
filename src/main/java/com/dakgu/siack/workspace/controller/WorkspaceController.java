@@ -1,12 +1,7 @@
 package com.dakgu.siack.workspace.controller;
 
-import com.dakgu.siack.workspace.dto.ResDTO_UploadWorkspaceImage;
+import com.dakgu.siack.workspace.dto.*;
 import com.dakgu.siack.utils.ResponseDTO;
-import com.dakgu.siack.workspace.dto.ReqDTO_CreateWorkspace;
-import com.dakgu.siack.workspace.dto.ResDTO_GetWorkspace;
-import com.dakgu.siack.workspace.dto.ReqDTO_ModifyWorkspace;
-import com.dakgu.siack.workspace.dto.ReqDTO_InviteWorkspaceMember;
-import com.dakgu.siack.workspace.dto.ResDTO_WorkspaceInfo;
 import com.dakgu.siack.workspace.service.WorkspaceRequestService;
 import com.dakgu.siack.workspace.service.WorkspaceMemberService;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +73,12 @@ public class WorkspaceController {
                                           @PathVariable("workspaceId") Long workspaceId,
                                           @PathVariable("userId") Long userId) {
         ResponseDTO response = workspaceMemberService.removeMember(authentication, workspaceId, userId);
+        return ResponseEntity.status(200).body(response);
+    }
+
+    @PostMapping("/join")
+    public ResponseEntity<?> joinWorkspace(Authentication authentication, @RequestBody ReqDTO_JoinWorkspace request) {
+        ResponseDTO response = workspaceRequestService.joinWorkspace(authentication, request);
         return ResponseEntity.status(200).body(response);
     }
 }
