@@ -32,25 +32,45 @@ ext {
 }
 
 dependencies {
+    // 인증·인가(로그인, 권한 처리)를 위한 스프링 시큐리티
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // REST API와 일반적인 웹(Controller, JSON 변환 등) 처리
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Lombok: getter/setter, 생성자 등 보일러플레이트 코드를 줄여줌 (컴파일 전용)
     compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // 개발 편의성 도구(코드 변경 시 앱 자동 재시작 등)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // WAR 패키징 시 톰캣은 런타임에 제공
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+
+    // 테스트용 라이브러리(단위/통합 테스트 도구들)
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // MySQL 드라이버
     implementation 'mysql:mysql-connector-java:8.0.33'
+    // JPA
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+    // JWT 관련 라이브러리: 토큰 생성/검증 (API + 구현체 + Jackson 어댑터 조합)
     implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${JJWT_VERSION}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
 
-    // SSH 연결을 위한 JSch 라이브러리 (개선된 포크 버전)
+    // 원격 서버 SSH 연결
     implementation 'com.github.mwiede:jsch:2.27.2'
+
+    // WebSocket + STOMP
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {
