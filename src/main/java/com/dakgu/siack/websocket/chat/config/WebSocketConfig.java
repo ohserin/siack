@@ -12,16 +12,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // 클라이언트 구독용 브로커 경로: /topic, /queue
         registry.enableSimpleBroker("/topic", "/queue");
-        // 클라이언트가 서버로 보낼 때 prefix
-        registry.setApplicationDestinationPrefixes("/app");
+        registry.setApplicationDestinationPrefixes("/siack");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // WebSocket/STOMP 연결 엔드포인트
-        registry.addEndpoint("/ws-chat")
+        registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
