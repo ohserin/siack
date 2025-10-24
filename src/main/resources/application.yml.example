@@ -1,0 +1,51 @@
+# VCS(원격 저장소)에 올려도 되는 예시용 application.yml
+# 이 파일을 `application.yml` 또는 `application.yml.local`로 복사한 뒤 비밀값을 채워 사용하세요.
+# 주의: 실제 값을 넣은 `application.yml`은 절대 커밋하지 마세요(.gitignore에 등록되어 있습니다).
+
+spring:
+  application:
+    name: siack
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: "jdbc:mysql://<DB_HOST>:<DB_PORT>/<DB_NAME>?serverTimezone=Asia/Seoul"
+    username: <DB_USERNAME>
+    password: <DB_PASSWORD>
+    hikari:
+      auto-commit: true
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      minimum-idle: 10
+      maximum-pool-size: 20
+  jpa:
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: "50MB"
+      max-request-size: "50MB"
+
+jwt:
+  secret: <JWT_SECRET>
+  expiration: 3600000
+
+ssh:
+  host: <SSH_HOST>
+  port: 22
+  session-timeout: 10000
+  channel-timeout: 5000
+  username: <SSH_USERNAME>
+  # private-key-path는 VCS에 포함되지 않는 파일을 가리켜야 합니다(예: id.rsa)
+  private-key-path: id.rsa
+  uploadPath: /home/<SSH_USERNAME>/siack/uploads
+
+file:
+  access:
+    mode: remote
+  local:
+    upload-path: uploads
+
+# 사용 예시:
+# 1) 개발용 로컬 복사(Windows):
+#    copy src\main\resources\application.yml.example src\main\resources\application.yml
+#    그런 다음 src\main\resources\application.yml 파일을 열어 플레이스홀더를 실제 값으로 변경하세요.
+# 2) 개발용 로컬 복사(Unix/macOS):
+#    cp src/main/resources/application.yml.example src/main/resources/application.yml
+# 3) 개발자별 오버라이드가 필요하면 src/main/resources/application.yml.local 파일을 생성하세요(이 파일은 VCS에서 무시됩니다).
