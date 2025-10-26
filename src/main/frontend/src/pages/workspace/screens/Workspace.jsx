@@ -7,6 +7,7 @@ import Sidebar from '@/pages/workspace//components/Sidebar.jsx';
 import WorkspaceInfo from '@/pages/workspace/screens/Workspace-Info.jsx';
 import WorkspaceEdit from '@/pages/workspace/screens/WorkspaceEdit.jsx';
 import WorkspaceDM from '@/pages/workspace/screens/Workspace-DM.jsx';
+import WorkspaceHome from '@/pages/workspace/screens/WorkspaceHome.jsx';
 
 function Workspace() {
     const navigate = useNavigate();
@@ -55,7 +56,7 @@ function Workspace() {
                 }}>
                     {mainContent === 'setting' && <WorkspaceInfo setMainContent={setMainContent} />}
                     {mainContent === 'edit' && <WorkspaceEdit onDone={() => setMainContent('setting')} />}
-                    {mainContent === 'home' && <Box sx={{p: 4, overflowX: 'hidden', width: '100%', maxWidth: '100%', wordBreak: 'break-word'}}>[홈 컨텐츠]</Box>}
+                    {mainContent === 'home' && <WorkspaceHome />}
                     {mainContent === 'more' && <Box sx={{p: 4}}>[더보기 컨텐츠]</Box>}
                     {mainContent === 'dm' && <WorkspaceDM selectedCid={selectedDM} />}
                 </Box>
