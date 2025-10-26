@@ -1,18 +1,20 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {Box, useMediaQuery} from '@mui/material';
 import {useNavigate, useParams} from 'react-router-dom';
 import {useAuth} from '@/contexts/AuthContext.jsx';
 import Header from '@/pages/workspace/components/Header.jsx';
-import Sidebar from '@/pages/workspace//components/Sidebar.jsx';
+import Sidebar from '@/pages/workspace/components/Sidebar.jsx';
 import WorkspaceInfo from '@/pages/workspace/screens/Workspace-Info.jsx';
 import WorkspaceEdit from '@/pages/workspace/screens/WorkspaceEdit.jsx';
 import WorkspaceDM from '@/pages/workspace/screens/Workspace-DM.jsx';
 import WorkspaceHome from '@/pages/workspace/screens/WorkspaceHome.jsx';
+import api from '@/api/api.js';
 
 function Workspace() {
     const navigate = useNavigate();
     const {roomId} = useParams();
-    const [workspace] = useState(null);
+    const [workspace, setWorkspace] = useState(null);
+    const [workspaceLoading, setWorkspaceLoading] = useState(false);
     const [mainContent, setMainContent] = useState('home');
     const [openPanel, setOpenPanel] = useState(false);
     const panelWidth = 220;
@@ -65,6 +67,83 @@ function Workspace() {
         };
     }, []);
 
+    // 부모에서 자식으로 전달할 콜백을 메모이제이션, 동일한 정보일 경우 상태를 갱신하지 않음
+    const handleWorkspaceInfo = useCallback((info) => {
+        setWorkspace(prev => {
+            if (!info) return prev;
+            if (!prev) {
+                setWorkspaceLoading(false);
+                return {...(info || {})};
+            }
+            const normalizeArr = (a) => Array.isArray(a) ? a : [];
+            const prevName = prev?.name ?? null;
+            const prevImage = prev?.image ?? null;
+            const prevCh = normalizeArr(prev?.channels);
+            const nextName = info?.name ?? null;
+            const nextImage = info?.image ?? null;
+            const nextCh = normalizeArr(info?.channels);
+            const sameBasic = prevName === nextName && prevImage === nextImage;
+            const sameChannels = prevCh.length === nextCh.length && JSON.stringify(prevCh) === JSON.stringify(nextCh);
+            if (sameBasic && sameChannels) return prev;
+            setWorkspaceLoading(false);
+            return {...(prev || {}), ...(info || {})};
+        });
+    }, []);
+
+    // 중앙에서 한 번만 워크스페이스 정보를 fetch
+    const requestIdRef = React.useRef(0);
+    useEffect(() => {
+        if (!roomId) return;
+        if (workspace && (workspace.name || workspace.image)) return;
+
+        const currentRequestId = ++requestIdRef.current;
+        setWorkspaceLoading(true);
+
+        api.get(`/v1/workspace/${roomId}/info`)
+            .then(res => {
+                if (currentRequestId !== requestIdRef.current) return;
+                let body = res.data;
+                if (body && body.data && typeof body.data === 'object') {
+                    body = body.data;
+                }
+                console.debug('Workspace /info 페이로드:', body);
+                const hasCore = body && (body.workspaceName || body.name || (Array.isArray(body.channels) && body.channels.length >= 0));
+                if (body && (body.statusCode === 200 || hasCore)) {
+                    const normalize = (v) => (typeof v === 'string' && v.trim() !== '' && v !== 'null' && v !== 'undefined') ? v : null;
+                    const workspaceNameRaw = body.workspaceName ?? body.name ?? body.workspaceNm ?? body.wsName ?? null;
+                    const imageRaw = body.workspaceImage ?? body.imageUrl ?? body.image ?? null;
+                    const channelsRaw = body.channels ?? body.channelList ?? body.channelItems ?? body.channel ?? [];
+
+                    const channelsArray = Array.isArray(channelsRaw) ? channelsRaw : [];
+                    const normalizedChannels = channelsArray.map(c => {
+                        const id = c?.channelId ?? c?.id ?? c?.channel_id ?? c?.cid ?? c?.channelIdStr ?? null;
+                        const name = c?.channelName ?? c?.name ?? c?.title ?? c?.channelNm ?? c?.channel_title ?? null;
+                        return {
+                            ...c,
+                            channelId: id,
+                            channelName: name,
+                        };
+                    });
+
+                    const info = {
+                        ...body,
+                        workspaceName: workspaceNameRaw ?? body.workspaceName ?? body.name,
+                        name: workspaceNameRaw ?? body.workspaceName ?? body.name,
+                        image: normalize(imageRaw),
+                        channels: normalizedChannels,
+                    };
+                    handleWorkspaceInfo(info);
+                }
+            })
+            .catch(() => {
+            })
+            .finally(() => {
+                if (currentRequestId === requestIdRef.current) {
+                    setWorkspaceLoading(false);
+                }
+            });
+    }, [roomId, handleWorkspaceInfo, workspace]);
+
     return (
         <Box component="main" sx={{
             height: 'var(--app-height, 100vh)',
@@ -83,7 +162,12 @@ function Workspace() {
                     setOpenPanel={setOpenPanel}
                     panelWidth={panelWidth}
                     selectedDM={selectedDM}
-                    onSelectDM={(cid) => { setSelectedDM(cid); setMainContent('dm'); }}
+                    onSelectDM={(cid) => {
+                        setSelectedDM(cid);
+                        setMainContent('dm');
+                    }}
+                    onWorkspaceInfo={handleWorkspaceInfo}
+                    workspace={workspace}
                 />
                 <Box sx={{
                     flex: 1,
@@ -93,11 +177,13 @@ function Workspace() {
                     minWidth: 0,
                     pb: isMobile ? 'var(--bottom-padding, calc(56px + env(safe-area-inset-bottom, 0px)))' : 0
                 }}>
-                    {mainContent === 'setting' && <WorkspaceInfo setMainContent={setMainContent} />}
-                    {mainContent === 'edit' && <WorkspaceEdit onDone={() => setMainContent('setting')} />}
-                    {mainContent === 'home' && <WorkspaceHome />}
+                    {mainContent === 'setting' &&
+                        <WorkspaceInfo setMainContent={setMainContent} onWorkspaceInfo={handleWorkspaceInfo}/>}
+                    {mainContent === 'edit' && <WorkspaceEdit onDone={() => setMainContent('setting')}/>}
+                    {mainContent === 'home' &&
+                        <WorkspaceHome workspace={workspace} parentWorkspaceLoading={workspaceLoading}/>}
                     {mainContent === 'more' && <Box sx={{p: 4}}>[더보기 컨텐츠]</Box>}
-                    {mainContent === 'dm' && <WorkspaceDM selectedCid={selectedDM} />}
+                    {mainContent === 'dm' && <WorkspaceDM selectedCid={selectedDM}/>}
                 </Box>
             </Box>
         </Box>

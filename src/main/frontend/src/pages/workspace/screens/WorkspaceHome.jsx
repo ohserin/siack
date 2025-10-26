@@ -15,59 +15,53 @@ import ChannelChat from '@/pages/workspace/components/ChannelChat.jsx';
 import ChannelCard from '@/pages/workspace/components/ChannelCard.jsx';
 import ChannelsDialog from '@/pages/workspace/components/ChannelsDialog.jsx';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import api from '@/api/api.js';
 
-export default function WorkspaceHome() {
+export default function WorkspaceHome({workspace: parentWorkspace, parentWorkspaceLoading = false}) {
     const {roomId} = useParams();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(parentWorkspaceLoading);
     const [error, setError] = useState(null);
-    const [workspace, setWorkspace] = useState(null);
+    const [workspace, setWorkspace] = useState(parentWorkspace || null);
     const [selectedChannel, setSelectedChannel] = useState(null);
     const [showMore, setShowMore] = useState(false);
     const isMobile = useMediaQuery('(max-width:600px)');
 
     useEffect(() => {
-        let mounted = true;
-        if (!roomId) {
-            setError('워크스페이스 ID가 없습니다.');
+        let timeoutId = null;
+        if (parentWorkspaceLoading) {
+            setLoading(true);
+            setError(null);
+            timeoutId = setTimeout(() => {
+                setLoading(false);
+                setError('워크스페이스 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+            }, 5000);
+        }
+
+        if (parentWorkspace) {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+            setWorkspace(parentWorkspace);
+            setError(null);
             setLoading(false);
+            if (parentWorkspace?.channels && parentWorkspace.channels.length > 0) {
+                setSelectedChannel(parentWorkspace.channels[0]);
+            }
             return () => {
-                mounted = false;
+                if (timeoutId) clearTimeout(timeoutId);
             };
         }
 
-        setLoading(true);
-        setError(null);
+        if (!roomId) {
+            setError('워크스페이스 ID가 없습니다.');
+        } else {
+            setError('워크스페이스 정보를 로드할 수 없습니다. 새로고침 해주세요.');
+        }
+        setWorkspace(null);
+        setLoading(false);
+        if (timeoutId) clearTimeout(timeoutId);
+    }, [parentWorkspaceLoading, parentWorkspace, roomId]);
 
-        api.get(`/v1/workspace/${roomId}/info`)
-            .then((res) => {
-                if (!mounted) return;
-                const body = res.data || null;
-                if (!body || (typeof body.statusCode === 'number' && body.statusCode !== 200)) {
-                    setError(body?.message || '워크스페이스 정보를 불러오지 못했습니다.');
-                    setWorkspace(null);
-                } else {
-                    setWorkspace(body);
-                    if (body?.channels && body.channels.length > 0) {
-                        setSelectedChannel(body.channels[0]);
-                    }
-                }
-            })
-            .catch(() => {
-                if (!mounted) return;
-                setError('워크스페이스 정보를 불러오지 못했습니다.');
-            })
-            .finally(() => {
-                if (!mounted) return;
-                setLoading(false);
-            });
-
-        return () => {
-            mounted = false;
-        };
-    }, [roomId]);
-
-    // --- 렌더링 ---
     if (loading) return (
         <Box sx={{p: 4, display: 'flex', justifyContent: 'center'}}>
             <CircularProgress/>
@@ -134,6 +128,7 @@ export default function WorkspaceHome() {
 
                         <ChannelsDialog open={showMore} onClose={() => setShowMore(false)} channels={channels}
                                         onSelect={(c) => setSelectedChannel(c)} selectedChannel={selectedChannel}/>
+
                     </>
                 )}
             </Box>

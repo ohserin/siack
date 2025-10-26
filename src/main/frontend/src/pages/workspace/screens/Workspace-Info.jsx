@@ -8,7 +8,7 @@ import {useParams} from 'react-router-dom';
 import api from '@/api/api.js';
 import Snackbar from '@mui/material/Snackbar';
 
-function WorkspaceInfo({ setMainContent }) {
+function WorkspaceInfo({setMainContent, onWorkspaceInfo}) {
     const {roomId} = useParams();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -32,6 +32,10 @@ function WorkspaceInfo({ setMainContent }) {
                     setData(null);
                 } else {
                     setData(body);
+                    if (typeof onWorkspaceInfo === 'function') {
+                        const url = body.workspaceImage;
+                        onWorkspaceInfo({name: body.workspaceName || null, image: url || null});
+                    }
                 }
             })
             .catch(() => {
@@ -42,19 +46,24 @@ function WorkspaceInfo({ setMainContent }) {
                 if (!mounted) return;
                 setLoading(false);
             });
-        return () => { mounted = false; };
-    }, [roomId]);
+        return () => {
+            mounted = false;
+        };
+    }, [roomId, onWorkspaceInfo]);
 
-    // API 응답 -> 화면 표시용 맵핑
     const vm = useMemo(() => {
         if (!data) return null;
 
         const translateRole = (role) => {
             switch (role) {
-                case 'OWNER': return '소유자';
-                case 'ADMIN': return '관리자';
-                case 'MEMBER': return '멤버';
-                default: return '-';
+                case 'OWNER':
+                    return '소유자';
+                case 'ADMIN':
+                    return '관리자';
+                case 'MEMBER':
+                    return '멤버';
+                default:
+                    return '-';
             }
         };
 
@@ -74,7 +83,7 @@ function WorkspaceInfo({ setMainContent }) {
                 avatar: u.profileImageUrl || undefined,
             })) : [],
             plan: data.planName || 'Free',
-            storage: { used: (data.usedStorage ?? 0) + ' MB', total: '-' },
+            storage: {used: (data.usedStorage ?? 0) + ' MB', total: '-'},
             notice: [],
             myRole: translateRole(data.userRole),
         };
@@ -132,7 +141,9 @@ function WorkspaceInfo({ setMainContent }) {
             {/* 상단: 아이콘, 이름, 상태, 초대코드 */}
             <Box display="flex" alignItems="center" mb={2}>
                 <Avatar src={vm.iconUrl} variant="rounded" sx={{width: 56, height: 56, mr: 2, borderRadius: 2}}
-                        onError={(e) => { e.currentTarget.src=''; }}
+                        onError={(e) => {
+                            e.currentTarget.src = '';
+                        }}
                 >{vm.name?.[0] || 'W'}</Avatar>
                 <Box>
                     <Typography variant="h5" fontWeight={700}>{vm.name}</Typography>
@@ -147,7 +158,7 @@ function WorkspaceInfo({ setMainContent }) {
                                 onClick={() => setMainContent('edit')}
                                 aria-label="설정"
                             >
-                                <SettingsIcon />
+                                <SettingsIcon/>
                             </Button>
                         )}
                     </Box>
@@ -210,10 +221,10 @@ function WorkspaceInfo({ setMainContent }) {
                 open={snackbarOpen}
                 autoHideDuration={2000}
                 onClose={() => setSnackbarOpen(false)}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-                sx={{ mt: '40px' }}
+                anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+                sx={{mt: '40px'}}
             >
-                <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{width: '100%'}}>
                     {snackbarMsg}
                 </Alert>
             </Snackbar>
