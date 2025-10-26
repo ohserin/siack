@@ -18,27 +18,32 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import {useNavigate, useParams} from 'react-router-dom';
-import api from '@/api/api.js';
+import {useNavigate} from 'react-router-dom';
 import {useAuth} from '@/contexts/AuthContext.jsx';
 import DMList from '@/pages/workspace/components/DMList.jsx';
-import { makeMockDMData } from '@/pages/workspace/components/dmMock.js';
+import {makeMockDMData} from '@/pages/workspace/components/dmMock.js';
 
-function Sidebar({ setMainContent, panelWidth, selectedDM, onSelectDM, openPanel, setOpenPanel }) {
+function Sidebar({setMainContent, panelWidth, selectedDM, onSelectDM, openPanel, setOpenPanel, workspace}) {
     const sidebarWidth = 56;
     const isMobile = useMediaQuery('(max-width:600px)');
     const [mobileValue, setMobileValue] = React.useState('home');
     const [mobileDMOpen, setMobileDMOpen] = React.useState(false);
     const navigate = useNavigate();
-    const { roomId } = useParams(); // 경로 파라미터(Workspace ID)
 
     // --- 프로필 / 인증 정보 ---
     const {user, userData, logout} = useAuth();
     const [profileAnchorEl, setProfileAnchorEl] = React.useState(null);
     const openProfileMenu = (e) => setProfileAnchorEl(e.currentTarget);
     const closeProfileMenu = () => setProfileAnchorEl(null);
-    const handleMyInfo = () => { closeProfileMenu(); navigate('/user-setting'); };
-    const handleLogout = () => { closeProfileMenu(); logout(); navigate('/login'); };
+    const handleMyInfo = () => {
+        closeProfileMenu();
+        navigate('/user-setting');
+    };
+    const handleLogout = () => {
+        closeProfileMenu();
+        logout();
+        navigate('/login');
+    };
     const avatarUrl = (typeof userData?.profileImageUrl === 'string'
         && userData.profileImageUrl.trim() !== ''
         && userData.profileImageUrl !== 'null'
@@ -48,29 +53,19 @@ function Sidebar({ setMainContent, panelWidth, selectedDM, onSelectDM, openPanel
     const [wsImage, setWsImage] = React.useState(null);
     const [wsName, setWsName] = React.useState('WS');
 
-    // DM 리스트 임시 데이터
-    const { conversations } = React.useMemo(() => makeMockDMData(), []);
-
     React.useEffect(() => {
-        let mounted = true;
-        if (!roomId) return;
-        api.get(`/v1/workspace/${roomId}/info`)
-            .then(res => {
-                if (!mounted) return;
-                const body = res.data;
-                if (body && body.statusCode === 200) {
-                    const url = body.workspaceImage;
-                    if (url && typeof url === 'string' && url.trim() !== '' && url !== 'null' && url !== 'undefined') {
-                        setWsImage(url);
-                    } else {
-                        setWsImage(null);
-                    }
-                    if (body.workspaceName) setWsName(body.workspaceName);
-                }
-            })
-            .catch(() => {/* fail silent */});
-        return () => { mounted = false; };
-    }, [roomId]);
+        if (!workspace) return;
+        const url = workspace.image;
+        if (url && typeof url === 'string' && url.trim() !== '' && url !== 'null' && url !== 'undefined') {
+            setWsImage(url);
+        } else {
+            setWsImage(null);
+        }
+        if (workspace.name) setWsName(workspace.name);
+    }, [workspace]);
+
+    // DM 리스트 임시 데이터
+    const {conversations} = React.useMemo(() => makeMockDMData(), []);
 
     const validWsImage = wsImage && wsImage.trim() !== '' && wsImage !== 'null' && wsImage !== 'undefined' ? wsImage : null;
 
@@ -135,8 +130,8 @@ function Sidebar({ setMainContent, panelWidth, selectedDM, onSelectDM, openPanel
                         }
                     }}
                 >
-                    <Box sx={{ p: 1, textAlign: 'center', color: 'text.secondary', fontSize: 12 }}>DM 목록</Box>
-                    <Divider />
+                    <Box sx={{p: 1, textAlign: 'center', color: 'text.secondary', fontSize: 12}}>DM 목록</Box>
+                    <Divider/>
                     <Box sx={{height: '100%', overflow: 'auto'}}>
                         <DMList
                             conversations={conversations}
@@ -215,8 +210,10 @@ function Sidebar({ setMainContent, panelWidth, selectedDM, onSelectDM, openPanel
                                     fontWeight: 700,
                                     bgcolor: '#f0f0f0'
                                 }}
-                                slotProps={{ img: { style: { objectFit: 'cover' } } }}
-                                onError={(e) => { e.currentTarget.src = ''; }}
+                                slotProps={{img: {style: {objectFit: 'cover'}}}}
+                                onError={(e) => {
+                                    e.currentTarget.src = '';
+                                }}
                             >{wsName?.[0] || 'W'}</Avatar>
                         ) : (
                             'WS'
