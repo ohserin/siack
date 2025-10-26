@@ -155,7 +155,7 @@ export default function ChannelChat({channel}) {
             <Typography variant="subtitle1" sx={{px: 2, py: 1}}>{channel.name}</Typography>
             <Box sx={{flex: 1, display: 'flex', flexDirection: 'column'}}>
                 <Box id="channel-message-scroller" ref={listRef}
-                     sx={{flex: 1, overflow: 'auto', py: 2, bgcolor: '#f7f8fa'}}>
+                     sx={{flex: 1, overflow: 'auto', py: 2, bgcolor: 'grey.200'}}>
                     {messages.length > 0 ? (
                         <>
                             <Box sx={{display: 'flex', justifyContent: 'center', mb: 2}}>
