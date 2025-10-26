@@ -256,6 +256,18 @@ public class WorkspaceRequestService {
         int memberCount = userDTOList.size();
         long channelCount = channelRepository.countByWorkspace_WorkspaceIdAndStatusTrue(workspaceId);
 
+        // 활성 채널 조회 및 DTO 변환
+        List<ChannelVO> activeChannels = channelRepository.findByWorkspace_WorkspaceIdAndStatusTrue(workspaceId);
+        List<ResDTO_Channel> channelDTOList = new ArrayList<>();
+        for (ChannelVO ch : activeChannels) {
+            if (ch == null) continue;
+            channelDTOList.add(ResDTO_Channel.builder()
+                    .channelId(ch.getChannelId())
+                    .name(ch.getName())
+                    .description(ch.getDescription())
+                    .build());
+        }
+
         ResDTO_WorkspaceInfo dto = ResDTO_WorkspaceInfo.builder()
                 .workspaceId(workspace.getWorkspaceId())
                 .workspaceName(workspace.getName())
@@ -270,6 +282,7 @@ public class WorkspaceRequestService {
                 .channelCount((int) channelCount)
                 .inviteCode(workspace.getInviteCode())
                 .users(userDTOList)
+                .channels(channelDTOList)
                 .build();
         dto.setStatusCode(HttpStatus.OK.value());
         dto.setMessage("워크스페이스 정보");

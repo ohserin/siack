@@ -26,4 +26,7 @@ public class ResDTO_WorkspaceInfo extends ResponseDTO {
 
     // 워크스페이스 참여 유저 리스트
     private List<ResDTO_WorkspaceUser> users;
+
+    // 활성 채널 리스트 (채널 이름, 아이디, 설명)
+    private List<ResDTO_Channel> channels;
 }
