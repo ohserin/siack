@@ -21,6 +21,13 @@ spring:
     multipart:
       max-file-size: "50MB"
       max-request-size: "50MB"
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password: <REDIS_PASSWORD>
+      # TLS가 필요한 경우 아래 URL 스킴(rediss)을 사용. host/port/password 대신 url 하나로 지정합니다.
+      # url: rediss://:<REDIS_PASSWORD>@<REDIS_HOST>:<REDIS_PORT>
 
 jwt:
   secret: <JWT_SECRET>
