@@ -25,6 +25,7 @@ public class ChatServiceImpl implements ChatService {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final RedisChatPublisher redisChatPublisher;
+    private final ChatHistoryCache chatHistoryCache;
 
     @Override
     @Transactional
@@ -57,6 +58,8 @@ public class ChatServiceImpl implements ChatService {
 
         // Redis Pub/Sub 발행
         redisChatPublisher.publish(dto);
+        // Redis 히스토리 캐시에도 추가
+        chatHistoryCache.appendMessage(dto);
     }
 
     @Override
@@ -91,4 +94,3 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 }
-
