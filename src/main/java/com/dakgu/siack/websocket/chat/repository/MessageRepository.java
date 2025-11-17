@@ -10,5 +10,5 @@ import java.util.List;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
     @EntityGraph(attributePaths = {"sender", "conversation"})
-    List<Message> findByConversationOrderByCreatedAtDesc(Conversation conversation, Pageable pageable);
+    List<Message> findByConversationOrderByCreatedatDesc(Conversation conversation, Pageable pageable);
 }

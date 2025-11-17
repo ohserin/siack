@@ -12,14 +12,13 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 
-/*
- * Redis Pub/Sub으로 들어온 채팅 이벤트를 받아서
- * STOMP 목적지("/topic/chat/rooms/{roomId}")로 재전송함.
+/**
+ * Redis Pub/Sub으로 들어온 채팅 메시지를 수신해서
+ * STOMP 브로커("/topic/chat/rooms/{roomId}")로 재전송하는 역할을 하는 구독자.
  *
- * - 다중 인스턴스에서 한 노드가 발행한 메시지를
- *   다른 노드도 받아 동일하게 브로드캐스트하게 함
- * - Redis에는 JSON 문자열로 올라옴 → ChatMessage로 역직렬화 후 전송함
- * - JSON 스키마/코드 안 맞으면 역직렬화 예외 날 수 있으니 주의
+ * - 여러 서버 인스턴스를 띄워도, 한 인스턴스가 발행한 메시지를
+ *   다른 인스턴스들도 Redis 구독을 통해 동일하게 받아서 클라이언트에 브로드캐스트함
+ * - Redis에는 ChatMessage DTO가 JSON 문자열로 올라오고, 여기서 역직렬화 후 STOMP로 전달
  */
 @Component
 @RequiredArgsConstructor
@@ -27,18 +26,24 @@ public class RedisChatSubscriber implements MessageListener {
 
     private static final Logger log = LoggerFactory.getLogger(RedisChatSubscriber.class);
 
-    // STOMP로 클라이언트에게 메시지 보내는 템플릿
+    // STOMP로 클라이언트에게 메시지를 보내는 템플릿
     private final SimpMessagingTemplate messagingTemplate;
-    // JSON <-> 객체 변환용. 스프링 ObjectMapper 주입받아 사용
+    // JSON <-> 객체 변환용 ObjectMapper
     private final ObjectMapper objectMapper;
 
+    /**
+     * Redis Pub/Sub 채널로부터 수신된 메시지를 처리한다.
+     *
+     * 처리 순서:
+     * 1) Redis에서 온 바이트 배열을 UTF-8 문자열(JSON)로 변환
+     * 2) JSON 문자열을 ChatMessage 객체로 역직렬화
+     * 3) ChatMessage.roomId를 이용해 STOMP 목적지 "/topic/chat/rooms/{roomId}" 구성
+     * 4) messagingTemplate.convertAndSend(...)로 해당 목적지에 브로드캐스트
+     *
+     * 역직렬화 실패 등 예외가 발생하면 경고 로그를 남기고 해당 메시지만 무시한다.
+     */
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        // 수신 흐름
-        // 1) 바이트 바디 -> UTF-8 문자열 변환
-        // 2) JSON -> ChatMessage 역직렬화
-        // 3) 방 ID로 STOMP 목적지 경로 구성
-        // 4) convertAndSend로 브로드캐스트
         try {
             String json = new String(message.getBody(), StandardCharsets.UTF_8);
             ChatMessage chat = objectMapper.readValue(json, ChatMessage.class);
