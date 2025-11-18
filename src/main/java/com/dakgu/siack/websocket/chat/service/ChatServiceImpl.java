@@ -85,13 +85,40 @@ public class ChatServiceImpl implements ChatService {
      * - 화면에서 "누가 입장했습니다" 같은 시스템 메시지 표현용으로 사용 가능
      */
     @Override
+    @Transactional
     public void notifyJoin(String roomId, String username) {
+        Objects.requireNonNull(roomId, "roomId is required");
+        Conversation conversation;
+
+        // 1) roomId가 숫자인 경우 해당 Conversation 조회, 없으면 새로 생성
+        try {
+            Long convId = Long.valueOf(roomId);
+            conversation = conversationRepository.findById(convId)
+                    .orElseGet(() -> {
+                        Conversation c = new Conversation();
+                        // 필요시 초기값 설정 (예: title, createdBy 등)
+                        return conversationRepository.save(c);
+                    });
+        } catch (NumberFormatException ex) {
+            // 2) roomId가 숫자가 아니면 새 Conversation 생성
+            conversation = new Conversation();
+            // 필요시 초기값 설정
+            conversation = conversationRepository.save(conversation);
+        }
+
+        // DB에 저장된 실제 conversationId를 메시지에 반영
+        String publishRoomId = String.valueOf(conversation.getConversationId());
+
         ChatMessage join = ChatMessage.builder()
                 .type(ChatMessageType.JOIN)
-                .roomId(roomId)
+                .roomId(publishRoomId)
                 .sender(username)
                 .timestamp(Instant.now())
                 .build();
+
+        // 권장: 퍼블리시는 트랜잭션 커밋 이후에 발생시키는 것이 안전함.
+        // 현재 코드는 즉시 퍼블리시.
+        // ApplicationEventPublisher + @TransactionalEventListener(AFTER_COMMIT)로 변경할 것.
         redisChatPublisher.publish(join);
     }
 

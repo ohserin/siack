@@ -19,7 +19,7 @@ import org.springframework.data.redis.connection.MessageListener;
  *
  * 참고
  * - 단일 인스턴스면 컨테이너 필수 X
- * - TLS가 필요하면 application.yml에서 rediss:// URL 사용
+ * - TLS가 필요하면 application.yml에서 redis:// URL 사용
  */
 @Configuration
 public class RedisConfig {
