@@ -6,6 +6,9 @@ import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.ReqDTO_CreateChannel;
 import com.dakgu.siack.workspace.repository.*;
 import com.dakgu.siack.workspace.vo.*;
+import com.dakgu.siack.websocket.chat.domain.Conversation;
+import com.dakgu.siack.websocket.chat.domain.ConversationType;
+import com.dakgu.siack.websocket.chat.repository.ConversationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,7 @@ public class ChannelRequestService {
     private final ChannelRepository channelRepository;
     private final ChannelMemberRepository channelMemberRepository;
     private final UserService userService;
+    private final ConversationRepository conversationRepository;
 
     /**
      * 워크스페이스 내 채널을 생성합니다.
@@ -89,7 +93,20 @@ public class ChannelRequestService {
                 .build();
         channelMemberRepository.save(creatorMembership);
 
+        try {
+            Conversation conversation = Conversation.builder()
+                    .type(ConversationType.CHANNEL)
+                    .workspace(workspace)
+                    .channel(channel)
+                    .title(channel.getName())
+                    .createdBy(user)
+                    .build();
+            conversationRepository.save(conversation);
+        } catch (Exception ex) {
+            log.warn("채널 생성 시 Conversation 생성 실패: {}", ex.getMessage());
+            // 채널/워크스페이스 생성은 성공했으므로 예외를 그대로 던지지 않음 > 나중에 방어코드 추가예정
+        }
+
         return new ResponseDTO(HttpStatus.CREATED.value(), "채널이 생성되었습니다.");
     }
 }
-

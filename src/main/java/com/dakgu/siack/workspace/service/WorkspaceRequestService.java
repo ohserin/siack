@@ -16,6 +16,9 @@ import com.dakgu.siack.workspace.vo.ChannelVO;
 import com.dakgu.siack.workspace.vo.WorkspaceMemberVO;
 import com.dakgu.siack.workspace.vo.WorkspaceVO;
 import com.dakgu.siack.file.dto.FileStorageResult;
+import com.dakgu.siack.websocket.chat.domain.Conversation;
+import com.dakgu.siack.websocket.chat.domain.ConversationType;
+import com.dakgu.siack.websocket.chat.repository.ConversationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -38,6 +41,7 @@ public class WorkspaceRequestService {
     private final ChannelMemberRepository channelMemberRepository;
     private final WorkspaceMemberRepository workspaceMemberRepository;
     private final FileUploadService uploadService;
+    private final ConversationRepository conversationRepository;
 
     /**
      * 워크스페이스를 생성합니다. (기본 채널 및 OWNER 멤버 자동 생성)
@@ -82,6 +86,21 @@ public class WorkspaceRequestService {
                 .status(true)
                 .build();
         channelMemberRepository.save(member);
+
+        // 기본 채널에 해당하는 Conversation 엔티티 생성
+        try {
+            Conversation conversation = Conversation.builder()
+                    .type(ConversationType.CHANNEL)
+                    .workspace(workspace)
+                    .channel(defaultChannel)
+                    .title(defaultChannel.getName())
+                    .createdBy(user)
+                    .build();
+            conversationRepository.save(conversation);
+        } catch (Exception ex) {
+            log.warn("기본 채팅 Conversation 생성 중 예외 발생: {}", ex.getMessage());
+            // 채널/워크스페이스 생성은 성공했으므로 예외를 그대로 던지지 않음 > 나중에 방어코드 추가예정
+        }
 
         return new ResponseDTO(HttpStatus.CREATED.value(), "워크스페이스가 생성되었습니다.");
     }
