@@ -318,22 +318,51 @@ public class WorkspaceRequestService {
     public ResponseDTO joinWorkspace(Authentication authentication, ReqDTO_JoinWorkspace request) {
         User user = getAuthenticatedUser(authentication);
         String code = request.getCode();
-        // 워크스페이스 코드로 조회
+
+        // 1. 워크스페이스 조회
         WorkspaceVO workspace = workspaceRepository.findByInviteCode(code);
         if (workspace == null) {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(),"유효하지 않은 초대코드입니다.");
         }
-        // 이미 멤버인지 확인
-        boolean isMember = workspaceMemberRepository.existsByWorkspace_WorkspaceIdAndUser_Userid(workspace.getWorkspaceId(), user.getUserid());
+
+        // 2. 이미 멤버인지 확인
+        boolean isMember = workspaceMemberRepository
+                .existsByWorkspace_WorkspaceIdAndUser_Userid(workspace.getWorkspaceId(), user.getUserid());
         if (isMember) {
             return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 참여한 워크스페이스입니다.");
         }
-        // 멤버로 추가
+
+        // 3. 워크스페이스 멤버로 추가
         WorkspaceMemberVO member = new WorkspaceMemberVO();
         member.setWorkspace(workspace);
         member.setUser(user);
         member.setRole("MEMBER");
         workspaceMemberRepository.save(member);
+
+        // 4. 이 워크스페이스의 공개 + 활성 채널 전부 조회
+        List<ChannelVO> publicChannels =
+                channelRepository.findByWorkspace_WorkspaceIdAndIsPrivateFalseAndStatusTrue(
+                        workspace.getWorkspaceId()
+                );
+
+        // 5. 각 공개 채널에 채널 멤버 추가
+        for (ChannelVO channel : publicChannels) {
+            boolean alreadyInChannel = channelMemberRepository
+                    .existsByChannel_ChannelIdAndUser_Userid(channel.getChannelId(), user.getUserid());
+            if (alreadyInChannel) {
+                continue;
+            }
+
+            ChannelMemberVO channelMember = ChannelMemberVO.builder()
+                    .channel(channel)
+                    .user(user)
+                    .role("MEMBER")
+                    .status(true)
+                    .build();
+
+            channelMemberRepository.save(channelMember);
+        }
+
         return new ResponseDTO(HttpStatus.OK.value(), "워크스페이스에 참여했습니다.");
     }
 

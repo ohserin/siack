@@ -11,4 +11,7 @@ public interface ChannelRepository extends JpaRepository<ChannelVO, Long> {
 
     // 활성 채널 목록 조회
     List<ChannelVO> findByWorkspace_WorkspaceIdAndStatusTrue(Long workspaceId);
+
+    // 워크스페이스 내 공개 + 활성 채널
+    List<ChannelVO> findByWorkspace_WorkspaceIdAndIsPrivateFalseAndStatusTrue(Long workspaceId);
 }
