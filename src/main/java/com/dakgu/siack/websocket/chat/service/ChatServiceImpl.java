@@ -8,7 +8,6 @@ import com.dakgu.siack.websocket.chat.dto.ChatMessage;
 import com.dakgu.siack.websocket.chat.dto.ChatMessageType;
 import com.dakgu.siack.websocket.chat.redis.RedisChatPublisher;
 import com.dakgu.siack.websocket.chat.repository.ConversationRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
