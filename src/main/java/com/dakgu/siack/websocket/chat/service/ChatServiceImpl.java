@@ -86,23 +86,10 @@ public class ChatServiceImpl implements ChatService {
     @Transactional
     public void notifyJoin(String roomId, String username) {
         Objects.requireNonNull(roomId, "roomId is required");
-        Conversation conversation;
+        Objects.requireNonNull(username, "username is required");
 
-        // 1) roomId가 숫자인 경우 해당 Conversation 조회, 없으면 새로 생성
-        try {
-            Long convId = Long.valueOf(roomId);
-            conversation = conversationRepository.findById(convId)
-                    .orElseGet(() -> {
-                        Conversation c = new Conversation();
-                        // 필요시 초기값 설정 (예: title, createdBy 등)
-                        return conversationRepository.save(c);
-                    });
-        } catch (NumberFormatException ex) {
-            // 2) roomId가 숫자가 아니면 새 Conversation 생성
-            conversation = new Conversation();
-            // 필요시 초기값 설정
-            conversation = conversationRepository.save(conversation);
-        }
+        // 개선: 중복 로직을 private 메서드로 분리하여 가독성 및 재사용성 향상
+        Conversation conversation = findOrCreateConversation(roomId);
 
         // DB에 저장된 실제 conversationId를 메시지에 반영
         String publishRoomId = String.valueOf(conversation.getConversationId());
@@ -153,5 +140,33 @@ public class ChatServiceImpl implements ChatService {
         if (message.getContent() == null || message.getContent().isBlank()) {
             throw new IllegalArgumentException("content is required");
         }
+    }
+
+    /**
+     * roomId를 기반으로 Conversation을 찾거나 새로 생성하는 헬퍼 메서드.
+     *
+     * @param roomId 대화방 ID
+     * @return 조회 또는 생성된 Conversation 엔티티
+     */
+    private Conversation findOrCreateConversation(String roomId) {
+        try {
+            Long convId = Long.valueOf(roomId);
+            // 숫자로 변환 가능한 roomId인 경우, ID로 조회하거나 없으면 새로 생성
+            return conversationRepository.findById(convId)
+                    .orElseGet(this::createNewConversation);
+        } catch (NumberFormatException ex) {
+            // roomId가 숫자가 아닌 경우(예: 임시 ID), 새로운 대화방 생성
+            return createNewConversation();
+        }
+    }
+
+    /**
+     * 새로운 Conversation을 생성하고 저장합니다.
+     *
+     * @return 저장된 Conversation 엔티티
+     */
+    private Conversation createNewConversation() {
+        // TODO: 필요시 title, createdBy 등 초기값 설정
+        return conversationRepository.save(new Conversation());
     }
 }
