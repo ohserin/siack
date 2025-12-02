@@ -8,7 +8,6 @@ import com.dakgu.siack.websocket.chat.dto.ChatMessage;
 import com.dakgu.siack.websocket.chat.dto.ChatMessageType;
 import com.dakgu.siack.websocket.chat.redis.RedisChatPublisher;
 import com.dakgu.siack.websocket.chat.repository.ConversationRepository;
-import com.dakgu.siack.websocket.chat.repository.MessageRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,11 +20,11 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
 
-    private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final RedisChatPublisher redisChatPublisher;
     private final ChatHistoryCache chatHistoryCache;
+    private final MessageBatchService messageBatchService;
 
     /**
      * 채팅 메시지를 특정 대화방(Conversation)으로 전송하는 핵심 비즈니스 로직.
@@ -35,7 +34,7 @@ public class ChatServiceImpl implements ChatService {
      * 2) roomId(=ConversationID)를 이용해 대화방 존재 여부 확인
      * 3) sender(=UserID)를 이용해 발신자 존재 여부 확인
      *    - 추후 ConversationParticipant 등을 통해 "해당 방에 속한 유저인지" 권한 체크 추가 예정
-     * 4) Message 엔티티 생성 후 DB에 저장
+     * 4) Message 엔티티 생성 후 DB 저장을 위해 배치 서비스에 추가
      * 5) DTO에 timestamp/type 기본값 세팅 (없을 경우)
      * 6) Redis Pub/Sub으로 메시지 발행 (다른 서버 인스턴스에도 실시간 전파)
      * 7) Redis 히스토리 캐시에 메시지 추가 (입장 시 과거 내역 조회용)
@@ -55,14 +54,14 @@ public class ChatServiceImpl implements ChatService {
 
         // TODO: 실제로는 ConversationParticipant 확인 등으로 방 참여 여부 검증 필요
 
-        // 4) Message 엔티티 생성 및 저장
+        // 4) Message 엔티티 생성 및 배치 저장을 위해 큐에 추가
         Message message = Message.builder()
                 .conversation(conversation)
                 .sender(sender)
                 .content(dto.getContent())
                 .build();
 
-        messageRepository.save(message);
+        messageBatchService.addMessageToQueue(message);
 
         // 5) DTO 기본값 세팅
         if (dto.getTimestamp() == null) {
