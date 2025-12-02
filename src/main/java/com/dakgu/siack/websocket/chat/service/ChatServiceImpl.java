@@ -31,8 +31,8 @@ public class ChatServiceImpl implements ChatService {
      *
      * 처리 단계:
      * 1) DTO 유효성 검사 (roomId, content 등 필수 값 확인)
-     * 2) roomId(=ConversationID)를 이용해 대화방 존재 여부 확인
-     * 3) sender(=UserID)를 이용해 발신자 존재 여부 확인
+     * 2) roomId(=ConversationID)를 이용해 대화방 프록시 조회 (성능 최적화)
+     * 3) sender(=UserID)를 이용해 발신자 프록시 조회 (성능 최적화)
      *    - 추후 ConversationParticipant 등을 통해 "해당 방에 속한 유저인지" 권한 체크 추가 예정
      * 4) Message 엔티티 생성 후 DB 저장을 위해 배치 서비스에 추가
      * 5) DTO에 timestamp/type 기본값 세팅 (없을 경우)
@@ -44,13 +44,13 @@ public class ChatServiceImpl implements ChatService {
     public void sendToRoom(ChatMessage dto) {
         validate(dto);
 
-        // 2) 대화방 존재 여부 확인
-        Conversation conversation = conversationRepository.findById(Long.valueOf(dto.getRoomId()))
-                .orElseThrow(() -> new EntityNotFoundException("Conversation not found: " + dto.getRoomId()));
+        // 2) 대화방 프록시 조회 (JPA 성능 최적화)
+        // INSERT 시 FK만 필요하므로, 불필요한 SELECT 쿼리를 생략하고 프록시 객체를 사용합니다.
+        // 해당 ID의 엔티티가 없을 경우, 트랜잭션 커밋 시점에 DataIntegrityViolationException이 발생할 수 있습니다.
+        Conversation conversation = conversationRepository.getReferenceById(Long.valueOf(dto.getRoomId()));
 
-        // 3) 발신자(User) 존재 여부 확인
-        User sender = userRepository.findById(Long.valueOf(dto.getSender()))
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found: " + dto.getSender()));
+        // 3) 발신자(User) 프록시 조회 (JPA 성능 최적화)
+        User sender = userRepository.getReferenceById(Long.valueOf(dto.getSender()));
 
         // TODO: 실제로는 ConversationParticipant 확인 등으로 방 참여 여부 검증 필요
 
