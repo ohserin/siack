@@ -1,4 +1,4 @@
-package com.dakgu.siack.workspace.vo;
+package com.dakgu.siack.workspace.domain;
 
 import lombok.*;
 import java.math.BigDecimal;
@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @ToString
-public class PlanVO {
+public class Plan {
     private Integer planId; // 플랜 ID
     private String name; // 플랜 이름
     private String description; // 플랜 설명

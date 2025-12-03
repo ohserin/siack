@@ -11,10 +11,10 @@ import com.dakgu.siack.workspace.repository.ChannelMemberRepository;
 import com.dakgu.siack.workspace.repository.ChannelRepository;
 import com.dakgu.siack.workspace.repository.WorkspaceMemberRepository;
 import com.dakgu.siack.workspace.repository.WorkspaceRepository;
-import com.dakgu.siack.workspace.vo.ChannelMemberVO;
-import com.dakgu.siack.workspace.vo.ChannelVO;
-import com.dakgu.siack.workspace.vo.WorkspaceMemberVO;
-import com.dakgu.siack.workspace.vo.WorkspaceVO;
+import com.dakgu.siack.workspace.domain.ChannelMember;
+import com.dakgu.siack.workspace.domain.Channel;
+import com.dakgu.siack.workspace.domain.WorkspaceMember;
+import com.dakgu.siack.workspace.domain.Workspace;
 import com.dakgu.siack.file.dto.FileStorageResult;
 import com.dakgu.siack.websocket.chat.domain.Conversation;
 import com.dakgu.siack.websocket.chat.domain.ConversationType;
@@ -53,7 +53,7 @@ public class WorkspaceRequestService {
     public ResponseDTO createWorkspace(Authentication authentication, ReqDTO_CreateWorkspace request) {
         User user = getAuthenticatedUser(authentication);
         String inviteCode = getUniqueInviteCode();
-        WorkspaceVO workspace = WorkspaceVO.builder()
+        Workspace workspace = Workspace.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .owner(user)
@@ -62,7 +62,7 @@ public class WorkspaceRequestService {
                 .build();
         workspaceRepository.save(workspace);
 
-        WorkspaceMemberVO workspaceMember = WorkspaceMemberVO.builder()
+        WorkspaceMember workspaceMember = WorkspaceMember.builder()
                 .workspace(workspace)
                 .user(user)
                 .role("OWNER")
@@ -70,7 +70,7 @@ public class WorkspaceRequestService {
                 .build();
         workspaceMemberRepository.save(workspaceMember);
 
-        ChannelVO defaultChannel = ChannelVO.builder()
+        Channel defaultChannel = Channel.builder()
                 .workspace(workspace)
                 .name("일반")
                 .description("워크스페이스 채널")
@@ -79,7 +79,7 @@ public class WorkspaceRequestService {
                 .build();
         channelRepository.save(defaultChannel);
 
-        ChannelMemberVO member = ChannelMemberVO.builder()
+        ChannelMember member = ChannelMember.builder()
                 .channel(defaultChannel)
                 .user(user)
                 .role("ADMIN")
@@ -114,7 +114,7 @@ public class WorkspaceRequestService {
     @Transactional
     public ResponseDTO deleteWorkspace(Authentication authentication, Long workspaceId) {
         User user = getAuthenticatedUser(authentication);
-        WorkspaceVO workspace = getWorkspaceOrThrow(workspaceId);
+        Workspace workspace = getWorkspaceOrThrow(workspaceId);
         validateOwner(user, workspace);
         workspace.setStatus(false);
         workspaceRepository.save(workspace);
@@ -129,12 +129,12 @@ public class WorkspaceRequestService {
     @Transactional(readOnly = true)
     public List<ResDTO_GetWorkspace> getWorkspaceList(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
-        List<WorkspaceMemberVO> myMemberships = workspaceMemberRepository.findByUser_Userid(user.getUserid());
+        List<WorkspaceMember> myMemberships = workspaceMemberRepository.findByUser_Userid(user.getUserid());
         Set<Long> workspaceIdSet = new HashSet<>();
         List<ResDTO_GetWorkspace> workspaceList = new ArrayList<>();
 
-        for (WorkspaceMemberVO membership : myMemberships) {
-            WorkspaceVO workspace = membership.getWorkspace();
+        for (WorkspaceMember membership : myMemberships) {
+            Workspace workspace = membership.getWorkspace();
             if (workspace == null || !workspace.isStatus() || !workspaceIdSet.add(workspace.getWorkspaceId())) continue;
             Long ownerId = Optional.ofNullable(workspace.getOwner()).map(User::getUserid).orElse(null);
             List<ResDTO_WorkspaceUser> userDTOList = getWorkspaceUserDTOList(workspace.getWorkspaceId());
@@ -159,7 +159,7 @@ public class WorkspaceRequestService {
     @Transactional
     public ResponseDTO modifyWorkspace(Authentication authentication, ReqDTO_ModifyWorkspace request) {
         User user = getAuthenticatedUser(authentication);
-        WorkspaceVO workspace = getWorkspaceOrThrow(request.getWorkspaceId());
+        Workspace workspace = getWorkspaceOrThrow(request.getWorkspaceId());
         validateOwner(user, workspace);
         boolean changed = false;
         if (request.getWorkspaceName() != null && !request.getWorkspaceName().equals(workspace.getName())) {
@@ -195,7 +195,7 @@ public class WorkspaceRequestService {
     @Transactional
     public ResDTO_UploadWorkspaceImage uploadWorkspaceImage(Authentication authentication, MultipartFile file, Long workspaceId) throws IOException {
         getAuthenticatedUser(authentication);
-        WorkspaceVO workspace = getWorkspaceOrThrow(workspaceId);
+        Workspace workspace = getWorkspaceOrThrow(workspaceId);
 
         if (!isAllowedImageExtension(file)) {
             return new ResDTO_UploadWorkspaceImage(HttpStatus.BAD_REQUEST.value(), "이미지 파일(jpg, jpeg, png)만 업로드 가능합니다.", null);
@@ -225,14 +225,14 @@ public class WorkspaceRequestService {
             return dto;
         }
 
-        Optional<WorkspaceVO> opt = workspaceRepository.findById(workspaceId);
+        Optional<Workspace> opt = workspaceRepository.findById(workspaceId);
         if (opt.isEmpty()) {
             ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
             dto.setStatusCode(HttpStatus.NOT_FOUND.value());
             dto.setMessage("워크스페이스를 찾을 수 없습니다.");
             return dto;
         }
-        WorkspaceVO workspace = opt.get();
+        Workspace workspace = opt.get();
         if (!workspace.isStatus()) {
             ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
             dto.setStatusCode(HttpStatus.BAD_REQUEST.value());
@@ -241,9 +241,9 @@ public class WorkspaceRequestService {
         }
 
         // 멤버십 확인 및 사용자 역할 조회
-        Optional<WorkspaceMemberVO> membershipOpt = (user != null) ? workspaceMemberRepository
+        Optional<WorkspaceMember> membershipOpt = (user != null) ? workspaceMemberRepository
                 .findByWorkspace_WorkspaceIdAndUser_Userid(workspaceId, user.getUserid())
-                .filter(WorkspaceMemberVO::isStatus) : Optional.empty();
+                .filter(WorkspaceMember::isStatus) : Optional.empty();
 
         if (membershipOpt.isEmpty()) {
             ResDTO_WorkspaceInfo dto = new ResDTO_WorkspaceInfo();
@@ -276,9 +276,9 @@ public class WorkspaceRequestService {
         long channelCount = channelRepository.countByWorkspace_WorkspaceIdAndStatusTrue(workspaceId);
 
         // 활성 채널 조회 및 DTO 변환
-        List<ChannelVO> activeChannels = channelRepository.findByWorkspace_WorkspaceIdAndStatusTrue(workspaceId);
+        List<Channel> activeChannels = channelRepository.findByWorkspace_WorkspaceIdAndStatusTrue(workspaceId);
         List<ResDTO_Channel> channelDTOList = new ArrayList<>();
-        for (ChannelVO ch : activeChannels) {
+        for (Channel ch : activeChannels) {
             if (ch == null) continue;
             channelDTOList.add(ResDTO_Channel.builder()
                     .channelId(ch.getChannelId())
@@ -320,7 +320,7 @@ public class WorkspaceRequestService {
         String code = request.getCode();
 
         // 1. 워크스페이스 조회
-        WorkspaceVO workspace = workspaceRepository.findByInviteCode(code);
+        Workspace workspace = workspaceRepository.findByInviteCode(code);
         if (workspace == null) {
             return new ResponseDTO(HttpStatus.NOT_FOUND.value(),"유효하지 않은 초대코드입니다.");
         }
@@ -333,27 +333,27 @@ public class WorkspaceRequestService {
         }
 
         // 3. 워크스페이스 멤버로 추가
-        WorkspaceMemberVO member = new WorkspaceMemberVO();
+        WorkspaceMember member = new WorkspaceMember();
         member.setWorkspace(workspace);
         member.setUser(user);
         member.setRole("MEMBER");
         workspaceMemberRepository.save(member);
 
         // 4. 이 워크스페이스의 공개 + 활성 채널 전부 조회
-        List<ChannelVO> publicChannels =
+        List<Channel> publicChannels =
                 channelRepository.findByWorkspace_WorkspaceIdAndIsPrivateFalseAndStatusTrue(
                         workspace.getWorkspaceId()
                 );
 
         // 5. 각 공개 채널에 채널 멤버 추가
-        for (ChannelVO channel : publicChannels) {
+        for (Channel channel : publicChannels) {
             boolean alreadyInChannel = channelMemberRepository
                     .existsByChannel_ChannelIdAndUser_Userid(channel.getChannelId(), user.getUserid());
             if (alreadyInChannel) {
                 continue;
             }
 
-            ChannelMemberVO channelMember = ChannelMemberVO.builder()
+            ChannelMember channelMember = ChannelMember.builder()
                     .channel(channel)
                     .user(user)
                     .role("MEMBER")
@@ -438,9 +438,9 @@ public class WorkspaceRequestService {
      * @return WorkspaceVO 엔티티
      * @throws IllegalArgumentException 워크스페이스 없음
      */
-    private WorkspaceVO getWorkspaceOrThrow(Long workspaceId) {
+    private Workspace getWorkspaceOrThrow(Long workspaceId) {
         if (workspaceId == null) throw new IllegalArgumentException("워크스페이스 ID가 필요합니다.");
-        WorkspaceVO workspace = workspaceRepository.findById(workspaceId)
+        Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
         if (!workspace.isStatus()) {
             throw new IllegalArgumentException("삭제된 워크스페이스입니다.");
@@ -454,7 +454,7 @@ public class WorkspaceRequestService {
      * @param workspace 워크스페이스
      * @throws SecurityException 소유자 아님
      */
-    private void validateOwner(User user, WorkspaceVO workspace) {
+    private void validateOwner(User user, Workspace workspace) {
         if (!workspace.getOwner().getUserid().equals(user.getUserid())) {
             throw new SecurityException("워크스페이스 소유자만 작업할 수 있습니다.");
         }
@@ -466,9 +466,9 @@ public class WorkspaceRequestService {
      * @return WorkspaceUserDTO 리스트
      */
     private List<ResDTO_WorkspaceUser> getWorkspaceUserDTOList(Long workspaceId) {
-        List<WorkspaceMemberVO> members = workspaceMemberRepository.findByWorkspace_WorkspaceId(workspaceId);
+        List<WorkspaceMember> members = workspaceMemberRepository.findByWorkspace_WorkspaceId(workspaceId);
         List<ResDTO_WorkspaceUser> userDTOList = new ArrayList<>();
-        for (WorkspaceMemberVO member : members) {
+        for (WorkspaceMember member : members) {
             if (member == null || !member.isStatus()) continue; // 비활성 멤버 제외
             User memberUser = member.getUser();
             if (memberUser == null || !memberUser.isUseyn()) continue; // 비활성 사용자 제외

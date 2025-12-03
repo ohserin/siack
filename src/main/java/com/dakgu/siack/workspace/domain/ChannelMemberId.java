@@ -1,4 +1,4 @@
-package com.dakgu.siack.workspace.vo;
+package com.dakgu.siack.workspace.domain;
 
 import lombok.*;
 

@@ -1,4 +1,4 @@
-package com.dakgu.siack.workspace.vo;
+package com.dakgu.siack.workspace.domain;
 
 import com.dakgu.siack.user.vo.User;
 import jakarta.persistence.*;
@@ -13,11 +13,11 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "sdw_workspace_member")
 @IdClass(WorkspaceMemberId.class)
-public class WorkspaceMemberVO {
+public class WorkspaceMember {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WORKSPACEID", referencedColumnName = "WORKSPACEID")
-    private WorkspaceVO workspace;
+    private Workspace workspace;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)

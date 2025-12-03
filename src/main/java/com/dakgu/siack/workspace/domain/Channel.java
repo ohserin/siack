@@ -1,4 +1,4 @@
-package com.dakgu.siack.workspace.vo;
+package com.dakgu.siack.workspace.domain;
 
 import com.dakgu.siack.utils.Timestamp;
 import jakarta.persistence.*;
@@ -11,7 +11,7 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "sdw_channel")
-public class ChannelVO extends Timestamp {
+public class Channel extends Timestamp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +20,7 @@ public class ChannelVO extends Timestamp {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WORKSPACEID", nullable = false)
-    private WorkspaceVO workspace;
+    private Workspace workspace;
 
     @Column(nullable = false, length = 255)
     private String name;

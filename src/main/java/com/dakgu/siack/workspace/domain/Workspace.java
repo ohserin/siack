@@ -1,4 +1,4 @@
-package com.dakgu.siack.workspace.vo;
+package com.dakgu.siack.workspace.domain;
 
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.utils.Timestamp;
@@ -16,7 +16,7 @@ import lombok.Setter;
 @Builder
 @Entity
 @Table(name = "sdw_workspace")
-public class WorkspaceVO extends Timestamp {
+public class Workspace extends Timestamp {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

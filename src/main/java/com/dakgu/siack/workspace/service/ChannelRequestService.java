@@ -5,7 +5,7 @@ import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.utils.ResponseDTO;
 import com.dakgu.siack.workspace.dto.ReqDTO_CreateChannel;
 import com.dakgu.siack.workspace.repository.*;
-import com.dakgu.siack.workspace.vo.*;
+import com.dakgu.siack.workspace.domain.*;
 import com.dakgu.siack.websocket.chat.domain.Conversation;
 import com.dakgu.siack.websocket.chat.domain.ConversationType;
 import com.dakgu.siack.websocket.chat.repository.ConversationRepository;
@@ -56,7 +56,7 @@ public class ChannelRequestService {
         }
         String normalizedName = request.getName().trim();
 
-        WorkspaceVO workspace = workspaceRepository.findById(workspaceId)
+        Workspace workspace = workspaceRepository.findById(workspaceId)
                 .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다."));
         if (!workspace.isStatus()) {
             return new ResponseDTO(HttpStatus.BAD_REQUEST.value(), "삭제된 워크스페이스입니다.");
@@ -65,7 +65,7 @@ public class ChannelRequestService {
         // 워크스페이스 멤버 여부 확인
         boolean isMember = workspaceMemberRepository
                 .findByWorkspace_WorkspaceIdAndUser_Userid(workspaceId, user.getUserid())
-                .filter(WorkspaceMemberVO::isStatus)
+                .filter(WorkspaceMember::isStatus)
                 .isPresent();
         if (!isMember) {
             return new ResponseDTO(HttpStatus.FORBIDDEN.value(), "워크스페이스 멤버만 채널을 생성할 수 있습니다.");
@@ -76,7 +76,7 @@ public class ChannelRequestService {
             return new ResponseDTO(HttpStatus.CONFLICT.value(), "이미 존재하는 채널 이름입니다.");
         }
 
-        ChannelVO channel = ChannelVO.builder()
+        Channel channel = Channel.builder()
                 .workspace(workspace)
                 .name(normalizedName)
                 .description(request.getDescription())
@@ -85,7 +85,7 @@ public class ChannelRequestService {
                 .build();
         channelRepository.save(channel);
 
-        ChannelMemberVO creatorMembership = ChannelMemberVO.builder()
+        ChannelMember creatorMembership = ChannelMember.builder()
                 .channel(channel)
                 .user(user)
                 .role("ADMIN")

@@ -2,7 +2,7 @@ package com.dakgu.siack.workspace.batch;
 
 import com.dakgu.siack.workspace.repository.WorkspaceRepository;
 import com.dakgu.siack.workspace.util.InviteCodeUtil;
-import com.dakgu.siack.workspace.vo.WorkspaceVO;
+import com.dakgu.siack.workspace.domain.Workspace;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -25,13 +25,13 @@ public class WorkspaceInviteCodeBatch {
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void refreshAllInviteCodes() {
-        List<WorkspaceVO> all = workspaceRepository.findAll();
+        List<Workspace> all = workspaceRepository.findAll();
         Set<String> usedCodes = new HashSet<>();
         // 이미 DB에 존재하는 코드도 포함 (동시성 대비)
         workspaceRepository.findAll().forEach(ws -> {
             if (ws.getInviteCode() != null) usedCodes.add(ws.getInviteCode());
         });
-        for (WorkspaceVO ws : all) {
+        for (Workspace ws : all) {
             String newCode;
             do {
                 newCode = InviteCodeUtil.generateInviteCode();

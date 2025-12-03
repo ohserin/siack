@@ -1,4 +1,4 @@
-package com.dakgu.siack.workspace.vo;
+package com.dakgu.siack.workspace.domain;
 
 import com.dakgu.siack.user.vo.User;
 import jakarta.persistence.*;
@@ -12,11 +12,11 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChannelMemberVO {
+public class ChannelMember {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CHANNELID", nullable = false)
-    private ChannelVO channel;
+    private Channel channel;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
