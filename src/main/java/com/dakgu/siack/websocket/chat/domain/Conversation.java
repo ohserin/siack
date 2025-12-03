@@ -2,8 +2,8 @@ package com.dakgu.siack.websocket.chat.domain;
 
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.utils.Timestamp;
-import com.dakgu.siack.workspace.vo.ChannelVO;
-import com.dakgu.siack.workspace.vo.WorkspaceVO;
+import com.dakgu.siack.workspace.domain.Channel;
+import com.dakgu.siack.workspace.domain.Workspace;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,11 +31,11 @@ public class Conversation extends Timestamp {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "WORKSPACEID", nullable = false)
-    private WorkspaceVO workspace;
+    private Workspace workspace;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CHANNELID")
-    private ChannelVO channel; // TYPE=0일 때만 사용
+    private Channel channel; // TYPE=0일 때만 사용
 
     @Column(name = "TITLE", length = 255)
     private String title; // 그룹 DM 제목 등
