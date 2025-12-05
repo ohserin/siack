@@ -1,215 +1,146 @@
-import React, {useEffect, useRef, useState, useLayoutEffect} from 'react';
-import {Box, IconButton, OutlinedInput, Typography, Avatar, Chip} from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
+import React, {useState, useEffect, useRef} from 'react';
+import {Client} from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import {
+    Box,
+    TextField,
+    Button,
+    List,
+    ListItem,
+    ListItemText,
+    Paper,
+    Typography,
+    CircularProgress,
+    Alert
+} from '@mui/material';
+import api from '@/api/api.js';
 
-function MessageBubble({meId, msg}) {
-    const isMine = msg.sender?.id === meId;
-    const timeText = msg.ts ? new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '';
-    return (
-        <Box sx={{display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', px: 2, mb: 1}}>
-            <Box sx={{display: 'flex', maxWidth: '70%', gap: 1, flexDirection: isMine ? 'row-reverse' : 'row'}}>
-                {!isMine && (
-                    <Avatar sx={{width: 28, height: 28, bgcolor: '#e0e0e0'}}>
-                        {msg.sender?.name?.[0] || '?'}
-                    </Avatar>
-                )}
-                <Box>
-                    {!isMine && (
-                        <Typography variant="caption" sx={{ml: 0.5, color: 'text.secondary'}}>
-                            {msg.sender?.name}
-                        </Typography>
-                    )}
-                    {/* 말풍선과 시간(옆)에 대한 행 레이아웃 */}
-                    <Box sx={{display: 'flex', alignItems: 'flex-end', gap: 0.5}}>
-                        <Box
-                            sx={{
-                                mt: 0.25,
-                                px: 1.25,
-                                py: 0.75,
-                                borderRadius: 2,
-                                bgcolor: isMine ? 'primary.main' : 'background.paper',
-                                color: isMine ? 'primary.contrastText' : 'text.primary',
-                                boxShadow: isMine ? 'none' : '0 1px 2px rgba(0,0,0,0.08)',
-                                border: isMine ? 'none' : '1px solid',
-                                borderColor: 'divider',
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word'
-                            }}
-                        >
-                            <Typography variant="body2">{msg.text}</Typography>
-                        </Box>
+// StompJs 클라이언트 설정
+const stompConfig = {
+    webSocketFactory: () => new SockJS('http://localhost:8080/ws-stomp'),
+    reconnectDelay: 5000,
+    debug: (str) => console.log(new Date(), str),
+};
 
-                        {/* 말풍선 옆에 시간 표시 (나/타인에 따라 위치가 바뀜) */}
-                        <Typography variant="caption" sx={{color: 'text.disabled', mb: 0.5, whiteSpace: 'nowrap'}}>
-                            {timeText}
-                        </Typography>
-                    </Box>
-                </Box>
-            </Box>
-        </Box>
-    );
-}
-
-export default function ChannelChat({channel}) {
+/**
+ * 워크스페이스/채널 기반 채팅 컴포넌트
+ * @param {{ workspaceId: number, channelId: number, currentUser: { id: string, name: string } }} props
+ */
+function ChannelChat({workspaceId, channelId, currentUser}) {
+    const [conversationId, setConversationId] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [text, setText] = useState('');
-    const listRef = useRef(null);
-    const lastMessageRef = useRef(null);
-    const inputRef = useRef(null);
-    const you = {id: 'me', name: 'You'};
+    const [input, setInput] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const stompClient = useRef(null);
 
+    // 1. conversationId를 가져오는 useEffect
     useEffect(() => {
-        if (!channel) return;
-        // 샘플 메시지 세팅
-        setMessages([
-            {
-                id: `sys-${Date.now()}`,
-                sender: {id: 'system', name: 'System'},
-                text: `채널 ${channel.name}에 입장했습니다.`,
-                ts: Date.now()
-            },
-            {id: `u1-${Date.now() + 1}`, sender: {id: 'user1', name: 'Alice'}, text: '안녕하세요!', ts: Date.now() + 1000},
-        ]);
-    }, [channel]);
+        if (!workspaceId || !channelId) return;
 
-    // 공통 스크롤 정렬 함수
-    const scrollToBottom = () => {
-        const scroller = listRef.current;
-        if (!scroller) return;
+        setLoading(true);
+        setError('');
+        api.get('/api/chat/conversation', {
+            params: {workspaceId, channelId}
+        })
+            .then(res => {
+                setConversationId(res.data.conversationId);
+            })
+            .catch(() => {
+                setError("채팅방 정보를 가져오는 데 실패했습니다.");
+            })
+            .finally(() => {
+                setLoading(false);
+            });
 
-        try {
-            const rootPadding = getComputedStyle(document.documentElement).getPropertyValue('--bottom-padding');
-            if (rootPadding) {
-                const p = rootPadding.trim();
-                scroller.style.paddingBottom = p;
-                scroller.style.scrollPaddingBottom = p;
-            }
-        } catch {
-            // ignore
-        }
+    }, [workspaceId, channelId]);
 
-        // visualViewport 기반 가림 영역 계산
-        const bottomInset = (window.visualViewport && window.visualViewport.height)
-            ? Math.max(0, window.innerHeight - window.visualViewport.height - (window.visualViewport.offsetTop || 0))
-            : 0;
-
-        if (lastMessageRef.current && typeof lastMessageRef.current.scrollIntoView === 'function') {
-            try {
-                lastMessageRef.current.scrollIntoView({behavior: 'auto', block: 'end'});
-            } catch {
-                // ignore
-            }
-        }
-
-        // 수동 보정 (visualViewport가 존재하면 키보드 높이를 반영)
-        const desired = scroller.scrollHeight - scroller.clientHeight - bottomInset;
-        scroller.scrollTop = Math.max(0, desired);
-    };
-
-    // 메시지 변경 시 자동 스크롤
-    useLayoutEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    // visualViewport/포커스 이벤트에 반응해 스크롤 보정
+    // 2. conversationId를 받은 후 웹소켓을 연결하는 useEffect
     useEffect(() => {
-        const onViewportChange = () => {
-            setTimeout(scrollToBottom, 50);
+        if (!conversationId) return;
+
+        stompClient.current = new Client(stompConfig);
+
+        stompClient.current.onConnect = () => {
+            console.log('STOMP Connected!');
+
+            // 채팅방 구독
+            stompClient.current.subscribe(`/topic/chat/room/${conversationId}`, (message) => {
+                const receivedMessage = JSON.parse(message.body);
+                setMessages((prev) => [...prev, receivedMessage]);
+            });
+
+            // JOIN 메시지 발행
+            stompClient.current.publish({
+                destination: '/pub/chat/join',
+                body: JSON.stringify({roomId: conversationId, sender: currentUser.name}),
+            });
         };
 
-        window.addEventListener('resize', onViewportChange);
-        window.addEventListener('focus', onViewportChange);
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', onViewportChange);
-            window.visualViewport.addEventListener('scroll', onViewportChange);
-        }
+        stompClient.current.activate();
 
         return () => {
-            window.removeEventListener('resize', onViewportChange);
-            window.removeEventListener('focus', onViewportChange);
-            if (window.visualViewport) {
-                window.visualViewport.removeEventListener('resize', onViewportChange);
-                window.visualViewport.removeEventListener('scroll', onViewportChange);
+            if (stompClient.current?.connected) {
+                stompClient.current.deactivate();
+                console.log('STOMP Disconnected.');
             }
         };
-    }, []);
+    }, [conversationId, currentUser.name]);
 
-    const send = () => {
-        if (!text || !text.trim()) return;
-        const newMsg = {id: `m-${Date.now()}`, sender: you, text: text.trim(), ts: Date.now()};
-        setMessages((s) => [...s, newMsg]);
-        setText('');
-    };
-
-    const handleKey = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            send();
+    const handleSend = () => {
+        if (input.trim() && stompClient.current?.connected) {
+            const chatMessage = {
+                roomId: conversationId,
+                sender: currentUser.id,
+                content: input,
+                type: 'CHAT',
+            };
+            stompClient.current.publish({
+                destination: '/pub/chat/message',
+                body: JSON.stringify(chatMessage),
+            });
+            setInput('');
         }
     };
 
-    if (!channel) return null;
+    if (loading) return <Box p={4} textAlign="center"><CircularProgress/></Box>;
+    if (error) return <Box p={4}><Alert severity="error">{error}</Alert></Box>;
 
     return (
-        <Box sx={{display: 'flex', flexDirection: 'column', height: '100%'}}>
-            <Typography variant="subtitle1" sx={{px: 2, py: 1}}>{channel.name}</Typography>
-            <Box sx={{flex: 1, display: 'flex', flexDirection: 'column'}}>
-                <Box id="channel-message-scroller" ref={listRef}
-                     sx={{flex: 1, overflow: 'auto', py: 2, bgcolor: 'grey.200'}}>
-                    {messages.length > 0 ? (
-                        <>
-                            <Box sx={{display: 'flex', justifyContent: 'center', mb: 2}}>
-                                <Chip size="small" label="오늘" variant="outlined"/>
-                            </Box>
-                            {messages.map((msg, idx) => (
-                                <Box key={msg.id} ref={idx === messages.length - 1 ? lastMessageRef : null}>
-                                    <MessageBubble meId={you.id} msg={msg}/>
-                                </Box>
-                            ))}
-                        </>
-                    ) : (
-                        <Box sx={{
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'text.secondary'
-                        }}>
-                            메시지가 없습니다. 첫 메시지를 보내보세요.
-                        </Box>
-                    )}
-                </Box>
-
-                <Box sx={{
-                    p: 1,
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                    borderBottomLeftRadius: '8px',
-                    borderBottomRightRadius: '8px',
-                    overflow: 'hidden'
-                }}>
-                    <OutlinedInput
-                        inputRef={inputRef}
-                        value={text}
-                        onFocus={() => setTimeout(scrollToBottom, 50)}
-                        onChange={e => setText(e.target.value)}
-                        onKeyDown={handleKey}
-                        fullWidth
-                        multiline
-                        size="small"
-                        minRows={1}
-                        maxRows={4}
-                        placeholder="메시지 입력..."
-                        sx={{borderRadius: 2}}
-                        endAdornment={
-                            <IconButton size="small" color="primary" onClick={send} disabled={!text.trim()}>
-                                <SendIcon fontSize="small"/>
-                            </IconButton>
-                        }
-                    />
-                </Box>
+        <Paper elevation={3} sx={{p: 2, height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column'}}>
+            <Typography variant="h6" gutterBottom>
+                Channel: {channelId}
+            </Typography>
+            <Box component={Paper} sx={{flexGrow: 1, overflowY: 'auto', p: 2, mb: 2, backgroundColor: '#f5f5f5'}}>
+                <List>
+                    {messages.map((msg, index) => (
+                        <ListItem key={index}>
+                            <ListItemText
+                                primary={msg.content}
+                                secondary={`${msg.sender} - ${new Date(msg.timestamp).toLocaleTimeString()}`}
+                                sx={{
+                                    textAlign: msg.sender === currentUser.name ? 'right' : 'left',
+                                }}
+                            />
+                        </ListItem>
+                    ))}
+                </List>
             </Box>
-        </Box>
+            <Box sx={{display: 'flex'}}>
+                <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder="메시지를 입력하세요..."
+                />
+                <Button variant="contained" onClick={handleSend} sx={{ml: 1}}>
+                    전송
+                </Button>
+            </Box>
+        </Paper>
     );
 }
+
+export default ChannelChat;
