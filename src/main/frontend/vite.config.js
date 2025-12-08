@@ -5,6 +5,11 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
+    // sockjs-client 라이브러리가 'global'을 참조하여 발생하는 오류를 막기 위해
+    // 'global'을 'window' 객체로 대체하도록 설정합니다.
+    define: {
+        'global': 'window',
+    },
     plugins: [
         react(),
         visualizer({
