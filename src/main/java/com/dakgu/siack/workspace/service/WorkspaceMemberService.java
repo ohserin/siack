@@ -13,6 +13,7 @@ import com.dakgu.siack.workspace.domain.Workspace;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,6 +113,32 @@ public class WorkspaceMemberService {
         membership.setStatus(false);
         workspaceMemberRepository.save(membership);
         return new ResponseDTO(HttpStatus.OK.value(), "멤버를 추방했습니다.");
+    }
+
+    /**
+     * 사용자가 워크스페이스의 멤버(또는 소유자)인지 권한을 확인합니다.
+     * @param authentication 인증 정보
+     * @param workspaceId 워크스페이스 ID
+     * @throws AccessDeniedException 권한이 없는 경우
+     * @throws IllegalArgumentException 워크스페이스를 찾을 수 없는 경우
+     */
+    @Transactional(readOnly = true)
+    public void validateWorkspaceMember(Authentication authentication, Long workspaceId) {
+        User user = getAuthUser(authentication);
+        Long userId = user.getUserid();
+
+        boolean isMember = workspaceMemberRepository.findByWorkspace_WorkspaceIdAndUser_Userid(workspaceId, userId)
+                .map(WorkspaceMember::isStatus)
+                .orElse(false);
+
+        if (isMember) return;
+
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new IllegalArgumentException("워크스페이스를 찾을 수 없습니다. ID: " + workspaceId));
+
+        if (workspace.getOwner().getUserid().equals(userId)) return;
+
+        throw new AccessDeniedException("해당 워크스페이스의 멤버가 아닙니다.");
     }
 
     private String resolveRole(String role) {
