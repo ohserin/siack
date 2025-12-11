@@ -5,8 +5,8 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
-def now = new Date()
-def formattedDate = now.format('yyyyMMdd')
+// 빌드 날짜를 버전에 포함 (예: 20251211-dev)
+def formattedDate = new Date().format('yyyyMMdd')
 
 group = 'com.dakgu'
 version = "${formattedDate}-dev"
@@ -32,55 +32,35 @@ ext {
 }
 
 dependencies {
-    // 인증·인가(로그인, 권한 처리)를 위한 스프링 시큐리티
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // --- [Web & Core] ---
+    implementation 'org.springframework.boot:spring-boot-starter-web'           // 웹 앱 개발 필수 모듈 (Tomcat, MVC)
+    implementation 'org.springframework.boot:spring-boot-starter-validation'    // 데이터 유효성 검사
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'       // 외장 배포 시 필요한 톰캣 런타임
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'             // 개발 편의 도구
 
-    // REST API와 일반적인 웹(Controller, JSON 변환 등) 처리
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // --- [Security & Auth] ---
+    implementation 'org.springframework.boot:spring-boot-starter-security'      // 스프링 시큐리티
+    implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"                   // JWT 토큰 API
+    runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"                     // JWT 토큰 구현체
+    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${JJWT_VERSION}"                  // JWT JSON 처리를 위한 어댑터
 
-    // Lombok: getter/setter, 생성자 등 보일러플레이트 코드를 줄여줌 (컴파일 전용)
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+    // --- [Data & Database] ---
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'      // JPA 스타터
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'    // Redis 연동
+    implementation 'com.mysql:mysql-connector-j:8.4.0'                          // MySQL 드라이버
+    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.12.0'  // 쿼리 파라미터 로그 출력 도구
 
-    // 개발 편의성 도구(코드 변경 시 앱 자동 재시작 등)
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    // --- [Messaging & Network] ---
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'     // 웹소켓 및 STOMP 프로토콜 지원
+    implementation 'com.github.mwiede:jsch:2.27.2'                              // SSH 원격 접속 라이브러리
 
-    // WAR 패키징 시 톰캣은 런타임에 제공
-    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    // --- [Utilities] ---
+    implementation 'tools.jackson.core:jackson-databind:3.0.3'                  // JSON 데이터 바인딩
+    compileOnly 'org.projectlombok:lombok'                                      // 코드 간소화 라이브러리
+    annotationProcessor 'org.projectlombok:lombok'                              // 롬복 어노테이션 프로세서
 
-    // 테스트용 라이브러리(단위/통합 테스트 도구들)
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // MySQL 드라이버
-    implementation 'com.mysql:mysql-connector-j:8.4.0'
-
-    // JPA
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-    // JWT 관련 라이브러리: 토큰 생성/검증 (API + 구현체 + Jackson 어댑터 조합)
-    implementation "io.jsonwebtoken:jjwt-api:${JJWT_VERSION}"
-    runtimeOnly "io.jsonwebtoken:jjwt-jackson:${JJWT_VERSION}"
-    runtimeOnly "io.jsonwebtoken:jjwt-impl:${JJWT_VERSION}"
-
-    // 원격 서버 SSH 연결
-    implementation 'com.github.mwiede:jsch:2.27.2'
-
-    // WebSocket + STOMP
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-
-    // Redis
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-
-    // p6spy 스타터
-    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.12.0'
-
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
+    // --- [Testing] ---
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'      // 스프링 부트 통합 테스트
+    testImplementation 'org.springframework.security:spring-security-test'      // 시큐리티 관련 테스트 지원
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'                // JUnit 테스트 런처
 }

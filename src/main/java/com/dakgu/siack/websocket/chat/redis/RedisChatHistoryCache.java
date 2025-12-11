@@ -2,11 +2,10 @@ package com.dakgu.siack.websocket.chat.redis;
 
 import com.dakgu.siack.websocket.chat.dto.ChatMessage;
 import com.dakgu.siack.websocket.chat.service.ChatHistoryCache;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.Comparator;
@@ -45,7 +44,7 @@ public class RedisChatHistoryCache implements ChatHistoryCache {
             redisTemplate.opsForList().leftPush(key, json);
             redisTemplate.opsForList().trim(key, 0, 99);
             redisTemplate.expire(key, Duration.ofHours(24));
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             // 로그만 남기고 캐시 실패는 무시
         }
     }
@@ -68,7 +67,7 @@ public class RedisChatHistoryCache implements ChatHistoryCache {
                 .map(json -> {
                     try {
                         return objectMapper.readValue(json, ChatMessage.class);
-                    } catch (JsonProcessingException e) {
+                    } catch (Exception e) {
                         return null;
                     }
                 })
@@ -96,7 +95,7 @@ public class RedisChatHistoryCache implements ChatHistoryCache {
                 .map(m -> {
                     try {
                         return objectMapper.writeValueAsString(m);
-                    } catch (JsonProcessingException e) {
+                    } catch (Exception e) {
                         return null;
                     }
                 })
