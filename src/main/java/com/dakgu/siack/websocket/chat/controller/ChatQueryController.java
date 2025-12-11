@@ -5,6 +5,7 @@ import com.dakgu.siack.websocket.chat.service.ChatHistoryCache;
 import com.dakgu.siack.websocket.chat.service.ChatQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,10 +31,11 @@ public class ChatQueryController {
      */
     @GetMapping("/conversation")
     public ResponseEntity<Map<String, Long>> getConversationId(
+            Authentication authentication,
             @RequestParam("workspaceId") Long workspaceId,
             @RequestParam("channelId") Long channelId) {
 
-        Long conversationId = chatQueryService.getOrCreateConversationId(workspaceId, channelId);
+        Long conversationId = chatQueryService.getOrCreateConversation(authentication, workspaceId, channelId);
         return ResponseEntity.ok(Map.of("conversationId", conversationId));
     }
 
@@ -46,10 +48,11 @@ public class ChatQueryController {
      */
     @GetMapping("/conversations/{conversationId}/messages")
     public List<ChatMessage> getMessagesByConversation(
+            Authentication authentication,
             @PathVariable Long conversationId,
             @RequestParam(defaultValue = "50") int limit
     ) {
-        // TODO: 현재 로그인 유저가 이 Conversation에 접근 가능한지(워크스페이스/채널 멤버인지) 권한 체크 추가
+        chatQueryService.checkAccessAuthority(authentication, conversationId);
         return chatHistoryCache.getRecentMessages(String.valueOf(conversationId), limit);
     }
 }
