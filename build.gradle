@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'war'
     id 'org.springframework.boot' version '4.0.0'
     id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -35,7 +34,6 @@ dependencies {
     // --- [Web & Core] ---
     implementation 'org.springframework.boot:spring-boot-starter-web'           // 웹 앱 개발 필수 모듈 (Tomcat, MVC)
     implementation 'org.springframework.boot:spring-boot-starter-validation'    // 데이터 유효성 검사
-    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'       // 외장 배포 시 필요한 톰캣 런타임
     developmentOnly 'org.springframework.boot:spring-boot-devtools'             // 개발 편의 도구
 
     // --- [Security & Auth] ---
