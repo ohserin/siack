@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.DisposableBean;
 
@@ -12,6 +13,7 @@ import java.net.Socket;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+@Profile("dev")
 @Component
 public class ReactDevServerRunner implements ApplicationRunner, DisposableBean {
 
