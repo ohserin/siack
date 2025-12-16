@@ -15,7 +15,7 @@ import java.util.Map;
  * 채팅 관련 조회 전용 컨트롤러
  */
 @RestController
-@RequestMapping("/api/chat")
+@RequestMapping("/chat")
 @RequiredArgsConstructor
 public class ChatQueryController {
 

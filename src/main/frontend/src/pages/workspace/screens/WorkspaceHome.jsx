@@ -141,7 +141,10 @@ export default function WorkspaceHome({workspace: parentWorkspace, parentWorkspa
                 border: '1px solid',
                 borderColor: 'rgb(145 145 145 / 14%)'
             }}>
-                <ChannelChat channel={selectedChannel}/>
+                <ChannelChat 
+                    workspaceId={workspace?.workspaceId} 
+                    channelId={selectedChannel?.channelId}
+                />
             </Box>
         </Box>
     );
