@@ -46,6 +46,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // /v1/user/ 하위의 모든 경로는 인증 없이 접근 허용 (접근 허용하려면 콤마로 구분해서 추가
                         .requestMatchers("/v1/user/**", "/v1/board/list").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
