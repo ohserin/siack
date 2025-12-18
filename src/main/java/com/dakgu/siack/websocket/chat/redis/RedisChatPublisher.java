@@ -29,7 +29,7 @@ public class RedisChatPublisher {
     public void publish(ChatMessage message) {
         try {
             String payload = objectMapper.writeValueAsString(message);
-            String channel = "chat.room." + message.getRoomId();
+            String channel = "chat:room:" + message.getRoomId() + ":pub";
             redisTemplate.convertAndSend(channel, payload);
         } catch (Exception e) {
             log.warn("Failed to serialize chat message for Redis Pub/Sub", e);

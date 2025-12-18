@@ -37,7 +37,7 @@ public class RedisChatSubscriber implements MessageListener {
      * 처리 순서:
      * 1) Redis에서 온 바이트 배열을 UTF-8 문자열(JSON)로 변환
      * 2) JSON 문자열을 ChatMessage 객체로 역직렬화
-     * 3) ChatMessage.roomId를 이용해 STOMP 목적지 "/topic/chat/rooms/{roomId}" 구성
+     * 3) ChatMessage.roomId를 이용해 STOMP 목적지 "/topic/chat/room/{roomId}" 구성
      * 4) messagingTemplate.convertAndSend(...)로 해당 목적지에 브로드캐스트
      *
      * 역직렬화 실패 등 예외가 발생하면 경고 로그를 남기고 해당 메시지만 무시한다.
@@ -47,7 +47,7 @@ public class RedisChatSubscriber implements MessageListener {
         try {
             String json = new String(message.getBody(), StandardCharsets.UTF_8);
             ChatMessage chat = objectMapper.readValue(json, ChatMessage.class);
-            String dest = "/topic/chat/rooms/" + chat.getRoomId();
+            String dest = "/topic/chat/room/" + chat.getRoomId();
             messagingTemplate.convertAndSend(dest, chat);
         } catch (Exception e) {
             log.warn("Redis Pub/Sub 메시지 처리 실패", e);

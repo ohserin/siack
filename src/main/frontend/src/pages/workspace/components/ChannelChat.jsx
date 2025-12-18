@@ -4,12 +4,7 @@ import SockJS from 'sockjs-client';
 import { Box, TextField, Button, List, ListItem, ListItemText, Paper, Typography, CircularProgress, Alert } from '@mui/material';
 import api from '@/api/api.js';
 import { useAuth } from '@/contexts/AuthContext.jsx';
-
-const stompConfig = {
-    webSocketFactory: () => new SockJS('http://localhost:8080/ws-stomp'),
-    reconnectDelay: 5000,
-    debug: (str) => console.log(new Date(), str),
-};
+import { getCookie } from '@/utils/cookie.js';
 
 /**
  * 워크스페이스/채널 기반 채팅 컴포넌트
@@ -54,25 +49,42 @@ function ChannelChat({ workspaceId, channelId }) {
     useEffect(() => {
         if (!conversationId || !userData) return;
 
-        stompClient.current = new Client(stompConfig);
+        const DEFAULT_BASE = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:8080';
+        const baseURL = import.meta.env.VITE_API_BASE || DEFAULT_BASE;
+        const socketUrl = `${baseURL}/ws`;
 
-        stompClient.current.onConnect = () => {
-            stompClient.current.subscribe(`/topic/chat/room/${conversationId}`, (message) => {
-                const receivedMessage = JSON.parse(message.body);
-                setMessages((prev) => [...prev, receivedMessage]);
-            });
+        // STOMP 클라이언트 설정을 내부로 이동하여 동적 토큰 적용
+        const client = new Client({
+            webSocketFactory: () => new SockJS(socketUrl),
+            connectHeaders: {
+                // 쿠키에서 토큰을 가져와 헤더에 추가 (api.js와 동일 방식)
+                Authorization: `Bearer ${getCookie('authToken')}`,
+            },
+            reconnectDelay: 5000,
+            debug: (str) => console.log(new Date(), str),
+            onConnect: () => {
+                client.subscribe(`/topic/chat/rooms/${conversationId}`, (message) => {
+                    const receivedMessage = JSON.parse(message.body);
+                    setMessages((prev) => [...prev, receivedMessage]);
+                });
 
-            stompClient.current.publish({
-                destination: '/pub/chat/join',
-                body: JSON.stringify({ roomId: conversationId, sender: userData.username }),
-            });
-        };
+                client.publish({
+                    destination: `/siack/chat/${conversationId}/join`,
+                    body: JSON.stringify({ roomId: conversationId, sender: userData.username }),
+                });
+            },
+            onStompError: (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+            },
+        });
 
-        stompClient.current.activate();
+        stompClient.current = client;
+        client.activate();
 
         return () => {
-            if (stompClient.current?.connected) {
-                stompClient.current.deactivate();
+            if (client.connected) {
+                client.deactivate();
                 console.log('STOMP Disconnected.');
             }
         };
@@ -87,7 +99,7 @@ function ChannelChat({ workspaceId, channelId }) {
                 type: 'CHAT',
             };
             stompClient.current.publish({
-                destination: '/pub/chat/message',
+                destination: `/siack/chat/${conversationId}/send`,
                 body: JSON.stringify(chatMessage),
             });
             setInput('');

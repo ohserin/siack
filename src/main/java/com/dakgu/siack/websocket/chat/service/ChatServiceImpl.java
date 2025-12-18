@@ -23,7 +23,7 @@ public class ChatServiceImpl implements ChatService {
     private final ConversationRepository conversationRepository;
     private final UserRepository userRepository;
     private final MessageBatchService messageBatchService;
-    private final ApplicationEventPublisher eventPublisher; // 이벤트 발행기 주입
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
