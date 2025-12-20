@@ -6,6 +6,7 @@ import com.dakgu.siack.websocket.chat.event.ChatMessageEvent;
 import com.dakgu.siack.websocket.chat.service.ChatHistoryCache;
 import com.dakgu.siack.websocket.chat.redis.RedisChatPublisher;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -22,6 +23,7 @@ public class ChatMessageEventListener {
 
     private final RedisChatPublisher redisChatPublisher;
     private final ChatHistoryCache chatHistoryCache;
+    private final SimpMessagingTemplate messagingTemplate;
 
     /**
      * 트랜잭션이 성공적으로 커밋된 후 ChatMessageEvent를 처리합니다.
@@ -38,5 +40,7 @@ public class ChatMessageEventListener {
         if (dto.getType() == ChatMessageType.CHAT) {
             chatHistoryCache.appendMessage(dto);
         }
+
+        messagingTemplate.convertAndSend("/topic/chat/rooms/" + dto.getRoomId(), dto);
     }
 }
