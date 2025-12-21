@@ -1,93 +1,126 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { Box, TextField, Button, List, ListItem, ListItemText, Paper, Typography, CircularProgress, Alert } from '@mui/material';
+import {
+    Box, IconButton, InputAdornment, Tooltip, Typography,
+    Avatar, Chip, OutlinedInput, CircularProgress, Alert
+} from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 import api from '@/api/api.js';
 import { useAuth } from '@/contexts/AuthContext.jsx';
 import { getCookie } from '@/utils/cookie.js';
 
 /**
- * 워크스페이스/채널 기반 채팅 컴포넌트
- * @param {{ workspaceId: number, channelId: number }} props
+ * 말풍선 컴포넌트 - 닉네임 및 프로필 이미지 적용
  */
+function MessageBubble({ meId, msg }) {
+    // msg.sender가 숫자형 id일 경우를 대비해 == 사용 혹은 타입 확인
+    const isMine = String(msg.sender) === String(meId);
+
+    return (
+        <Box sx={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', px: 2, mb: 1.5 }}>
+            <Box sx={{ display: 'flex', maxWidth: '75%', gap: 1, flexDirection: isMine ? 'row-reverse' : 'row' }}>
+                {!isMine && (
+                    <Avatar
+                        src={msg.profileImageUrl} // 프로필 이미지 URL 적용
+                        sx={{ width: 32, height: 32, bgcolor: '#e0e0e0', fontSize: '0.875rem' }}
+                    >
+                        {/* 이미지 로드 실패 시 닉네임 첫 글자 표시 */}
+                        {msg.nickname?.[0] || '?'}
+                    </Avatar>
+                )}
+                <Box>
+                    {!isMine && (
+                        <Typography variant="caption" sx={{ ml: 0.5, mb: 0.5, display: 'block', color: 'text.secondary', fontWeight: 600 }}>
+                            {msg.nickname || '알 수 없음'}
+                        </Typography>
+                    )}
+                    <Box
+                        sx={{
+                            px: 1.5,
+                            py: 1,
+                            borderRadius: 2,
+                            bgcolor: isMine ? 'primary.main' : 'background.paper',
+                            color: isMine ? 'primary.contrastText' : 'text.primary',
+                            boxShadow: isMine ? 'none' : '0 1px 2px rgba(0,0,0,0.06)',
+                            border: isMine ? 'none' : '1px solid',
+                            borderColor: 'divider',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ lineHeight: 1.5 }}>{msg.content}</Typography>
+                    </Box>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.25, color: 'text.disabled', textAlign: isMine ? 'right' : 'left' }}>
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Typography>
+                </Box>
+            </Box>
+        </Box>
+    );
+}
+
 function ChannelChat({ workspaceId, channelId }) {
-    const { userData, loading: userLoading } = useAuth();
+    const { userData, loading: userLoading } = useAuth(); // userData에 nickname, profileImageUrl 포함됨
     const [conversationId, setConversationId] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
     const stompClient = useRef(null);
+    const scrollRef = useRef(null);
 
+    // 자동 스크롤
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    // 대화방 정보 로드
     useEffect(() => {
         if (!workspaceId || !channelId) return;
-
         setLoading(true);
-        setError('');
-        api.get('/chat/conversation', {
-            params: { workspaceId, channelId }
-        })
-        .then(res => {
-            const newConversationId = res.data.conversationId;
-            setConversationId(newConversationId);
-            // conversationId로 이전 대화 내역을 조회
-            return api.get(`/chat/conversations/${newConversationId}/messages`);
-        })
-        .then(res => {
-            setMessages(res.data);
-        })
-        .catch(() => {
-            setError("채팅방 정보를 가져오거나 대화 내역을 불러오는 데 실패했습니다.");
-        })
-        .finally(() => {
-            setLoading(false);
-        });
-
+        api.get('/chat/conversation', { params: { workspaceId, channelId } })
+            .then(res => {
+                const newConversationId = res.data.conversationId;
+                setConversationId(newConversationId);
+                return api.get(`/chat/conversations/${newConversationId}/messages`);
+            })
+            .then(res => setMessages(res.data))
+            .catch(err => console.error("데이터 로드 실패:", err))
+            .finally(() => setLoading(false));
     }, [workspaceId, channelId]);
 
-    // conversationId와 userData가 모두 준비된 후 웹소켓을 연결합니다.
+    // WebSocket 연결
     useEffect(() => {
         if (!conversationId || !userData) return;
 
-        const DEFAULT_BASE = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:8080';
-        const baseURL = import.meta.env.VITE_API_BASE || DEFAULT_BASE;
+        const baseURL = import.meta.env.VITE_API_BASE || (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:8080');
         const socketUrl = `${baseURL}/ws`;
 
-        // STOMP 클라이언트 설정을 내부로 이동하여 동적 토큰 적용
         const client = new Client({
             webSocketFactory: () => new SockJS(socketUrl),
-            connectHeaders: {
-                // 쿠키에서 토큰을 가져와 헤더에 추가 (api.js와 동일 방식)
-                Authorization: `Bearer ${getCookie('authToken')}`,
-            },
-            reconnectDelay: 5000,
-            debug: (str) => console.log(new Date(), str),
+            connectHeaders: { Authorization: `Bearer ${getCookie('authToken')}` },
             onConnect: () => {
                 client.subscribe(`/topic/chat/rooms/${conversationId}`, (message) => {
                     const receivedMessage = JSON.parse(message.body);
                     setMessages((prev) => [...prev, receivedMessage]);
                 });
-
+                // 입장 시에도 nickname 전달
                 client.publish({
                     destination: `/siack/chat/${conversationId}/join`,
-                    body: JSON.stringify({ roomId: conversationId, sender: userData.username }),
+                    body: JSON.stringify({
+                        roomId: conversationId,
+                        sender: userData.userid,
+                        nickname: userData.nickname
+                    }),
                 });
-            },
-            onStompError: (frame) => {
-                console.error('Broker reported error: ' + frame.headers['message']);
-                console.error('Additional details: ' + frame.body);
             },
         });
 
         stompClient.current = client;
         client.activate();
-
-        return () => {
-            if (client.connected) {
-                client.deactivate();
-                console.log('STOMP Disconnected.');
-            }
-        };
+        return () => { if (client.connected) client.deactivate(); };
     }, [conversationId, userData]);
 
     const handleSend = () => {
@@ -95,8 +128,11 @@ function ChannelChat({ workspaceId, channelId }) {
             const chatMessage = {
                 roomId: conversationId,
                 sender: userData.userid,
+                nickname: userData.nickname, // 전송 시 nickname 포함
+                profileImageUrl: userData.profileImageUrl, // 전송 시 프로필 이미지 포함
                 content: input,
                 type: 'CHAT',
+                timestamp: new Date().toISOString()
             };
             stompClient.current.publish({
                 destination: `/siack/chat/${conversationId}/send`,
@@ -106,55 +142,50 @@ function ChannelChat({ workspaceId, channelId }) {
         }
     };
 
-    // userData가 로딩 중일 때를 위한 UI 처리
-    if (userLoading) {
-        return <Box p={4} textAlign="center"><Alert severity="info">사용자 정보를 불러오는 중입니다...</Alert></Box>;
-    }
-
-    // 채널이 선택되지 않았을 때 안내 메시지 표시
-    if (!workspaceId || !channelId) {
-        return <Box p={4} textAlign="center"><Typography variant="body1" color="textSecondary">채널을 선택해주세요.</Typography></Box>;
-    }
-
-    if (loading) return <Box p={4} textAlign="center"><CircularProgress /></Box>;
-    if (error) return <Box p={4}><Alert severity="error">{error}</Alert></Box>;
+    if (userLoading || loading) return <Box p={4} textAlign="center"><CircularProgress size={24} /></Box>;
 
     return (
-        <Paper elevation={3} sx={{ p: 2, height: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="h6" gutterBottom>
-                Channel: {channelId}
-            </Typography>
-            <Box component={Paper} sx={{ flexGrow: 1, overflowY: 'auto', p: 2, mb: 2, backgroundColor: '#f5f5f5' }}>
-                <List>
-                    {messages.map((msg, index) => (
-                        <ListItem key={index}>
-                            <ListItemText
-                                primary={msg.content}
-                                // [수정] senderName을 우선 사용하고, 없으면 sender ID를 표시합니다.
-                                secondary={`${msg.senderName || msg.sender} - ${new Date(msg.timestamp).toLocaleTimeString()}`}
-                                sx={{
-                                    // [수정] 메시지 정렬 기준을 userData.userid로 변경
-                                    textAlign: msg.sender === userData.userid ? 'right' : 'left',
-                                }}
-                            />
-                        </ListItem>
-                    ))}
-                </List>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.default' }}>
+            <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}># 채널 대화</Typography>
             </Box>
-            <Box sx={{ display: 'flex' }}>
-                <TextField
-                    fullWidth
-                    variant="outlined"
+
+            <Box ref={scrollRef} sx={{ flex: 1, overflowY: 'auto', py: 2, bgcolor: '#f7f8fa' }}>
+                {messages.length > 0 ? (
+                    <>
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                            <Chip size="small" label="오늘" variant="outlined" sx={{ fontSize: '0.75rem', height: 20 }} />
+                        </Box>
+                        {messages.map((msg, idx) => (
+                            <MessageBubble key={idx} meId={userData.userid} msg={msg} />
+                        ))}
+                    </>
+                ) : (
+                    <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' }}>
+                        메시지가 없습니다.
+                    </Box>
+                )}
+            </Box>
+
+            <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
+                <OutlinedInput
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="메시지를 입력하세요..."
+                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSend())}
+                    fullWidth
+                    multiline
+                    placeholder={`${userData?.nickname}님으로 메시지 보내기...`}
+                    sx={{ borderRadius: 1.5, bgcolor: '#fff' }}
+                    endAdornment={
+                        <InputAdornment position="end">
+                            <IconButton color="primary" onClick={handleSend} disabled={!input.trim()}>
+                                <SendIcon />
+                            </IconButton>
+                        </InputAdornment>
+                    }
                 />
-                <Button variant="contained" onClick={handleSend} sx={{ ml: 1 }}>
-                    전송
-                </Button>
             </Box>
-        </Paper>
+        </Box>
     );
 }
 
