@@ -4,8 +4,6 @@ import org.springframework.security.core.Authentication;
 
 /**
  * 채팅 관련 조회 전용 서비스 인터페이스
- *
- * @author AI Assistant
  */
 public interface ChatQueryService {
 

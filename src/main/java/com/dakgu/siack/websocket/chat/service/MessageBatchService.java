@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 채팅 메시지를 버퍼링하여 주기적으로 DB에 배치 저장하는 서비스.
- * DB 부하를 줄이기 위해 사용됩니다.
  */
 @Service
 @RequiredArgsConstructor
@@ -37,9 +36,7 @@ public class MessageBatchService {
     @Scheduled(fixedDelay = 5000)
     @Transactional
     public void flushMessages() {
-        if (messageQueue.isEmpty()) {
-            return;
-        }
+        if (messageQueue.isEmpty()) return;
 
         // 큐의 모든 메시지를 로컬 리스트로 가져옴
         List<Message> messagesToSave = new ArrayList<>();
