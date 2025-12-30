@@ -1,13 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {
-    Box,
-    Button,
-    CircularProgress,
-    Typography,
-    List,
-    ListItem,
-    ListItemButton,
-    IconButton
+    Box, Button, CircularProgress, Typography, List, ListItem, ListItemButton, IconButton
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {useParams} from 'react-router-dom';
@@ -62,28 +55,31 @@ export default function WorkspaceHome({workspace: parentWorkspace, parentWorkspa
         if (timeoutId) clearTimeout(timeoutId);
     }, [parentWorkspaceLoading, parentWorkspace, roomId]);
 
-    if (loading) return (
-        <Box sx={{p: 4, display: 'flex', justifyContent: 'center'}}>
+    if (loading) return (<Box sx={{p: 4, display: 'flex', justifyContent: 'center'}}>
             <CircularProgress/>
-        </Box>
-    );
+        </Box>);
 
-    if (error) return (
-        <Box sx={{p: 4}}>
+    if (error) return (<Box sx={{p: 4}}>
             <Typography variant="h6" gutterBottom>오류</Typography>
             <Typography color="error">{error}</Typography>
             <Box sx={{mt: 2}}>
                 <Button variant="contained" onClick={() => window.location.reload()}>다시 시도</Button>
             </Box>
-        </Box>
-    );
+        </Box>);
 
     const channels = workspace?.channels || [];
     const primary = channels.slice(0, 3);
     const others = channels.slice(3);
 
-    return (
-        <Box sx={{p: 2, display: 'flex', flexDirection: 'column', gap: 1, height: '100%'}}>
+    return (<Box sx={{
+            p: 2,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            height: 'calc(100vh - 100px)',
+            boxSizing: 'border-box',
+            overflow: 'hidden'
+        }}>
             {/* 워크스페이스 이름 영역 */}
             <Box>
                 <Typography variant="h5">
@@ -94,21 +90,16 @@ export default function WorkspaceHome({workspace: parentWorkspace, parentWorkspa
             {/* 채널리스트 영역 */}
             <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
                 {channels.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">활성 채널이 없습니다.</Typography>
-                ) : (
-                    <>
+                    <Typography variant="body2" color="text.secondary">활성 채널이 없습니다.</Typography>) : (<>
                         <List sx={{display: 'flex', flexDirection: 'row', gap: 1, overflowX: 'auto'}}>
-                            {primary.map((ch) => (
-                                <ChannelCard
+                            {primary.map((ch) => (<ChannelCard
                                     key={ch.channelId}
                                     ch={ch}
                                     selected={selectedChannel?.channelId === ch.channelId}
                                     onSelect={(c) => setSelectedChannel(c)}
                                     isMobile={isMobile}
-                                />
-                            ))}
-                            {others.length > 0 && (
-                                <ListItem disablePadding>
+                                />))}
+                            {others.length > 0 && (<ListItem disablePadding>
                                     <ListItemButton onClick={() => setShowMore(true)} sx={{
                                         borderRadius: 2,
                                         bgcolor: 'common.white',
@@ -122,30 +113,29 @@ export default function WorkspaceHome({workspace: parentWorkspace, parentWorkspa
                                                         color="text.secondary">{`+${others.length}`}</Typography>
                                         </Box>
                                     </ListItemButton>
-                                </ListItem>
-                            )}
+                                </ListItem>)}
                         </List>
 
                         <ChannelsDialog open={showMore} onClose={() => setShowMore(false)} channels={channels}
                                         onSelect={(c) => setSelectedChannel(c)} selectedChannel={selectedChannel}/>
 
-                    </>
-                )}
+                    </>)}
             </Box>
 
             {/* 채팅창 영역 */}
             <Box sx={{
-                height: '100%',
+                flex: 1,
+                minHeight: 0,
                 bgcolor: 'background.paper',
                 borderRadius: 2,
                 border: '1px solid',
-                borderColor: 'rgb(145 145 145 / 14%)'
+                borderColor: 'rgb(145 145 145 / 14%)',
+                overflow: 'hidden'
             }}>
-                <ChannelChat 
-                    workspaceId={workspace?.workspaceId} 
+                <ChannelChat
+                    workspaceId={workspace?.workspaceId}
                     channelId={selectedChannel?.channelId}
                 />
             </Box>
-        </Box>
-    );
+        </Box>);
 }

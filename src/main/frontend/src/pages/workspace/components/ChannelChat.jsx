@@ -2,8 +2,7 @@ import React, {useState, useEffect, useRef, useMemo, useCallback} from 'react';
 import {Client} from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import {
-    Box, IconButton, InputAdornment, Typography,
-    Avatar, Chip, OutlinedInput, CircularProgress
+    Box, IconButton, InputAdornment, Typography, Avatar, Chip, OutlinedInput, CircularProgress
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import api from '@/api/api.js';
@@ -11,21 +10,17 @@ import {useAuth} from '@/contexts/AuthContext.jsx';
 import {getCookie} from '@/utils/cookie.js';
 
 const STYLES = {
-    chatContainer: {display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.default'},
+    chatContainer: {
+        display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', bgcolor: 'background.default'
+    },
     header: {px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper'},
     messageList: {flex: 1, overflowY: 'auto', py: 2, bgcolor: '#f7f8fa'},
     inputArea: {p: 2, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper'},
     bubbleWrapper: (isMine) => ({
-        display: 'flex',
-        justifyContent: isMine ? 'flex-end' : 'flex-start',
-        px: 2,
-        mb: 1.5
+        display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', px: 2, mb: 1.5
     }),
     bubbleContent: (isMine) => ({
-        display: 'flex',
-        maxWidth: '75%',
-        gap: 1,
-        flexDirection: isMine ? 'row-reverse' : 'row'
+        display: 'flex', maxWidth: '75%', gap: 1, flexDirection: isMine ? 'row-reverse' : 'row'
     }),
     messageBox: (isMine) => ({
         px: 1.5,
@@ -44,39 +39,36 @@ const STYLES = {
 const MessageBubble = React.memo(({meId, msg}) => {
     const isMine = useMemo(() => String(msg.sender) === String(meId), [msg.sender, meId]);
 
-    return (
-        <Box sx={STYLES.bubbleWrapper(isMine)}>
+    return (<Box sx={STYLES.bubbleWrapper(isMine)}>
             <Box sx={STYLES.bubbleContent(isMine)}>
-                {!isMine && (
-                    <Avatar
+                {!isMine && (<Avatar
                         src={msg.profileImageUrl}
                         sx={{width: 32, height: 32, bgcolor: '#e0e0e0', fontSize: '0.875rem'}}
                     >
                         {msg.nickname?.[0] || '?'}
-                    </Avatar>
-                )}
+                    </Avatar>)}
                 <Box>
-                    {!isMine && (
-                        <Typography variant="caption"
-                                    sx={{ml: 0.5, mb: 0.5, display: 'block', color: 'text.secondary', fontWeight: 600}}>
+                    {!isMine && (<Typography variant="caption"
+                                             sx={{
+                                                 ml: 0.5,
+                                                 mb: 0.5,
+                                                 display: 'block',
+                                                 color: 'text.secondary',
+                                                 fontWeight: 600
+                                             }}>
                             {msg.nickname || '알 수 없음'}
-                        </Typography>
-                    )}
+                        </Typography>)}
                     <Box sx={STYLES.messageBox(isMine)}>
                         <Typography variant="body2" sx={{lineHeight: 1.5}}>{msg.content}</Typography>
                     </Box>
                     <Typography variant="caption" sx={{
-                        display: 'block',
-                        mt: 0.25,
-                        color: 'text.disabled',
-                        textAlign: isMine ? 'right' : 'left'
+                        display: 'block', mt: 0.25, color: 'text.disabled', textAlign: isMine ? 'right' : 'left'
                     }}>
                         {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
                     </Typography>
                 </Box>
             </Box>
-        </Box>
-    );
+        </Box>);
 });
 
 function ChannelChat({workspaceId, channelId}) {
@@ -133,11 +125,8 @@ function ChannelChat({workspaceId, channelId}) {
                 });
 
                 client.publish({
-                    destination: `/siack/chat/${conversationId}/join`,
-                    body: JSON.stringify({
-                        roomId: conversationId,
-                        sender: userData.userid,
-                        nickname: userData.nickname
+                    destination: `/siack/chat/${conversationId}/join`, body: JSON.stringify({
+                        roomId: conversationId, sender: userData.userid, nickname: userData.nickname
                     }),
                 });
             },
@@ -168,8 +157,7 @@ function ChannelChat({workspaceId, channelId}) {
         };
 
         stompClient.current.publish({
-            destination: `/siack/chat/${conversationId}/send`,
-            body: JSON.stringify(payload),
+            destination: `/siack/chat/${conversationId}/send`, body: JSON.stringify(payload),
         });
         setInput('');
     };
@@ -178,24 +166,19 @@ function ChannelChat({workspaceId, channelId}) {
         return <Box p={4} textAlign="center"><CircularProgress size={24}/></Box>;
     }
 
-    return (
-        <Box sx={STYLES.chatContainer}>
+    return (<Box sx={STYLES.chatContainer}>
             <Box sx={STYLES.header}>
                 <Typography variant="subtitle1" sx={{fontWeight: 700}}># 채널 대화</Typography>
             </Box>
 
             <Box ref={scrollRef} sx={STYLES.messageList}>
-                {messages.length > 0 ? (
-                    <>
+                {messages.length > 0 ? (<>
                         <Box sx={{display: 'flex', justifyContent: 'center', mb: 2}}>
                             <Chip size="small" label="오늘" variant="outlined" sx={{fontSize: '0.75rem', height: 20}}/>
                         </Box>
                         {messages.map((msg, idx) => (
-                            <MessageBubble key={msg.id || idx} meId={userData.userid} msg={msg}/>
-                        ))}
-                    </>
-                ) : (
-                    <Box sx={{
+                            <MessageBubble key={msg.id || idx} meId={userData.userid} msg={msg}/>))}
+                    </>) : (<Box sx={{
                         height: '100%',
                         display: 'flex',
                         alignItems: 'center',
@@ -203,8 +186,7 @@ function ChannelChat({workspaceId, channelId}) {
                         color: 'text.secondary'
                     }}>
                         메시지가 없습니다.
-                    </Box>
-                )}
+                    </Box>)}
             </Box>
 
             <Box sx={STYLES.inputArea}>
@@ -222,17 +204,14 @@ function ChannelChat({workspaceId, channelId}) {
                     maxRows={4}
                     placeholder={`${userData?.nickname}님으로 메시지 보내기...`}
                     sx={{borderRadius: 1.5, bgcolor: '#fff'}}
-                    endAdornment={
-                        <InputAdornment position="end">
-                            <IconButton color="primary" onClick={handleSend} disabled={!input.trim()}>
-                                <SendIcon/>
-                            </IconButton>
-                        </InputAdornment>
-                    }
+                    endAdornment={<InputAdornment position="end">
+                        <IconButton color="primary" onClick={handleSend} disabled={!input.trim()}>
+                            <SendIcon/>
+                        </IconButton>
+                    </InputAdornment>}
                 />
             </Box>
-        </Box>
-    );
+        </Box>);
 }
 
 export default ChannelChat;
