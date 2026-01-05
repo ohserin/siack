@@ -1,7 +1,9 @@
 package com.dakgu.siack.websocket.chat.service;
 
+import com.dakgu.siack.file.repository.SdfFileRepository;
 import com.dakgu.siack.user.vo.User;
 import com.dakgu.siack.user.repository.UserRepository;
+import com.dakgu.siack.user.vo.UserProfile;
 import com.dakgu.siack.websocket.chat.domain.Conversation;
 import com.dakgu.siack.websocket.chat.domain.Message;
 import com.dakgu.siack.websocket.chat.dto.ChatMessage;
@@ -9,6 +11,7 @@ import com.dakgu.siack.websocket.chat.dto.ChatMessageType;
 import com.dakgu.siack.websocket.chat.event.ChatMessageEvent;
 import com.dakgu.siack.websocket.chat.repository.ConversationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +27,10 @@ public class ChatServiceImpl implements ChatService {
     private final UserRepository userRepository;
     private final MessageBatchService messageBatchService;
     private final ApplicationEventPublisher eventPublisher;
+    private final SdfFileRepository fileRepository;
+
+    @Value("${file.access.url-base}")
+    private String imageUrlBase;
 
     @Override
     @Transactional
@@ -41,12 +48,21 @@ public class ChatServiceImpl implements ChatService {
 
         messageBatchService.addMessageToQueue(message);
 
-        if (dto.getTimestamp() == null) {
-            dto.setTimestamp(Instant.now());
+        UserProfile profile = sender.getUserProfile();
+        if (profile != null) {
+            dto.setNickname(profile.getNickname());
+
+            // 이미지 URL 생성
+            if (profile.getProfileimg() != null) {
+                String fileName = fileRepository.findStoredFileNameByFileId(profile.getProfileimg());
+                if (fileName != null) {
+                    dto.setProfileImageUrl(imageUrlBase + fileName);
+                }
+            }
         }
-        if (dto.getType() == null) {
-            dto.setType(ChatMessageType.CHAT);
-        }
+
+        if (dto.getTimestamp() == null) dto.setTimestamp(Instant.now());
+        if (dto.getType() == null) dto.setType(ChatMessageType.CHAT);
 
         // 트랜잭션 커밋 후 Redis 작업을 처리하도록 이벤트 발행
         eventPublisher.publishEvent(new ChatMessageEvent(this, dto));
@@ -80,8 +96,8 @@ public class ChatServiceImpl implements ChatService {
                 .sender(username)
                 .timestamp(Instant.now())
                 .build();
-        
-        // LEAVE는 트랜잭션과 무관하므로 즉시 발행도 가능하나, 일관성을 위해 이벤트로 처리합니다.
+
+        // LEAVE는 트랜잭션과 무관하므로 즉시 발행도 가능하나, 일관성을 위해 이벤트로 처리
         eventPublisher.publishEvent(new ChatMessageEvent(this, leave));
     }
 
