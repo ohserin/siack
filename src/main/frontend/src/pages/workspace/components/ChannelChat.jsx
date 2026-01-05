@@ -56,7 +56,7 @@ const MessageBubble = React.memo(({meId, msg}) => {
                                                  color: 'text.secondary',
                                                  fontWeight: 600
                                              }}>
-                            {msg.nickname || '알 수 없음'}
+                        {msg.nickname || '알 수 없음'}
                         </Typography>)}
                     <Box sx={STYLES.messageBox(isMine)}>
                         <Typography variant="body2" sx={{lineHeight: 1.5}}>{msg.content}</Typography>
@@ -121,7 +121,15 @@ function ChannelChat({workspaceId, channelId}) {
             connectHeaders: {Authorization: `Bearer ${getCookie('authToken')}`},
             onConnect: () => {
                 client.subscribe(`/topic/chat/rooms/${conversationId}`, (m) => {
-                    setMessages((prev) => [...prev, JSON.parse(m.body)]);
+                    const receivedMsg = JSON.parse(m.body);
+                    console.log(receivedMsg);
+
+                    // 메시지 타입이 CHAT일 때만 목록에 추가
+                    if (receivedMsg.type === 'CHAT') {
+                        setMessages((prev) => [...prev, receivedMsg]);
+                    } else if (receivedMsg.type === 'JOIN') {
+                        // 입장 메시지 처리
+                    }
                 });
 
                 client.publish({
