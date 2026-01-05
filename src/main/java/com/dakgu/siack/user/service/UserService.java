@@ -15,6 +15,7 @@ import com.dakgu.siack.user.repository.UserRepository;
 import com.dakgu.siack.utils.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,6 +45,9 @@ public class UserService {
     private final FileUploadService uploadService;
     private final SdfFileRepository fileRepository;
     private final UserLogService userLogService;
+
+    @Value("${file.access.url-base}")
+    private String imageUrlBase;
 
     /* username 사용 가능한지 확인 */
     public ResponseDTO checkUsernameAvailability(String username) {
@@ -374,7 +378,7 @@ public class UserService {
 
         Long fileId = profile.getProfileimg();
         String fileName = fileRepository.findStoredFileNameByFileId(fileId);
-        return new UserProfileUrlResponseDTO("조회 성공", "https://devsiack.me/uploads/images/" + fileName);
+        return new UserProfileUrlResponseDTO("조회 성공", imageUrlBase + fileName);
     }
 
     /**
