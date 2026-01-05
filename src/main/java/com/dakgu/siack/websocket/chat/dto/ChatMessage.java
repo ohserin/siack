@@ -16,6 +16,8 @@ public class ChatMessage {
     private String roomId;
     private String sender;
     private String content;
+    private String nickname;
+    private String profileImageUrl;
     @Builder.Default
     private Instant timestamp = Instant.now();
 }
