@@ -1,30 +1,52 @@
 package com.dakgu.siack.websocket.chat.service;
 
+import com.dakgu.siack.websocket.chat.domain.Conversation;
+import com.dakgu.siack.websocket.chat.repository.ConversationRepository;
+import com.dakgu.siack.workspace.domain.Channel;
+import com.dakgu.siack.workspace.domain.Workspace;
+import com.dakgu.siack.workspace.repository.ChannelRepository;
+import com.dakgu.siack.workspace.repository.WorkspaceRepository;
+import com.dakgu.siack.workspace.service.WorkspaceMemberService;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * 채팅 관련 조회 전용 서비스 인터페이스
- */
-public interface ChatQueryService {
+@Service
+@RequiredArgsConstructor
+public class ChatQueryService {
 
-    /**
-     * 워크스페이스 ID와 채널 ID에 해당하는 대화(Conversation)가 있는지 확인하고,
-     * 없으면 새로 생성한 후 해당 대화의 ID를 반환합니다.
-     * 이 과정에서 사용자가 해당 워크스페이스의 멤버인지 권한을 확인합니다.
-     *
-     * @param authentication 인증 정보
-     * @param workspaceId 워크스페이스 ID
-     * @param channelId 채널 ID
-     * @return 조회 또는 생성된 대화(Conversation)의 ID
-     */
-    Long getOrCreateConversation(Authentication authentication, Long workspaceId, Long channelId);
+    private final ConversationRepository conversationRepository;
+    private final WorkspaceRepository workspaceRepository;
+    private final ChannelRepository channelRepository;
+    private final WorkspaceMemberService workspaceMemberService;
 
-    /**
-     * 사용자가 특정 대화(Conversation)에 접근할 권한이 있는지 확인합니다.
-     *
-     * @param authentication 인증 정보
-     * @param conversationId 대화 ID
-     * @throws org.springframework.security.access.AccessDeniedException 권한이 없는 경우
-     */
-    void checkAccessAuthority(Authentication authentication, Long conversationId);
+    @Transactional
+    public Long getOrCreateConversation(Authentication authentication, Long workspaceId, Long channelId) {
+        workspaceMemberService.validateWorkspaceMember(authentication, workspaceId);
+
+        return conversationRepository.findIdByWorkspaceAndChannel(workspaceId, channelId)
+                .orElseGet(() -> {
+                    Workspace workspace = workspaceRepository.findById(workspaceId)
+                            .orElseThrow(() -> new EntityNotFoundException("Workspace not found: " + workspaceId));
+                    Channel channel = channelRepository.findById(channelId)
+                            .orElseThrow(() -> new EntityNotFoundException("Channel not found: " + channelId));
+
+                    Conversation newConversation = Conversation.builder()
+                            .workspace(workspace)
+                            .channel(channel)
+                            .build();
+
+                    return conversationRepository.save(newConversation).getConversationId();
+                });
+    }
+
+    @Transactional(readOnly = true)
+    public void checkAccessAuthority(Authentication authentication, Long conversationId) {
+        Conversation conversation = conversationRepository.findWithWorkspaceById(conversationId)
+                .orElseThrow(() -> new EntityNotFoundException("Conversation not found: " + conversationId));
+
+        workspaceMemberService.validateWorkspaceMember(authentication, conversation.getWorkspace().getWorkspaceId());
+    }
 }
