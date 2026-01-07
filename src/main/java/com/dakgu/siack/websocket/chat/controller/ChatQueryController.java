@@ -1,7 +1,7 @@
 package com.dakgu.siack.websocket.chat.controller;
 
 import com.dakgu.siack.websocket.chat.dto.ChatMessage;
-import com.dakgu.siack.websocket.chat.redis.RedisChatHistoryCache;
+import com.dakgu.siack.websocket.chat.service.ChatHistoryService;
 import com.dakgu.siack.websocket.chat.service.ChatQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class ChatQueryController {
 
     private final ChatQueryService chatQueryService;
-    private final RedisChatHistoryCache chatHistoryCache; // 채팅 내역 조회를 위한 의존성 추가
+    private final ChatHistoryService chatHistoryService;
 
     /**
      * 워크스페이스 ID와 채널 ID를 기반으로 대화 ID(conversationId)를 조회합니다.
@@ -53,6 +53,6 @@ public class ChatQueryController {
             @RequestParam(defaultValue = "50") int limit
     ) {
         chatQueryService.checkAccessAuthority(authentication, conversationId);
-        return chatHistoryCache.getRecentMessages(String.valueOf(conversationId), limit);
+        return chatHistoryService.getRecentMessagesByConversationId(conversationId, limit);
     }
 }
