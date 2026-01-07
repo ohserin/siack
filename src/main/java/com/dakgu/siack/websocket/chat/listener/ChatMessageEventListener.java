@@ -3,7 +3,7 @@ package com.dakgu.siack.websocket.chat.listener;
 import com.dakgu.siack.websocket.chat.dto.ChatMessage;
 import com.dakgu.siack.websocket.chat.dto.ChatMessageType;
 import com.dakgu.siack.websocket.chat.event.ChatMessageEvent;
-import com.dakgu.siack.websocket.chat.service.ChatHistoryCache;
+import com.dakgu.siack.websocket.chat.redis.RedisChatHistoryCache;
 import com.dakgu.siack.websocket.chat.redis.RedisChatPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -22,7 +22,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class ChatMessageEventListener {
 
     private final RedisChatPublisher redisChatPublisher;
-    private final ChatHistoryCache chatHistoryCache;
+    private final RedisChatHistoryCache chatHistoryCache;
     private final SimpMessagingTemplate messagingTemplate;
 
     /**

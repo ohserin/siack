@@ -1,7 +1,6 @@
 package com.dakgu.siack.websocket.chat.redis;
 
 import com.dakgu.siack.websocket.chat.dto.ChatMessage;
-import com.dakgu.siack.websocket.chat.service.ChatHistoryCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,7 @@ import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
-public class RedisChatHistoryCache implements ChatHistoryCache {
+public class RedisChatHistoryCache {
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -36,7 +35,6 @@ public class RedisChatHistoryCache implements ChatHistoryCache {
      * - TTL 24시간 설정 (오래 사용되지 않는 방의 캐시는 자연스럽게 만료)
      * - 직렬화 실패(JsonProcessingException)는 캐시 미스 정도로 보고 조용히 무시한다.
      */
-    @Override
     public void appendMessage(ChatMessage message) {
         try {
             String key = keyForRoom(message.getRoomId());
@@ -56,7 +54,6 @@ public class RedisChatHistoryCache implements ChatHistoryCache {
      * - 값은 JSON 문자열이므로 ChatMessage로 역직렬화
      * - 역직렬화에 실패한 항목은 무시하고 넘어간다.
      */
-    @Override
     public List<ChatMessage> getRecentMessages(String roomId, int limit) {
         String key = keyForRoom(roomId);
         List<String> values = redisTemplate.opsForList().range(key, 0, limit - 1);
@@ -83,7 +80,6 @@ public class RedisChatHistoryCache implements ChatHistoryCache {
      * - 기존 Redis 키를 삭제하고 새 리스트로 대체
      * - 최대 100개까지만 유지하고 TTL 24시간 적용
      */
-    @Override
     public void saveAll(String roomId, List<ChatMessage> messages) {
         if (messages == null || messages.isEmpty()) {
             return;
