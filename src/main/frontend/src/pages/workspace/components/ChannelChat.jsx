@@ -81,6 +81,10 @@ function ChannelChat({workspaceId, channelId}) {
     const stompClient = useRef(null);
     const scrollRef = useRef(null);
 
+    const sortedMessages = useMemo(() => {
+        return [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    }, [messages]);
+
     const scrollToBottom = useCallback(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -100,7 +104,9 @@ function ChannelChat({workspaceId, channelId}) {
                 const {data} = await api.get('/chat/conversation', {params: {workspaceId, channelId}});
                 setConversationId(data.conversationId);
                 const {data: history} = await api.get(`/chat/conversations/${data.conversationId}/messages`);
-                setMessages(history);
+
+                const sortedHistory = history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                setMessages(sortedHistory);
             } catch (err) {
                 console.error("Failed to load chat data:", err);
             } finally {
@@ -126,7 +132,11 @@ function ChannelChat({workspaceId, channelId}) {
 
                     // 메시지 타입이 CHAT일 때만 목록에 추가
                     if (receivedMsg.type === 'CHAT') {
-                        setMessages((prev) => [...prev, receivedMsg]);
+                        setMessages((prev) => {
+                            const isDuplicate = prev.some(m => m.id === receivedMsg.id);
+                            if (isDuplicate) return prev;
+                            return [...prev, receivedMsg];
+                        });
                     } else if (receivedMsg.type === 'JOIN') {
                         // 입장 메시지 처리
                     }
@@ -180,11 +190,11 @@ function ChannelChat({workspaceId, channelId}) {
             </Box>
 
             <Box ref={scrollRef} sx={STYLES.messageList}>
-                {messages.length > 0 ? (<>
+                {sortedMessages.length > 0 ? (<>
                         <Box sx={{display: 'flex', justifyContent: 'center', mb: 2}}>
                             <Chip size="small" label="오늘" variant="outlined" sx={{fontSize: '0.75rem', height: 20}}/>
                         </Box>
-                        {messages.map((msg, idx) => (
+                        {sortedMessages.map((msg, idx) => (
                             <MessageBubble key={msg.id || idx} meId={userData.userid} msg={msg}/>))}
                     </>) : (<Box sx={{
                         height: '100%',
