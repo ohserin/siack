@@ -90,7 +90,7 @@ function ChannelChat({workspaceId, channelId}) {
 
         sorted.forEach((msg, idx) => {
             const msgDate = new Date(msg.timestamp);
-            const dateStr = msgDate.toLocaleDateString('ko-KR'); // "2025. 1. 8." 형식
+            const dateStr = msgDate.toLocaleDateString('ko-KR');
 
             // 이전 메시지와 날짜가 다르다면 날짜 구분선 추가
             if (dateStr !== lastDate) {
@@ -164,11 +164,7 @@ function ChannelChat({workspaceId, channelId}) {
 
                     // 메시지 타입이 CHAT일 때만 목록에 추가
                     if (receivedMsg.type === 'CHAT') {
-                        setMessages((prev) => {
-                            const isDuplicate = prev.some(m => m.id === receivedMsg.id);
-                            if (isDuplicate) return prev;
-                            return [...prev, receivedMsg];
-                        });
+                        setMessages((prev) => [...prev, receivedMsg]);
                     } else if (receivedMsg.type === 'JOIN') {
                         // 입장 메시지 처리
                     }
@@ -218,7 +214,7 @@ function ChannelChat({workspaceId, channelId}) {
 
     return (<Box sx={STYLES.chatContainer}>
         <Box sx={STYLES.header}>
-            <Typography variant="subtitle1" sx={{fontWeight: 700}}># 채널 대화</Typography>
+            <Typography variant="subtitle1" sx={{fontWeight: 700}}># 일반</Typography>
         </Box>
 
         <Box ref={scrollRef} sx={STYLES.messageList}>
