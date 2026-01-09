@@ -40,35 +40,35 @@ const MessageBubble = React.memo(({meId, msg}) => {
     const isMine = useMemo(() => String(msg.sender) === String(meId), [msg.sender, meId]);
 
     return (<Box sx={STYLES.bubbleWrapper(isMine)}>
-            <Box sx={STYLES.bubbleContent(isMine)}>
-                {!isMine && (<Avatar
-                        src={msg.profileImageUrl}
-                        sx={{width: 32, height: 32, bgcolor: '#e0e0e0', fontSize: '0.875rem'}}
-                    >
-                        {msg.nickname?.[0] || '?'}
-                    </Avatar>)}
-                <Box>
-                    {!isMine && (<Typography variant="caption"
-                                             sx={{
-                                                 ml: 0.5,
-                                                 mb: 0.5,
-                                                 display: 'block',
-                                                 color: 'text.secondary',
-                                                 fontWeight: 600
-                                             }}>
-                        {msg.nickname || '알 수 없음'}
-                        </Typography>)}
-                    <Box sx={STYLES.messageBox(isMine)}>
-                        <Typography variant="body2" sx={{lineHeight: 1.5}}>{msg.content}</Typography>
-                    </Box>
-                    <Typography variant="caption" sx={{
-                        display: 'block', mt: 0.25, color: 'text.disabled', textAlign: isMine ? 'right' : 'left'
-                    }}>
-                        {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                    </Typography>
+        <Box sx={STYLES.bubbleContent(isMine)}>
+            {!isMine && (<Avatar
+                src={msg.profileImageUrl}
+                sx={{width: 32, height: 32, bgcolor: '#e0e0e0', fontSize: '0.875rem'}}
+            >
+                {msg.nickname?.[0] || '?'}
+            </Avatar>)}
+            <Box>
+                {!isMine && (<Typography variant="caption"
+                                         sx={{
+                                             ml: 0.5,
+                                             mb: 0.5,
+                                             display: 'block',
+                                             color: 'text.secondary',
+                                             fontWeight: 600
+                                         }}>
+                    {msg.nickname || '알 수 없음'}
+                </Typography>)}
+                <Box sx={STYLES.messageBox(isMine)}>
+                    <Typography variant="body2" sx={{lineHeight: 1.5}}>{msg.content}</Typography>
                 </Box>
+                <Typography variant="caption" sx={{
+                    display: 'block', mt: 0.25, color: 'text.disabled', textAlign: isMine ? 'right' : 'left'
+                }}>
+                    {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
+                </Typography>
             </Box>
-        </Box>);
+        </Box>
+    </Box>);
 });
 
 function ChannelChat({workspaceId, channelId}) {
@@ -81,8 +81,40 @@ function ChannelChat({workspaceId, channelId}) {
     const stompClient = useRef(null);
     const scrollRef = useRef(null);
 
-    const sortedMessages = useMemo(() => {
-        return [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    const renderedElements = useMemo(() => {
+        const sorted = [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const elements = [];
+        let lastDate = null;
+
+        const todayStr = new Date().toLocaleDateString('ko-KR');
+
+        sorted.forEach((msg, idx) => {
+            const msgDate = new Date(msg.timestamp);
+            const dateStr = msgDate.toLocaleDateString('ko-KR'); // "2025. 1. 8." 형식
+
+            // 이전 메시지와 날짜가 다르다면 날짜 구분선 추가
+            if (dateStr !== lastDate) {
+                const isToday = dateStr === todayStr;
+                const displayDate = isToday
+                    ? "오늘"
+                    : msgDate.toLocaleDateString('ko-KR', {year: 'numeric', month: 'long', day: 'numeric'});
+
+                elements.push({
+                    type: 'date-divider',
+                    label: displayDate,
+                    key: `date-${dateStr}`
+                });
+                lastDate = dateStr;
+            }
+
+            elements.push({
+                type: 'message',
+                data: msg,
+                key: msg.id || idx
+            });
+        });
+
+        return elements;
     }, [messages]);
 
     const scrollToBottom = useCallback(() => {
@@ -185,51 +217,76 @@ function ChannelChat({workspaceId, channelId}) {
     }
 
     return (<Box sx={STYLES.chatContainer}>
-            <Box sx={STYLES.header}>
-                <Typography variant="subtitle1" sx={{fontWeight: 700}}># 채널 대화</Typography>
-            </Box>
+        <Box sx={STYLES.header}>
+            <Typography variant="subtitle1" sx={{fontWeight: 700}}># 채널 대화</Typography>
+        </Box>
 
-            <Box ref={scrollRef} sx={STYLES.messageList}>
-                {sortedMessages.length > 0 ? (<>
-                        <Box sx={{display: 'flex', justifyContent: 'center', mb: 2}}>
-                            <Chip size="small" label="오늘" variant="outlined" sx={{fontSize: '0.75rem', height: 20}}/>
-                        </Box>
-                        {sortedMessages.map((msg, idx) => (
-                            <MessageBubble key={msg.id || idx} meId={userData.userid} msg={msg}/>))}
-                    </>) : (<Box sx={{
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'text.secondary'
-                    }}>
-                        메시지가 없습니다.
-                    </Box>)}
-            </Box>
+        <Box ref={scrollRef} sx={STYLES.messageList}>
+            {renderedElements.length > 0 ? (
+                renderedElements.map((el) => {
+                    if (el.type === 'date-divider') {
+                        return (
+                            <Box key={el.key} sx={{display: 'flex', justifyContent: 'center', my: 3}}>
+                                <Chip
+                                    size="small"
+                                    label={el.label}
+                                    variant="outlined"
+                                    sx={{
+                                        fontSize: '0.75rem',
+                                        height: 24,
+                                        bgcolor: 'background.paper',
+                                        borderColor: 'divider',
+                                        color: 'text.secondary',
+                                        fontWeight: 600
+                                    }}
+                                />
+                            </Box>
+                        );
+                    }
+                    return (
+                        <MessageBubble
+                            key={el.key}
+                            meId={userData.userid}
+                            msg={el.data}
+                        />
+                    );
+                })
+            ) : (
+                <Box sx={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'text.secondary'
+                }}>
+                    메시지가 없습니다.
+                </Box>
+            )}
+        </Box>
 
-            <Box sx={STYLES.inputArea}>
-                <OutlinedInput
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSend();
-                        }
-                    }}
-                    fullWidth
-                    multiline
-                    maxRows={4}
-                    placeholder={`${userData?.nickname}님으로 메시지 보내기...`}
-                    sx={{borderRadius: 1.5, bgcolor: '#fff'}}
-                    endAdornment={<InputAdornment position="end">
-                        <IconButton color="primary" onClick={handleSend} disabled={!input.trim()}>
-                            <SendIcon/>
-                        </IconButton>
-                    </InputAdornment>}
-                />
-            </Box>
-        </Box>);
+        <Box sx={STYLES.inputArea}>
+            <OutlinedInput
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                    }
+                }}
+                fullWidth
+                multiline
+                maxRows={4}
+                placeholder={`${userData?.nickname}님으로 메시지 보내기...`}
+                sx={{borderRadius: 1.5, bgcolor: '#fff'}}
+                endAdornment={<InputAdornment position="end">
+                    <IconButton color="primary" onClick={handleSend} disabled={!input.trim()}>
+                        <SendIcon/>
+                    </IconButton>
+                </InputAdornment>}
+            />
+        </Box>
+    </Box>);
 }
 
 export default ChannelChat;
