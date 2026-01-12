@@ -1,21 +1,23 @@
-import React, {useState, useEffect, useRef, useMemo, useCallback} from 'react';
-import {Client} from '@stomp/stompjs';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import {
     Box, IconButton, InputAdornment, Typography, Avatar, Chip, OutlinedInput, CircularProgress
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import api from '@/api/api.js';
-import {useAuth} from '@/contexts/AuthContext.jsx';
-import {getCookie} from '@/utils/cookie.js';
+import { useAuth } from '@/contexts/AuthContext.jsx';
+import { getCookie } from '@/utils/cookie.js';
 
+// --- Styles ---
 const STYLES = {
     chatContainer: {
         display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, height: '100%', bgcolor: 'background.default'
     },
-    header: {px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper'},
-    messageList: {flex: 1, overflowY: 'auto', py: 2, bgcolor: '#f7f8fa'},
-    inputArea: {p: 2, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper'},
+    header: { px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' },
+    messageList: { flex: 1, overflowY: 'auto', py: 2, bgcolor: '#f7f8fa' },
+    inputArea: { p: 2, borderTop: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' },
+    emptyState: { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary' },
     bubbleWrapper: (isMine) => ({
         display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start', px: 2, mb: 1.5
     }),
@@ -23,56 +25,50 @@ const STYLES = {
         display: 'flex', maxWidth: '75%', gap: 1, flexDirection: isMine ? 'row-reverse' : 'row'
     }),
     messageBox: (isMine) => ({
-        px: 1.5,
-        py: 1,
-        borderRadius: 2,
+        px: 1.5, py: 1, borderRadius: 2,
         bgcolor: isMine ? 'primary.main' : 'background.paper',
         color: isMine ? 'primary.contrastText' : 'text.primary',
         boxShadow: isMine ? 'none' : '0 1px 2px rgba(0,0,0,0.06)',
         border: isMine ? 'none' : '1px solid',
         borderColor: 'divider',
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-    })
+        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+    }),
+    dateDivider: { display: 'flex', justifyContent: 'center', my: 3 }
 };
 
-const MessageBubble = React.memo(({meId, msg}) => {
-    const isMine = useMemo(() => String(msg.sender) === String(meId), [msg.sender, meId]);
+// --- Sub-Components ---
+const MessageBubble = React.memo(({ meId, msg }) => {
+    const isMine = String(msg.sender) === String(meId);
 
-    return (<Box sx={STYLES.bubbleWrapper(isMine)}>
-        <Box sx={STYLES.bubbleContent(isMine)}>
-            {!isMine && (<Avatar
-                src={msg.profileImageUrl}
-                sx={{width: 32, height: 32, bgcolor: '#e0e0e0', fontSize: '0.875rem'}}
-            >
-                {msg.nickname?.[0] || '?'}
-            </Avatar>)}
-            <Box>
-                {!isMine && (<Typography variant="caption"
-                                         sx={{
-                                             ml: 0.5,
-                                             mb: 0.5,
-                                             display: 'block',
-                                             color: 'text.secondary',
-                                             fontWeight: 600
-                                         }}>
-                    {msg.nickname || '알 수 없음'}
-                </Typography>)}
-                <Box sx={STYLES.messageBox(isMine)}>
-                    <Typography variant="body2" sx={{lineHeight: 1.5}}>{msg.content}</Typography>
+    return (
+        <Box sx={STYLES.bubbleWrapper(isMine)}>
+            <Box sx={STYLES.bubbleContent(isMine)}>
+                {!isMine && (
+                    <Avatar src={msg.profileImageUrl} sx={{ width: 32, height: 32, bgcolor: '#e0e0e0', fontSize: '0.875rem' }}>
+                        {msg.nickname?.[0] || '?'}
+                    </Avatar>
+                )}
+                <Box>
+                    {!isMine && (
+                        <Typography variant="caption" sx={{ ml: 0.5, mb: 0.5, display: 'block', color: 'text.secondary', fontWeight: 600 }}>
+                            {msg.nickname || '알 수 없음'}
+                        </Typography>
+                    )}
+                    <Box sx={STYLES.messageBox(isMine)}>
+                        <Typography variant="body2" sx={{ lineHeight: 1.5 }}>{msg.content}</Typography>
+                    </Box>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.25, color: 'text.disabled', textAlign: isMine ? 'right' : 'left' }}>
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </Typography>
                 </Box>
-                <Typography variant="caption" sx={{
-                    display: 'block', mt: 0.25, color: 'text.disabled', textAlign: isMine ? 'right' : 'left'
-                }}>
-                    {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-                </Typography>
             </Box>
         </Box>
-    </Box>);
+    );
 });
 
-function ChannelChat({workspaceId, channelId}) {
-    const {userData, loading: userLoading} = useAuth();
+// --- Main Component ---
+function ChannelChat({ workspaceId, channelId }) {
+    const { userData, loading: userLoading } = useAuth();
     const [conversationId, setConversationId] = useState(null);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -81,39 +77,24 @@ function ChannelChat({workspaceId, channelId}) {
     const stompClient = useRef(null);
     const scrollRef = useRef(null);
 
-    const renderedElements = useMemo(() => {
+    // 메시지 데이터 가공 (정렬 및 날짜 구분선 추가)
+    const processedElements = useMemo(() => {
         const sorted = [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         const elements = [];
         let lastDate = null;
-
         const todayStr = new Date().toLocaleDateString('ko-KR');
 
         sorted.forEach((msg, idx) => {
-            const msgDate = new Date(msg.timestamp);
-            const dateStr = msgDate.toLocaleDateString('ko-KR');
-
-            // 이전 메시지와 날짜가 다르다면 날짜 구분선 추가
+            const dateStr = new Date(msg.timestamp).toLocaleDateString('ko-KR');
             if (dateStr !== lastDate) {
-                const isToday = dateStr === todayStr;
-                const displayDate = isToday
-                    ? "오늘"
-                    : msgDate.toLocaleDateString('ko-KR', {year: 'numeric', month: 'long', day: 'numeric'});
+                const label = dateStr === todayStr ? "오늘" :
+                    new Date(msg.timestamp).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-                elements.push({
-                    type: 'date-divider',
-                    label: displayDate,
-                    key: `date-${dateStr}`
-                });
+                elements.push({ type: 'date-divider', label, key: `date-${dateStr}` });
                 lastDate = dateStr;
             }
-
-            elements.push({
-                type: 'message',
-                data: msg,
-                key: msg.id || idx
-            });
+            elements.push({ type: 'message', data: msg, key: msg.id || `msg-${idx}` });
         });
-
         return elements;
     }, [messages]);
 
@@ -125,30 +106,31 @@ function ChannelChat({workspaceId, channelId}) {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, scrollToBottom]);
+    }, [processedElements, scrollToBottom]);
 
+    // 1. 초기 데이터 로딩 (Conversation 및 내역)
     useEffect(() => {
         if (!workspaceId || !channelId) return;
 
-        const fetchConversation = async () => {
+        const initChat = async () => {
             setLoading(true);
             try {
-                const {data} = await api.get('/chat/conversation', {params: {workspaceId, channelId}});
-                setConversationId(data.conversationId);
-                const {data: history} = await api.get(`/chat/conversations/${data.conversationId}/messages`);
+                const { data: conv } = await api.get('/chat/conversation', { params: { workspaceId, channelId } });
+                setConversationId(conv.conversationId);
 
-                const sortedHistory = history.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-                setMessages(sortedHistory);
+                const { data: history } = await api.get(`/chat/conversations/${conv.conversationId}/messages`);
+                setMessages(history);
             } catch (err) {
-                console.error("Failed to load chat data:", err);
+                console.error("채팅 데이터를 불러오는데 실패했습니다:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchConversation();
+        initChat();
     }, [workspaceId, channelId]);
 
+    // 2. WebSocket 연결 설정
     useEffect(() => {
         if (!conversationId || !userData) return;
 
@@ -156,35 +138,30 @@ function ChannelChat({workspaceId, channelId}) {
 
         const client = new Client({
             webSocketFactory: () => new SockJS(`${baseURL}/ws`),
-            connectHeaders: {Authorization: `Bearer ${getCookie('authToken')}`},
+            connectHeaders: { Authorization: `Bearer ${getCookie('authToken')}` },
             onConnect: () => {
-                client.subscribe(`/topic/chat/rooms/${conversationId}`, (m) => {
-                    const receivedMsg = JSON.parse(m.body);
-                    console.log(receivedMsg);
-
-                    // 메시지 타입이 CHAT일 때만 목록에 추가
-                    if (receivedMsg.type === 'CHAT') {
-                        setMessages((prev) => [...prev, receivedMsg]);
-                    } else if (receivedMsg.type === 'JOIN') {
-                        // 입장 메시지 처리
+                // 메시지 구독
+                client.subscribe(`/topic/chat/rooms/${conversationId}`, (message) => {
+                    const payload = JSON.parse(message.body);
+                    if (payload.type === 'CHAT') {
+                        setMessages(prev => [...prev, payload]);
                     }
                 });
 
+                // 입장 알림 발송
                 client.publish({
-                    destination: `/siack/chat/${conversationId}/join`, body: JSON.stringify({
-                        roomId: conversationId, sender: userData.userid, nickname: userData.nickname
-                    }),
+                    destination: `/siack/chat/${conversationId}/join`,
+                    body: JSON.stringify({ roomId: conversationId, sender: userData.userid, nickname: userData.nickname }),
                 });
             },
+            onStompError: (frame) => console.error('STOMP Error:', frame.headers['message'])
         });
 
         stompClient.current = client;
         client.activate();
 
         return () => {
-            if (stompClient.current) {
-                stompClient.current.deactivate();
-            }
+            if (stompClient.current) stompClient.current.deactivate();
         };
     }, [conversationId, userData]);
 
@@ -203,86 +180,63 @@ function ChannelChat({workspaceId, channelId}) {
         };
 
         stompClient.current.publish({
-            destination: `/siack/chat/${conversationId}/send`, body: JSON.stringify(payload),
+            destination: `/siack/chat/${conversationId}/send`,
+            body: JSON.stringify(payload),
         });
         setInput('');
     };
 
     if (userLoading || loading) {
-        return <Box p={4} textAlign="center"><CircularProgress size={24}/></Box>;
+        return <Box p={4} textAlign="center"><CircularProgress size={24} /></Box>;
     }
 
-    return (<Box sx={STYLES.chatContainer}>
-        <Box sx={STYLES.header}>
-            <Typography variant="subtitle1" sx={{fontWeight: 700}}># 일반</Typography>
-        </Box>
+    return (
+        <Box sx={STYLES.chatContainer}>
+            <Box sx={STYLES.header}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}># 일반</Typography>
+            </Box>
 
-        <Box ref={scrollRef} sx={STYLES.messageList}>
-            {renderedElements.length > 0 ? (
-                renderedElements.map((el) => {
-                    if (el.type === 'date-divider') {
-                        return (
-                            <Box key={el.key} sx={{display: 'flex', justifyContent: 'center', my: 3}}>
-                                <Chip
-                                    size="small"
-                                    label={el.label}
-                                    variant="outlined"
-                                    sx={{
-                                        fontSize: '0.75rem',
-                                        height: 24,
-                                        bgcolor: 'background.paper',
-                                        borderColor: 'divider',
-                                        color: 'text.secondary',
-                                        fontWeight: 600
-                                    }}
-                                />
+            <Box ref={scrollRef} sx={STYLES.messageList}>
+                {processedElements.length > 0 ? (
+                    processedElements.map((el) =>
+                        el.type === 'date-divider' ? (
+                            <Box key={el.key} sx={STYLES.dateDivider}>
+                                <Chip size="small" label={el.label} variant="outlined"
+                                      sx={{ fontSize: '0.75rem', height: 24, bgcolor: 'background.paper', color: 'text.secondary', fontWeight: 600 }} />
                             </Box>
-                        );
-                    }
-                    return (
-                        <MessageBubble
-                            key={el.key}
-                            meId={userData.userid}
-                            msg={el.data}
-                        />
-                    );
-                })
-            ) : (
-                <Box sx={{
-                    height: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'text.secondary'
-                }}>
-                    메시지가 없습니다.
-                </Box>
-            )}
-        </Box>
+                        ) : (
+                            <MessageBubble key={el.key} meId={userData.userid} msg={el.data} />
+                        )
+                    )
+                ) : (
+                    <Box sx={STYLES.emptyState}>메시지가 없습니다.</Box>
+                )}
+            </Box>
 
-        <Box sx={STYLES.inputArea}>
-            <OutlinedInput
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
+            <Box sx={STYLES.inputArea}>
+                <OutlinedInput
+                    fullWidth multiline maxRows={4}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSend();
+                        }
+                    }}
+                    placeholder={`${userData?.nickname}님으로 메시지 보내기...`}
+                    sx={{ borderRadius: 1.5, bgcolor: '#fff' }}
+                    endAdornment={
+                        <InputAdornment position="end">
+                            <IconButton color="primary" onClick={handleSend} disabled={!input.trim()}>
+                                <SendIcon />
+                            </IconButton>
+                        </InputAdornment>
                     }
-                }}
-                fullWidth
-                multiline
-                maxRows={4}
-                placeholder={`${userData?.nickname}님으로 메시지 보내기...`}
-                sx={{borderRadius: 1.5, bgcolor: '#fff'}}
-                endAdornment={<InputAdornment position="end">
-                    <IconButton color="primary" onClick={handleSend} disabled={!input.trim()}>
-                        <SendIcon/>
-                    </IconButton>
-                </InputAdornment>}
-            />
+                />
+            </Box>
         </Box>
-    </Box>);
+    );
 }
 
 export default ChannelChat;
